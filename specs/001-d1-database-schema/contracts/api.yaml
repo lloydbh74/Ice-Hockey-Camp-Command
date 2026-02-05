@@ -1,0 +1,258 @@
+openapi: 3.0.0
+info:
+  title: Swedish Camp Command API
+  version: 1.0.0
+  description: API for managing Swedish Hockey Camp data, including registrations, purchases, and reminders.
+servers:
+  - url: /api
+    description: Base URL for the API (handled by Cloudflare Workers)
+tags:
+  - name: Registration
+    description: Operations related to player registration
+  - name: Purchases
+    description: Management of camp purchases
+  - name: Reminders
+    description: Management and triggering of registration reminders
+
+paths:
+  /register/{token}:
+    get:
+      summary: Get registration form data using magic link token
+      operationId: getRegistrationForm
+      tags:
+        - Registration
+      parameters:
+        - in: path
+          name: token
+          schema:
+            type: string
+          required: true
+          description: Magic link token for accessing registration form
+      responses:
+        '200':
+          description: Registration form data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  purchase:
+                    $ref: '#/components/schemas/Purchase'
+                  guardian:
+                    $ref: '#/components/schemas/Guardian'
+                  players:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Player'
+        '404':
+          description: Invalid or expired token
+    post:
+      summary: Submit registration form
+      operationId: submitRegistrationForm
+      tags:
+        - Registration
+      parameters:
+        - in: path
+          name: token
+          schema:
+            type: string
+          required: true
+          description: Magic link token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationForm'
+      responses:
+        '200':
+          description: Registration successful
+        '400':
+          description: Invalid input
+        '404':
+          description: Invalid or expired token
+
+  /purchases:
+    post:
+      summary: Create a new purchase record (internal/admin)
+      operationId: createPurchase
+      tags:
+        - Purchases
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewPurchase'
+      responses:
+        '201':
+          description: Purchase created
+        '400':
+          description: Invalid input
+
+  /reminders:
+    post:
+      summary: Trigger a registration reminder for a purchase (internal/admin)
+      operationId: sendReminder
+      tags:
+        - Reminders
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                purchaseId:
+                  type: integer
+                  format: int64
+              required:
+                - purchaseId
+      responses:
+        '200':
+          description: Reminder sent
+        '404':
+          description: Purchase not found
+
+components:
+  schemas:
+    Guardian:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        email:
+          type: string
+          format: email
+        full_name:
+          type: string
+    Player:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        guardian_id:
+          type: integer
+          format: int64
+        first_name:
+          type: string
+        last_name:
+          type: string
+        date_of_birth:
+          type: string
+          format: date
+        sex:
+          type: string
+    Purchase:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        guardian_id:
+          type: integer
+          format: int64
+        camp_id:
+          type: integer
+          format: int64
+        product_id:
+          type: integer
+          format: int64
+        quantity:
+          type: integer
+        registration_state:
+          type: string
+          enum:
+            - uninvited
+            - invited
+            - in_progress
+            - completed
+        purchase_timestamp:
+          type: string
+          format: date-time
+        raw_email_id:
+          type: string
+    NewPurchase:
+      type: object
+      properties:
+        guardian_id:
+          type: integer
+          format: int64
+        camp_id:
+          type: integer
+          format: int64
+        product_id:
+          type: integer
+          format: int64
+        quantity:
+          type: integer
+          default: 1
+        purchase_timestamp:
+          type: string
+          format: date-time
+        raw_email_id:
+          type: string
+      required:
+        - guardian_id
+        - camp_id
+        - product_id
+    RegistrationForm:
+      type: object
+      properties:
+        player:
+          $ref: '#/components/schemas/PlayerDetails'
+        kitOrders:
+          type: array
+          items:
+            $ref: '#/components/schemas/KitOrderDetails'
+      required:
+        - player
+    PlayerDetails:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        date_of_birth:
+          type: string
+          format: date
+        sex:
+          type: string
+        club:
+          type: string
+        playing_age_group:
+          type: string
+        playing_experience:
+          type: string
+        playing_position:
+          type: string
+        medical_notes:
+          type: string
+        consent_photo_video:
+          type: boolean
+          default: false
+      required:
+        - first_name
+        - last_name
+        - date_of_birth
+        - consent_photo_video
+    KitOrderDetails:
+      type: object
+      properties:
+        item_type:
+          type: string
+          enum:
+            - jersey
+            - t-shirt
+        size:
+          type: string
+        personalization_name:
+          type: string
+        personalization_number:
+          type: string
+      required:
+        - item_type
+        - size

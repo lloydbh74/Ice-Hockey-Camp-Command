@@ -1,0 +1,241 @@
+openapi: 3.0.0
+info:
+  title: Organiser Dashboards and Reports API
+  version: 1.0.0
+  description: API endpoints for organisers to view camp summaries, attendance, kit orders, and missing registrations, including CSV export functionalities.
+servers:
+  - url: /api/admin
+    description: Admin API server for organiser access
+security:
+  - OrganiserAuth: []
+components:
+  securitySchemes:
+    OrganiserAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT # Represents a magic link token or similar
+  schemas:
+    CampSummary:
+      type: object
+      properties:
+        total_purchases:
+          type: integer
+          description: Total number of purchases for the camp.
+          example: 150
+        completed_registrations:
+          type: integer
+          description: Number of registrations that are completed.
+          example: 120
+        missing_registrations:
+          type: integer
+          description: Number of registrations that are not yet completed.
+          example: 30
+    AttendanceRecord:
+      type: object
+      properties:
+        player_name:
+          type: string
+          example: "Olof Mellberg"
+        age_group:
+          type: string
+          example: "U10"
+        medical_info:
+          type: string
+          nullable: true
+          example: "Asthma"
+    KitOrderItem:
+      type: object
+      properties:
+        item_type:
+          type: string
+          example: "Jersey"
+        size:
+          type: string
+          example: "L"
+        quantity:
+          type: integer
+          example: 50
+    MissingRegistration:
+      type: object
+      properties:
+        purchase_id:
+          type: string
+          format: uuid
+        guardian_name:
+          type: string
+          example: "Sven Svensson"
+        guardian_email:
+          type: string
+          format: email
+          example: "sven.svensson@example.com"
+paths:
+  /camps:
+    get:
+      summary: Get a list of available camps
+      operationId: listCamps
+      responses:
+        '200':
+          description: A list of camps
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    name:
+                      type: string
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  /camps/{campId}/summary:
+    get:
+      summary: Get summary statistics for a specific camp
+      operationId: getCampSummary
+      parameters:
+        - in: path
+          name: campId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: ID of the camp to retrieve summary for
+      responses:
+        '200':
+          description: Camp summary statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampSummary'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Camp not found
+  /camps/{campId}/attendance:
+    get:
+      summary: Get daily attendance list for a specific camp and date
+      operationId: getDailyAttendance
+      parameters:
+        - in: path
+          name: campId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: ID of the camp
+        - in: query
+          name: date
+          schema:
+            type: string
+            format: date
+          required: true
+          description: Date for which to retrieve attendance (YYYY-MM-DD)
+      responses:
+        '200':
+          description: List of players attending on the specified date
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AttendanceRecord'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Camp or date not found
+  /camps/{campId}/kit-orders:
+    get:
+      summary: Get a summary of all kit orders for a specific camp
+      operationId: getKitOrdersSummary
+      parameters:
+        - in: path
+          name: campId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: ID of the camp
+      responses:
+        '200':
+          description: Summary of kit orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/KitOrderItem'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Camp not found
+  /camps/{campId}/missing-registrations:
+    get:
+      summary: Get a list of missing registrations for a specific camp
+      operationId: getMissingRegistrations
+      parameters:
+        - in: path
+          name: campId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: ID of the camp
+      responses:
+        '200':
+          description: List of purchases with missing registrations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MissingRegistration'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Camp not found
+  /camps/{campId}/export/{type}:
+    get:
+      summary: Export data for a specific type (attendance, kit-orders, missing-registrations) as CSV
+      operationId: exportDataAsCsv
+      parameters:
+        - in: path
+          name: campId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: ID of the camp
+        - in: path
+          name: type
+          schema:
+            type: string
+            enum: [attendance, kit-orders, missing-registrations]
+          required: true
+          description: Type of data to export
+        - in: query
+          name: date # Only relevant for attendance export
+          schema:
+            type: string
+            format: date
+          required: false
+          description: Date for attendance export (YYYY-MM-DD). Required if type is 'attendance'.
+      responses:
+        '200':
+          description: CSV file of the requested data
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary # Represents the CSV file content
+        '400':
+          description: Bad Request (e.g., missing date for attendance export)
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Camp or data not found
+components:
+  responses:
+    UnauthorizedError:
+      description: Authentication required or invalid/expired token

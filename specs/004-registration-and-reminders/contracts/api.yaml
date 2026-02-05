@@ -1,0 +1,201 @@
+openapi: 3.0.0
+info:
+  title: Registration Flow and Reminder API
+  version: 1.0.0
+  description: API for managing guardian registration, magic links, and automated reminder emails.
+servers:
+  - url: /api
+    description: Base URL for backend APIs (handled by Cloudflare Workers)
+tags:
+  - name: Registration
+    description: Operations related to player registration flow
+  - name: Reminders
+    description: Operations related to reminder generation and sending
+
+paths:
+  /registration/invite:
+    post:
+      summary: Generate a magic link, send invitation email, and update purchase state.
+      operationId: sendRegistrationInvite
+      tags:
+        - Registration
+        - Reminders
+      security:
+        - BearerAuth: [] # Assumes admin/internal tool access for this endpoint
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - purchaseId
+              properties:
+                purchaseId:
+                  type: integer
+                  format: int64
+                  description: ID of the Purchase record to send an invite for.
+      responses:
+        '200':
+          description: Invitation email sent successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invitation email sent."
+                  reminderId:
+                    type: integer
+                    format: int64
+        '400':
+          description: Invalid purchaseId or purchase not eligible for invite.
+        '401':
+          description: Unauthorized.
+        '404':
+          description: Purchase not found.
+
+  /registration/{token}:
+    get:
+      summary: Validate magic link, update purchase state, and redirect to registration UI.
+      operationId: validateMagicLinkAndRedirect
+      tags:
+        - Registration
+      parameters:
+        - in: path
+          name: token
+          schema:
+            type: string
+          required: true
+          description: Secure, time-limited magic link token.
+      responses:
+        '302':
+          description: Redirects to the frontend registration page (e.g., /app/registration?token=...)
+        '400':
+          description: Invalid, expired, or already used token.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid or expired link."
+  /registration/submit:
+    post:
+      summary: Submit guardian-provided player details and kit orders.
+      operationId: submitRegistration
+      tags:
+        - Registration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationSubmissionRequest'
+      responses:
+        '200':
+          description: Registration submitted successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Registration completed."
+                  registrationId:
+                    type: integer
+                    format: int64
+        '400':
+          description: Invalid input data.
+        '404':
+          description: Associated Purchase not found or token invalid/expired.
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT # Or any other appropriate format
+  schemas:
+    PlayerDetails:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - dateOfBirth
+        - consentPhotoVideo
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        sex:
+          type: string
+          nullable: true
+        club:
+          type: string
+          nullable: true
+        playingAgeGroup:
+          type: string
+          nullable: true
+        playingExperience:
+          type: string
+          nullable: true
+        playingPosition:
+          type: string
+          nullable: true
+        medicalNotes:
+          type: string
+          nullable: true
+        consentPhotoVideo:
+          type: boolean
+    KitOrderDetails:
+      type: object
+      required:
+        - itemType
+        - size
+      properties:
+        itemType:
+          type: string
+          enum:
+            - jersey
+            - t-shirt
+        size:
+          type: string
+        personalizationName:
+          type: string
+          nullable: true
+        personalizationNumber:
+          type: string
+          nullable: true
+    RegistrationSubmissionRequest:
+      type: object
+      required:
+        - purchaseId
+        - playerDetails
+      properties:
+        purchaseId:
+          type: integer
+          format: int64
+          description: The ID of the Purchase record associated with this registration.
+        token:
+          type: string
+          description: The magic link token used to access the registration (for validation).
+        playerId:
+          type: integer
+          format: int64
+          nullable: true
+          description: Optional. If editing an existing player, their ID.
+        playerDetails:
+          $ref: '#/components/schemas/PlayerDetails'
+        kitOrders:
+          type: array
+          items:
+            $ref: '#/components/schemas/KitOrderDetails'
+          nullable: true

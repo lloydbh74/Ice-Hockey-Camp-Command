@@ -1,0 +1,510 @@
+openapi: 3.0.0
+info:
+  title: Camp and Settings Management API
+  version: 1.0.0
+  description: API endpoints for organisers to manage camp details, products, camp-specific product associations, and reminder settings.
+servers:
+  - url: /api/admin/settings
+    description: Admin settings API server for organiser access
+security:
+  - OrganiserAuth: []
+components:
+  securitySchemes:
+    OrganiserAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT # Represents a magic link token or similar
+  schemas:
+    Camp:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          example: "CIHA Swedish Hockey Camp 2027 – Week 1"
+        year:
+          type: integer
+          example: 2027
+        status:
+          type: string
+          enum: [active, deactivated, archived]
+          example: active
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+        - name
+        - year
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          example: "Full Camp Registration"
+        description:
+          type: string
+          nullable: true
+          example: "Full access to all ice sessions and off-ice training."
+        base_price:
+          type: number
+          format: float
+          example: 999.99
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+        - name
+        - base_price
+    CampProduct:
+      type: object
+      properties:
+        camp_id:
+          type: string
+          format: uuid
+        product_id:
+          type: string
+          format: uuid
+        price:
+          type: number
+          format: float
+          example: 999.99
+        status:
+          type: string
+          enum: [active, inactive]
+          example: active
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+        - camp_id
+        - product_id
+        - price
+    CampSettings:
+      type: object
+      properties:
+        camp_id:
+          type: string
+          format: uuid
+          readOnly: true
+        reminder_interval_days:
+          type: integer
+          example: 7
+        max_reminders:
+          type: integer
+          example: 3
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+        - reminder_interval_days
+        - max_reminders
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+  responses:
+    UnauthorizedError:
+      description: Authentication required or invalid/expired token
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+paths:
+  /camps:
+    get:
+      summary: Get a list of all camps
+      operationId: listCamps
+      responses:
+        '200':
+          description: A list of camps
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Camp'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+    post:
+      summary: Create a new camp
+      operationId: createCamp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Camp'
+      responses:
+        '201':
+          description: Camp created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Camp'
+        '400':
+          description: Invalid input
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  /camps/{campId}:
+    get:
+      summary: Get details for a specific camp
+      operationId: getCampById
+      parameters:
+        - in: path
+          name: campId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: ID of the camp to retrieve
+      responses:
+        '200':
+          description: Camp details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Camp'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    put:
+      summary: Update an existing camp
+      operationId: updateCamp
+      parameters:
+        - in: path
+          name: campId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: ID of the camp to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Camp'
+      responses:
+        '200':
+          description: Camp updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Camp'
+        '400':
+          description: Invalid input
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /camps/{campId}/deactivate:
+    patch:
+      summary: Deactivate a camp
+      operationId: deactivateCamp
+      parameters:
+        - in: path
+          name: campId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: ID of the camp to deactivate
+      responses:
+        '200':
+          description: Camp deactivated successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: Conflict, cannot deactivate camp with associated purchases
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /products:
+    get:
+      summary: Get a list of all products
+      operationId: listProducts
+      responses:
+        '200':
+          description: A list of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+    post:
+      summary: Create a new product
+      operationId: createProduct
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+      responses:
+        '201':
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: Invalid input
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  /products/{productId}:
+    get:
+      summary: Get details for a specific product
+      operationId: getProductById
+      parameters:
+        - in: path
+          name: productId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: ID of the product to retrieve
+      responses:
+        '200':
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    put:
+      summary: Update an existing product
+      operationId: updateProduct
+      parameters:
+        - in: path
+          name: productId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: ID of the product to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+      responses:
+        '200':
+          description: Product updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: Invalid input
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /camps/{campId}/products:
+    get:
+      summary: Get a list of products associated with a specific camp
+      operationId: listCampProducts
+      parameters:
+        - in: path
+          name: campId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: ID of the camp
+      responses:
+        '200':
+          description: A list of camp products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CampProduct'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    post:
+      summary: Associate a product with a camp (create CampProduct)
+      operationId: createCampProduct
+      parameters:
+        - in: path
+          name: campId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: ID of the camp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                product_id:
+                  type: string
+                  format: uuid
+                price:
+                  type: number
+                  format: float
+              required:
+                - product_id
+                - price
+      responses:
+        '201':
+          description: CampProduct created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampProduct'
+        '400':
+          description: Invalid input
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          description: Product already associated with camp
+  /camps/{campId}/products/{productId}:
+    put:
+      summary: Update a specific CampProduct (e.g., price)
+      operationId: updateCampProduct
+      parameters:
+        - in: path
+          name: campId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: ID of the camp
+        - in: path
+          name: productId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: ID of the product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                price:
+                  type: number
+                  format: float
+                status:
+                  type: string
+                  enum: [active, inactive]
+              required:
+                - price
+      responses:
+        '200':
+          description: CampProduct updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampProduct'
+        '400':
+          description: Invalid input
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /camps/{campId}/settings:
+    get:
+      summary: Get reminder settings for a specific camp
+      operationId: getCampSettings
+      parameters:
+        - in: path
+          name: campId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: ID of the camp
+      responses:
+        '200':
+          description: Camp settings details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampSettings'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    put:
+      summary: Update reminder settings for a specific camp
+      operationId: updateCampSettings
+      parameters:
+        - in: path
+          name: campId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: ID of the camp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampSettings'
+      responses:
+        '200':
+          description: Camp settings updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampSettings'
+        '400':
+          description: Invalid input
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'

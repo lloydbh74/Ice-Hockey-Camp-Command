@@ -1,0 +1,162 @@
+openapi: 3.0.0
+info:
+  title: Email Ingestion API
+  version: 1.0.0
+  description: API for ingesting parsed order confirmation emails into the D1 database.
+servers:
+  - url: /api
+    description: Base URL for the Email Ingestion API (handled by Cloudflare Workers)
+tags:
+  - name: Email Ingestion
+    description: Operations for processing order confirmation emails
+
+paths:
+  /email-ingest/purchase:
+    post:
+      summary: Ingest a normalized purchase record from an email
+      operationId: ingestPurchaseEmail
+      tags:
+        - Email Ingestion
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PurchaseIngestionRequest'
+      responses:
+        '201':
+          description: New purchase record created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Purchase ingested successfully."
+                  purchaseId:
+                    type: integer
+                    format: int64
+        '200':
+          description: Purchase record already exists (idempotent response).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Purchase already processed."
+                  purchaseId:
+                    type: integer
+                    format: int64
+        '400':
+          description: Invalid request body or unknown product.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid request format or product not found."
+        '401':
+          description: Unauthorized request (missing or invalid Bearer token).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized."
+        '500':
+          description: Internal server error.
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT # Or any other appropriate format
+  schemas:
+    PurchaseIngestionRequest:
+      type: object
+      required:
+        - orderId
+        - guardianEmail
+        - products
+        - rawEmailId
+        - rawSource
+      properties:
+        orderId:
+          type: string
+          description: Unique identifier for the order from the upstream system.
+          example: "ORDER-ABC-123"
+        orderReference:
+          type: string
+          nullable: true
+          description: Optional reference for the order.
+          example: "REF-XYZ-456"
+        guardianEmail:
+          type: string
+          format: email
+          description: Email of the guardian who made the purchase.
+          example: "guardian@example.com"
+        guardianName:
+          type: string
+          nullable: true
+          description: Full name of the guardian.
+          example: "Jane Doe"
+        paymentMethod:
+          type: string
+          nullable: true
+          description: Method used for payment.
+          example: "Credit Card"
+        totalAmount:
+          type: number
+          format: float
+          nullable: true
+          description: Total amount of the purchase.
+          example: 99.99
+        currency:
+          type: string
+          nullable: true
+          description: Currency of the purchase.
+          example: "SEK"
+        orderDate:
+          type: string
+          format: date-time
+          nullable: true
+          description: ISO 8601 formatted date and time of the order.
+          example: "2026-01-01T10:00:00Z"
+        products:
+          type: array
+          description: List of products included in the purchase.
+          items:
+            $ref: '#/components/schemas/ProductDetails'
+        rawEmailId:
+          type: string
+          description: Unique identifier for the raw email, used for idempotency.
+          example: "email_id_12345"
+        rawSource:
+          type: string
+          description: Original source of the email or data.
+          example: "n8n workflow"
+    ProductDetails:
+      type: object
+      required:
+        - rawDescription
+        - quantity
+      properties:
+        rawDescription:
+          type: string
+          description: Raw description of the product, expected to contain SKU for lookup.
+          example: "Hat-Trick Heroes 2026 Camp (CIHA-S-W1-2026)"
+        quantity:
+          type: number
+          format: integer
+          description: Quantity of the product purchased.
+          example: 1

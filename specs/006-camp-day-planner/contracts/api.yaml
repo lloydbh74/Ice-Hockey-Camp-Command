@@ -1,0 +1,564 @@
+openapi: 3.0.0
+info:
+  title: Camp Day Planner API
+  version: 1.0.0
+  description: API endpoints for organisers to manage camp schedules (days, sessions, streams) and a read-only coach view.
+servers:
+  - url: /api/admin
+    description: Admin API server for organiser access
+  - url: /coach
+    description: Public API server for coach view
+security:
+  - OrganiserAuth: [] # For /api/admin endpoints
+components:
+  securitySchemes:
+    OrganiserAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT # Represents a magic link token or similar
+  schemas:
+    CampDay:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        camp_id:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+          example: "2027-07-01"
+        label:
+          type: string
+          nullable: true
+          example: "Day 1"
+        status:
+          type: string
+          enum: [active, archived]
+          example: active
+      required:
+        - camp_id
+        - date
+    Stream:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        camp_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "9–14 Elite"
+        status:
+          type: string
+          enum: [active, archived]
+          example: active
+      required:
+        - camp_id
+        - name
+    Session:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        camp_day_id:
+          type: integer
+        name:
+          type: string
+          example: "On-ice skills"
+        description:
+          type: string
+          nullable: true
+          example: "Focus on skating and puck handling"
+        start_time:
+          type: string
+          pattern: '^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$'
+          example: "09:00"
+        end_time:
+          type: string
+          pattern: '^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$'
+          example: "10:00"
+        location:
+          type: string
+          nullable: true
+          example: "Arena 1"
+      required:
+        - camp_day_id
+        - name
+        - start_time
+        - end_time
+    SessionStream:
+      type: object
+      properties:
+        session_id:
+          type: integer
+        stream_id:
+          type: integer
+      required:
+        - session_id
+        - stream_id
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+  responses:
+    UnauthorizedError:
+      description: Authentication required or invalid/expired token
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ConflictError:
+      description: Conflict (e.g., scheduling overlap, entity in use)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+paths:
+  /camps/{campId}/days:
+    get:
+      summary: Get all camp days for a specific camp
+      operationId: listCampDays
+      parameters:
+        - in: path
+          name: campId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: ID of the camp
+      responses:
+        '200':
+          description: List of camp days
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CampDay'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+    post:
+      summary: Create a new camp day for a specific camp
+      operationId: createCampDay
+      parameters:
+        - in: path
+          name: campId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: ID of the camp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampDay'
+      responses:
+        '201':
+          description: Camp day created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampDay'
+        '400':
+          description: Invalid input
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  /camps/{campId}/days/{dayId}:
+    put:
+      summary: Update a specific camp day
+      operationId: updateCampDay
+      parameters:
+        - in: path
+          name: campId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: ID of the camp
+        - in: path
+          name: dayId
+          schema:
+            type: integer
+          required: true
+          description: ID of the camp day to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampDay'
+      responses:
+        '200':
+          description: Camp day updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampDay'
+        '400':
+          description: Invalid input
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    delete:
+      summary: Delete a specific camp day
+      operationId: deleteCampDay
+      parameters:
+        - in: path
+          name: campId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: ID of the camp
+        - in: path
+          name: dayId
+          schema:
+            type: integer
+          required: true
+          description: ID of the camp day to delete
+      responses:
+        '204':
+          description: Camp day deleted successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError' # If CampDay has associated sessions
+  /camps/{campId}/streams:
+    get:
+      summary: Get all streams for a specific camp
+      operationId: listStreams
+      parameters:
+        - in: path
+          name: campId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: ID of the camp
+      responses:
+        '200':
+          description: List of streams
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Stream'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+    post:
+      summary: Create a new stream for a specific camp
+      operationId: createStream
+      parameters:
+        - in: path
+          name: campId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: ID of the camp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Stream'
+      responses:
+        '201':
+          description: Stream created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stream'
+        '400':
+          description: Invalid input
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  /camps/{campId}/streams/{streamId}:
+    put:
+      summary: Update a specific stream
+      operationId: updateStream
+      parameters:
+        - in: path
+          name: campId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: ID of the camp
+        - in: path
+          name: streamId
+          schema:
+            type: integer
+          required: true
+          description: ID of the stream to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Stream'
+      responses:
+        '200':
+          description: Stream updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stream'
+        '400':
+          description: Invalid input
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    delete:
+      summary: Delete a specific stream
+      operationId: deleteStream
+      parameters:
+        - in: path
+          name: campId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: ID of the camp
+        - in: path
+          name: streamId
+          schema:
+            type: integer
+          required: true
+          description: ID of the stream to delete
+      responses:
+        '204':
+          description: Stream deleted successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError' # If Stream has associated sessions
+  /camps/{campId}/days/{dayId}/sessions:
+    get:
+      summary: Get all sessions for a specific camp day
+      operationId: listSessions
+      parameters:
+        - in: path
+          name: campId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: ID of the camp
+        - in: path
+          name: dayId
+          schema:
+            type: integer
+          required: true
+          description: ID of the camp day
+      responses:
+        '200':
+          description: List of sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Session'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+    post:
+      summary: Create a new session for a specific camp day
+      operationId: createSession
+      parameters:
+        - in: path
+          name: campId
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: ID of the camp
+        - in: path
+          name: dayId
+          schema:
+            type: integer
+          required: true
+          description: ID of the camp day
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Session'
+      responses:
+        '201':
+          description: Session created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '400':
+          description: Invalid input (e.g., time conflict)
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  /sessions/{sessionId}:
+    put:
+      summary: Update a specific session (e.g., time, location)
+      operationId: updateSession
+      parameters:
+        - in: path
+          name: sessionId
+          schema:
+            type: integer
+          required: true
+          description: ID of the session to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Session'
+      responses:
+        '200':
+          description: Session updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '400':
+          description: Invalid input (e.g., time conflict)
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError' # Scheduling overlap
+    delete:
+      summary: Delete a specific session
+      operationId: deleteSession
+      parameters:
+        - in: path
+          name: sessionId
+          schema:
+            type: integer
+          required: true
+          description: ID of the session to delete
+      responses:
+        '204':
+          description: Session deleted successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /sessions/{sessionId}/streams:
+    post:
+      summary: Assign streams to a session
+      operationId: assignStreamsToSession
+      parameters:
+        - in: path
+          name: sessionId
+          schema:
+            type: integer
+          required: true
+          description: ID of the session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                stream_ids:
+                  type: array
+                  items:
+                    type: integer
+              required:
+                - stream_ids
+      responses:
+        '200':
+          description: Streams assigned successfully
+        '400':
+          description: Invalid input
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError' # Overlapping sessions for the same stream
+  /sessions/{sessionId}/streams/{streamId}:
+    delete:
+      summary: Unassign a stream from a session
+      operationId: unassignStreamFromSession
+      parameters:
+        - in: path
+          name: sessionId
+          schema:
+            type: integer
+          required: true
+          description: ID of the session
+        - in: path
+          name: streamId
+          schema:
+            type: integer
+          required: true
+          description: ID of the stream to unassign
+      responses:
+        '204':
+          description: Stream unassigned successfully
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+tags:
+  - name: Coach View
+    description: Public API for coaches to view schedules
+/coach/camps/{campId}/day/{dayId}:
+  get:
+    tags:
+      - Coach View
+    summary: Get read-only schedule for a specific camp day and stream
+    operationId: getCoachSchedule
+    parameters:
+      - in: path
+        name: campId
+        schema:
+          type: string
+          format: uuid
+        required: true
+        description: ID of the camp
+      - in: path
+        name: dayId
+        schema:
+          type: integer
+        required: true
+        description: ID of the camp day
+      - in: query
+        name: streamId
+        schema:
+          type: integer
+        required: true
+        description: ID of the stream to filter sessions by
+    responses:
+      '200':
+        description: List of sessions for the coach's stream on the specified day
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Session'
+      '404':
+        description: Camp, day, or stream not found
