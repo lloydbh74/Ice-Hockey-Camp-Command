@@ -1,0 +1,246 @@
+import { useState, useRef } from "react";
+import LinkInsertionModal from "./LinkInsertionModal";
+
+
+interface FormField {
+    id: string;
+    type: 'text' | 'select' | 'checkbox' | 'radio' | 'image_choice' | 'heading' | 'paragraph' | 'bullet' | 'divider' | 'separator';
+    label: string;
+    required: boolean;
+    options?: string[];
+    headingLevel?: 'h1' | 'h2' | 'h3' | 'h4';
+}
+
+interface PropertiesPanelProps {
+    field: FormField | null;
+    onChange: (updates: Partial<FormField>) => void;
+    onDelete?: () => void;
+}
+
+export default function PropertiesPanel({ field, onChange, onDelete }: PropertiesPanelProps) {
+    // Link Insertion Logic - Hooks must be at top level
+    const [linkModalOpen, setLinkModalOpen] = useState(false);
+    const [selectedTextRange, setSelectedTextRange] = useState<{ start: number; end: number } | null>(null);
+    const [currentLinkData, setCurrentLinkData] = useState<{ type: 'url' | 'phone' | 'email'; value: string } | null>(null);
+    const activeTextareaRef = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null);
+
+    if (!field) {
+        return (
+            <div className="p-4 text-center text-slate-500 dark:text-slate-400 mt-10">
+                <span className="material-symbols-outlined text-4xl mb-2">touch_app</span>
+                <p>Select an element on the canvas to edit its properties.</p>
+            </div>
+        );
+    }
+
+    const handleAddOption = () => {
+        const currentOptions = field.options || [];
+        onChange({ options: [...currentOptions, `Option ${currentOptions.length + 1}`] });
+    };
+
+    const handleUpdateOption = (index: number, value: string) => {
+        const currentOptions = field.options || [];
+        const newOptions = [...currentOptions];
+        newOptions[index] = value;
+        onChange({ options: newOptions });
+    };
+
+    const handleDeleteOption = (index: number) => {
+        const currentOptions = field.options || [];
+        onChange({ options: currentOptions.filter((_, i) => i !== index) });
+    };
+
+    const handleLinkClick = () => {
+        if (!activeTextareaRef.current) return;
+
+        const el = activeTextareaRef.current;
+        const start = el.selectionStart;
+        const end = el.selectionEnd;
+
+        // Validation for null selection indices (some inputs don't support it)
+        if (start === null || end === null) return;
+
+        setSelectedTextRange({ start, end });
+        setCurrentLinkData(null);
+        setLinkModalOpen(true);
+    };
+
+    const handleApplyLink = (data: { type: 'url' | 'phone' | 'email'; value: string }) => {
+        if (!activeTextareaRef.current || !selectedTextRange) return;
+
+        const el = activeTextareaRef.current;
+        const { start, end } = selectedTextRange;
+        const selectedText = el.value.substring(start, end) || 'link';
+
+        let href = data.value;
+        if (data.type === 'email' && !href.startsWith('mailto:')) href = `mailto:${href}`;
+        if (data.type === 'phone' && !href.startsWith('tel:')) href = `tel:${href}`;
+
+        const markdownLink = `[${selectedText}](${href})`;
+
+        el.setRangeText(markdownLink, start, end, 'select');
+
+        // Trigger generic change to update parent state
+        onChange({ label: el.value });
+        setLinkModalOpen(false);
+    };
+
+    return (
+        <div className="flex flex-col h-full bg-white dark:bg-slate-900 relative">
+            <LinkInsertionModal
+                key={linkModalOpen ? 'open' : 'closed'}
+                isOpen={linkModalOpen}
+                onClose={() => setLinkModalOpen(false)}
+                onSave={handleApplyLink}
+                onRemove={() => { }}
+                initialData={currentLinkData}
+            />
+            <div className="p-6 border-b border-slate-200 dark:border-slate-800">
+                <h2 className="font-bold text-lg text-slate-900 dark:text-white">Properties</h2>
+                <div className="flex items-center gap-2 mt-1">
+                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Editing:</span>
+                    <span className="text-sm font-semibold text-primary capitalize">{field.type.replace('_', ' ')}</span>
+                </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 space-y-8">
+                {/* Reference ID (mostly for debug) */}
+                <div className="hidden">
+                    <span className="text-xs font-mono text-slate-400">#{field.id.split('-')[0]}</span>
+                </div>
+
+                {/* Content/Label Section */}
+                {!['divider', 'separator'].includes(field.type) && (
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                            <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                                {['heading', 'paragraph', 'bullet'].includes(field.type) ? 'Content' : 'Label'}
+                            </label>
+                        </div>
+
+                        <div className="border border-slate-300 dark:border-slate-700 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-shadow">
+                            {/* Rich Text Toolbar - Only for structural text types */}
+                            {['heading', 'paragraph', 'bullet'].includes(field.type) && (
+                                <div className="flex items-center gap-1 p-2 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                                    <button className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded"><span className="material-symbols-outlined text-[18px]">format_bold</span></button>
+                                    <button className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded"><span className="material-symbols-outlined text-[18px]">format_italic</span></button>
+                                    <button className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded"><span className="material-symbols-outlined text-[18px]">format_underlined</span></button>
+                                    <div className="w-px h-4 bg-slate-300 dark:bg-slate-700 mx-1"></div>
+                                    <button
+                                        onClick={handleLinkClick}
+                                        className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors"
+                                        title="Insert Link"
+                                    >
+                                        <span className="material-symbols-outlined text-lg">link</span>
+                                    </button>
+                                </div>
+                            )}
+
+                            {['heading', 'bullet'].includes(field.type) ? (
+                                <input
+                                    ref={activeTextareaRef as React.Ref<HTMLInputElement>}
+                                    type="text"
+                                    value={field.label}
+                                    onChange={(e) => onChange({ label: e.target.value })}
+                                    className="w-full p-3 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-900 outline-none text-base"
+                                    placeholder={field.type === 'heading' ? 'Heading Text' : 'Bullet Point Text'}
+                                />
+                            ) : (
+                                <textarea
+                                    ref={activeTextareaRef as any}
+                                    value={field.label}
+                                    onChange={(e) => onChange({ label: e.target.value })}
+                                    className="w-full p-3 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-900 min-h-[100px] resize-none outline-none text-base"
+                                    placeholder={field.type === 'paragraph' ? "Enter text here..." : "Enter your question here..."}
+                                />
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Heading Level - Only for Headings */}
+                {field.type === 'heading' && (
+                    <div className="space-y-3">
+                        <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Heading Level</label>
+                        <select
+                            value={field.headingLevel || 'h2'}
+                            onChange={(e) => onChange({ headingLevel: e.target.value as any })}
+                            className="w-full p-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-md text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-primary outline-none"
+                        >
+                            <option value="h1">H1 - Page Title</option>
+                            <option value="h2">H2 - Section</option>
+                            <option value="h3">H3 - Subsection</option>
+                            <option value="h4">H4 - Small</option>
+                        </select>
+                    </div>
+                )}
+
+                {/* Required Toggle */}
+                {!['heading', 'paragraph', 'bullet', 'divider', 'separator'].includes(field.type) && (
+                    <div className="flex items-center gap-3">
+                        <input
+                            type="checkbox"
+                            id="required_toggle"
+                            checked={field.required}
+                            onChange={(e) => onChange({ required: e.target.checked })}
+                            className="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer"
+                        />
+                        <label htmlFor="required_toggle" className="text-sm font-medium text-slate-900 dark:text-slate-200 cursor-pointer">Required Field</label>
+                    </div>
+                )}
+
+                {/* Options Editor */}
+                {(field.type === 'select' || field.type === 'checkbox' || field.type === 'radio' || field.type === 'image_choice') && (
+                    <div className="space-y-4 pt-4 border-t border-slate-100">
+                        <div className="flex items-center justify-between">
+                            <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Options</label>
+                            <button
+                                onClick={handleAddOption}
+                                className="text-sm font-medium text-primary hover:text-blue-700 flex items-center gap-1"
+                            >
+                                <span className="material-symbols-outlined text-sm">add</span> Add Option
+                            </button>
+                        </div>
+
+                        <div className="space-y-3">
+                            {(field.options || []).map((option, idx) => (
+                                <div key={idx} className="flex items-center gap-2 group">
+                                    <div className="flex-1 relative">
+                                        <input
+                                            type="text"
+                                            value={option}
+                                            onChange={(e) => handleUpdateOption(idx, e.target.value)}
+                                            className="w-full pl-3 pr-8 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                                        />
+                                    </div>
+                                    <button
+                                        onClick={() => handleDeleteOption(idx)}
+                                        className="p-2 text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                                        title="Delete option"
+                                    >
+                                        <span className="material-symbols-outlined text-lg">close</span>
+                                    </button>
+                                </div>
+                            ))}
+                            {(!field.options || field.options.length === 0) && (
+                                <div className="text-sm text-slate-500 dark:text-slate-400 italic p-2 border border-dashed border-slate-300 dark:border-slate-800 rounded bg-slate-50 dark:bg-slate-900/50">
+                                    No options added yet.
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Footer Actions */}
+            <div className="p-6 border-t border-slate-200 dark:border-slate-800 mt-auto bg-white dark:bg-slate-900">
+                <button
+                    onClick={onDelete}
+                    className="w-full py-3 bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 font-medium rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors flex items-center justify-center gap-2"
+                >
+                    Delete Component
+                </button>
+            </div>
+        </div>
+    );
+}
