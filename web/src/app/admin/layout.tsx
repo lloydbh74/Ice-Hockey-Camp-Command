@@ -42,6 +42,10 @@ export default function AdminLayout({
             <span className="material-symbols-outlined transition-transform group-hover:scale-110" aria-hidden="true">inventory_2</span>
             <span className="text-sm font-medium">Product Repository</span>
           </Link>
+          <Link href="/admin/settings/reminders" className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-white/5 hover:text-white transition-all group">
+            <span className="material-symbols-outlined transition-transform group-hover:scale-110" aria-hidden="true">notifications</span>
+            <span className="text-sm font-medium">Reminder Settings</span>
+          </Link>
           <Link href="/admin/settings/system" className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-white/5 hover:text-white transition-all group">
             <span className="material-symbols-outlined transition-transform group-hover:scale-110" aria-hidden="true">settings</span>
             <span className="text-sm font-medium">System Config</span>

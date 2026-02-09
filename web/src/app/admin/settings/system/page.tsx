@@ -1,146 +1,206 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
+
+const ADMIN_TOKEN = 'swedish-camp-admin-2026';
+
+interface SystemSettings {
+    admin_emails?: string;
+    support_email?: string;
+    smtp_host?: string;
+    smtp_port?: string;
+    smtp_username?: string;
+    [key: string]: string | undefined;
+}
 
 export default function SystemSettingsPage() {
+    const [settings, setSettings] = useState<SystemSettings>({});
+    const [editedSettings, setEditedSettings] = useState<SystemSettings>({});
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+
+    useEffect(() => {
+        fetchSettings();
+    }, []);
+
+    const fetchSettings = async () => {
+        try {
+            const res = await fetch("/api/admin/system-settings", {
+                headers: { 'X-Admin-Token': ADMIN_TOKEN }
+            });
+            if (!res.ok) throw new Error("Failed to fetch settings");
+
+            const data = await res.json();
+            setSettings(data);
+            setEditedSettings(data);
+        } catch (e) {
+            console.error("Failed to fetch settings", e);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSave = async () => {
+        setSaving(true);
+        try {
+            const res = await fetch("/api/admin/system-settings", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    'X-Admin-Token': ADMIN_TOKEN
+                },
+                body: JSON.stringify(editedSettings)
+            });
+
+            if (res.ok) {
+                setSettings(editedSettings);
+                alert("Settings saved successfully!");
+            } else {
+                const error = await res.json();
+                alert(`Failed to save: ${error.error}`);
+            }
+        } catch (e: any) {
+            console.error("Failed to save settings", e);
+            alert(`Failed to save settings: ${e.message}`);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const hasChanges = JSON.stringify(settings) !== JSON.stringify(editedSettings);
+
+    const adminEmails = (editedSettings.admin_emails || '').split(',').map(e => e.trim()).filter(Boolean);
+
     return (
         <div className="max-w-5xl mx-auto px-8 py-10">
-            {/* Breadcrumbs */}
             <nav className="flex items-center gap-2 mb-4">
-                <a href="#" className="text-slate-600 dark:text-slate-400 text-sm font-medium hover:text-slate-900 dark:hover:text-white transition-colors">Admin</a>
+                <a href="/admin" className="text-slate-600 dark:text-slate-400 text-sm font-medium hover:text-slate-900 dark:hover:text-white transition-colors">Admin</a>
                 <span className="text-slate-300 dark:text-slate-700">/</span>
                 <span className="text-slate-900 dark:text-slate-50 text-sm font-semibold">System Settings</span>
             </nav>
 
-            {/* Page Header */}
             <header className="mb-10">
                 <h2 className="text-[#0d161c] dark:text-white text-4xl font-black leading-tight tracking-tight mb-2">System Settings</h2>
                 <p className="text-slate-500 dark:text-slate-400 text-lg max-w-2xl">Manage camp logistics, user access controls, and core system configurations.</p>
             </header>
 
             <div className="flex flex-col gap-10">
-                {/* Section 1: Admin Access */}
+                {/* Admin Access */}
                 <section className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
                     <div className="p-6 border-b border-slate-100 dark:border-slate-800">
                         <h3 className="text-[#0d161c] dark:text-white text-xl font-bold">Admin Access</h3>
                         <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Manage who has administrative control over the camp system.</p>
                     </div>
 
-                    {/* Table */}
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left">
-                            <thead className="bg-slate-50 dark:bg-slate-800/50">
-                                <tr>
-                                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Email Address</th>
-                                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Role</th>
-                                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400">Status</th>
-                                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                <tr>
-                                    <td className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-slate-200">bjorn.admin@camp.se</td>
-                                    <td className="px-6 py-4">
-                                        <span className="px-2.5 py-1 text-xs font-medium rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">Owner</span>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                                            <span className="size-1.5 rounded-full bg-emerald-600"></span> Active
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <button disabled className="text-xs font-bold text-slate-400 cursor-not-allowed uppercase tracking-wide">Remove</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-slate-200">astrid.manager@camp.se</td>
-                                    <td className="px-6 py-4">
-                                        <span className="px-2.5 py-1 text-xs font-medium rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">Admin</span>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                                            <span className="size-1.5 rounded-full bg-emerald-600"></span> Active
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <button className="text-xs font-bold text-red-500 dark:text-red-400 hover:text-red-700 transition-colors uppercase tracking-wide">Remove</button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Add User Footer */}
-                    <div className="p-6 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800">
-                        <form className="flex gap-3 items-end">
-                            <div className="flex-1 max-w-sm">
-                                <label htmlFor="new_email" className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase mb-2">Add New Administrator</label>
-                                <input
-                                    type="email"
-                                    id="new_email"
-                                    placeholder="email@address.se"
-                                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all dark:text-white"
-                                />
-                            </div>
-                            <button type="submit" className="bg-primary hover:bg-[#c9e8fc] text-nordic-midnight font-bold py-2 px-6 rounded-lg text-sm transition-all shadow-sm">
-                                Add User
-                            </button>
-                        </form>
+                    <div className="p-8">
+                        <label htmlFor="admin-emails" className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2">
+                            Admin Email Addresses
+                        </label>
+                        <input
+                            id="admin-emails"
+                            type="text"
+                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none transition-all placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500 font-mono text-sm"
+                            placeholder="admin@example.com, admin2@example.com"
+                            value={editedSettings.admin_emails || ''}
+                            onChange={e => setEditedSettings({ ...editedSettings, admin_emails: e.target.value })}
+                        />
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                            Comma-separated list. {adminEmails.length} admin(s) configured.
+                        </p>
                     </div>
                 </section>
 
-                {/* Section 2: SMTP Configuration */}
+                {/* SMTP Configuration */}
                 <section className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
                     <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
                         <div>
-                            <h3 className="text-[#0d161c] dark:text-white text-xl font-bold">SMTP Configuration</h3>
-                            <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">Configure email server settings for system notifications.</p>
+                            <h3 className="text-[#0d161c] dark:text-white text-xl font-bold">Email Configuration</h3>
+                            <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">Configure support email for system notifications.</p>
                         </div>
                         <span className="material-symbols-outlined text-slate-400 dark:text-slate-600 text-4xl">mail</span>
                     </div>
                     <div className="p-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="flex flex-col gap-2">
+                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Support Email</label>
+                                <input
+                                    type="email"
+                                    value={editedSettings.support_email || ''}
+                                    onChange={e => setEditedSettings({ ...editedSettings, support_email: e.target.value })}
+                                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all dark:text-white"
+                                />
+                                <p className="text-xs text-slate-500 dark:text-slate-400">Used in "Reply-To" headers</p>
+                            </div>
+                            <div className="flex flex-col gap-2">
                                 <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">SMTP Host</label>
-                                <input type="text" defaultValue="smtp.camp-command.se" className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all dark:text-white" />
+                                <input
+                                    type="text"
+                                    value={editedSettings.smtp_host || ''}
+                                    onChange={e => setEditedSettings({ ...editedSettings, smtp_host: e.target.value })}
+                                    placeholder="smtp.example.com"
+                                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all dark:text-white"
+                                />
                             </div>
                             <div className="flex flex-col gap-2">
-                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Port</label>
-                                <input type="number" defaultValue="587" className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all dark:text-white" />
+                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">SMTP Port</label>
+                                <input
+                                    type="number"
+                                    value={editedSettings.smtp_port || ''}
+                                    onChange={e => setEditedSettings({ ...editedSettings, smtp_port: e.target.value })}
+                                    placeholder="587"
+                                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all dark:text-white"
+                                />
                             </div>
                             <div className="flex flex-col gap-2">
-                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Username</label>
-                                <input type="text" defaultValue="notifications@camp-command.se" className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all dark:text-white" />
-                            </div>
-                            <div className="flex flex-col gap-2 relative">
-                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Password</label>
-                                <input type="password" defaultValue="••••••••••••" className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all dark:text-white" />
-                                <button type="button" className="absolute right-3 top-[34px] text-slate-400 hover:text-slate-600 transition-colors">
-                                    <span className="material-symbols-outlined text-[20px]">visibility</span>
-                                </button>
+                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">SMTP Username</label>
+                                <input
+                                    type="text"
+                                    value={editedSettings.smtp_username || ''}
+                                    onChange={e => setEditedSettings({ ...editedSettings, smtp_username: e.target.value })}
+                                    placeholder="notifications@example.com"
+                                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all dark:text-white"
+                                />
                             </div>
                         </div>
                         <div className="mt-10 pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
-                            <button type="button" className="px-6 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                            <button
+                                type="button"
+                                onClick={() => setEditedSettings(settings)}
+                                disabled={!hasChanges}
+                                className="px-6 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
                                 Discard
                             </button>
-                            <button type="submit" className="bg-nordic-midnight text-white px-8 py-2.5 text-sm font-semibold rounded-lg hover:bg-slate-800 transition-colors shadow-lg shadow-nordic-midnight/10">
-                                Save Changes
+                            <button
+                                type="button"
+                                onClick={handleSave}
+                                disabled={!hasChanges || saving}
+                                className="bg-nordic-midnight text-white px-8 py-2.5 text-sm font-semibold rounded-lg hover:bg-slate-800 transition-colors shadow-lg shadow-nordic-midnight/10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            >
+                                {saving ? (
+                                    <>
+                                        <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
+                                        Saving...
+                                    </>
+                                ) : (
+                                    'Save Changes'
+                                )}
                             </button>
                         </div>
                     </div>
                 </section>
 
-                {/* Background Decor */}
-                <div className="mt-4 flex items-center justify-center p-12 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-50/50 dark:bg-slate-900/50">
-                    <div className="text-center flex flex-col items-center">
-                        <div className="size-16 bg-primary/20 rounded-full flex items-center justify-center mb-4">
-                            <span className="material-symbols-outlined text-primary text-3xl">terminal</span>
+                {hasChanges && (
+                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 flex items-start gap-3">
+                        <span className="material-symbols-outlined text-amber-600 dark:text-amber-400 text-xl">warning</span>
+                        <div className="flex-1">
+                            <div className="font-bold text-amber-900 dark:text-amber-100 text-sm">Unsaved Changes</div>
+                            <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
+                                You have unsaved changes. Click "Save Changes" to apply them.
+                            </p>
                         </div>
-                        <h4 className="text-sm font-bold text-slate-900 dark:text-slate-50 uppercase tracking-widest">Version Control</h4>
-                        <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 uppercase tracking-wider">v2.4.1 - Stockholm Node</p>
                     </div>
-                </div>
+                )}
             </div>
         </div>
     );

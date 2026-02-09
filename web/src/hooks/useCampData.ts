@@ -5,6 +5,7 @@ interface Camp {
     name: string;
     year: number;
     status: string;
+    purchase_count?: number;
 }
 
 interface CampProduct {
@@ -131,6 +132,122 @@ export function useCampData(campId: string) {
         }
     };
 
+    const updateProduct = async (cpId: number, price: number) => {
+        try {
+            const res = await fetch(`/api/admin/camps/${campId}/products`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    'X-Admin-Token': ADMIN_TOKEN
+                },
+                body: JSON.stringify({ cpId, price })
+            });
+
+            if (!res.ok) {
+                const err: any = await res.json();
+                throw new Error(err.error || "Failed to update product");
+            }
+
+            await fetchData();
+            return true;
+        } catch (e: any) {
+            throw e;
+        }
+    };
+
+    const toggleStatus = async (newStatus: 'active' | 'deactivated') => {
+        try {
+            // Determine endpoint based on status. Deactivate is PATCH, activate is POST (as per our impl)
+            const endpoint = newStatus === 'deactivated'
+                ? `/api/admin/camps/${campId}/deactivate`
+                : `/api/admin/camps/${campId}/deactivate`; // actually both are handled in that route file, let's verify.
+
+            // Wait, I implemented PATCH for deactivate and POST for reactivate in the SAME file `api/admin/camps/[id]/deactivate/route.ts`
+
+            const method = newStatus === 'deactivated' ? 'PATCH' : 'POST';
+
+            const res = await fetch(`/api/admin/camps/${campId}/deactivate`, {
+                method: method,
+                headers: { 'X-Admin-Token': ADMIN_TOKEN }
+            });
+
+            if (!res.ok) {
+                const data: any = await res.json();
+                // Check if confirmation is required
+                if (res.status === 409 && data.confirmationRequired) {
+                    // We throw a specific error object that the UI can catch and show confirmation for
+                    throw { confirmationRequired: true, message: data.message };
+                }
+                throw new Error(data.error || "Failed to update status");
+            }
+
+            await fetchData();
+            return true;
+        } catch (e: any) {
+            throw e;
+        }
+    };
+
+    const forceDeactivate = async () => {
+        try {
+            const res = await fetch(`/api/admin/camps/${campId}/deactivate?force=true`, {
+                method: 'PATCH',
+                headers: { 'X-Admin-Token': ADMIN_TOKEN }
+            });
+
+            if (!res.ok) {
+                const data: any = await res.json();
+                throw new Error(data.error || "Failed to force deactivate");
+            }
+
+            await fetchData();
+            return true;
+        } catch (e: any) {
+            throw e;
+        }
+    }
+
+    const deleteCamp = async () => {
+        try {
+            const res = await fetch(`/api/admin/camps/${campId}`, {
+                method: "DELETE",
+                headers: { 'X-Admin-Token': ADMIN_TOKEN }
+            });
+
+            if (!res.ok) {
+                const data: any = await res.json();
+                throw new Error(data.error || "Failed to delete camp");
+            }
+
+            return true;
+        } catch (e: any) {
+            throw e;
+        }
+    };
+
+    const archiveCamp = async () => {
+        try {
+            const res = await fetch(`/api/admin/camps/${campId}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    'X-Admin-Token': ADMIN_TOKEN
+                },
+                body: JSON.stringify({ status: 'archived' })
+            });
+
+            if (!res.ok) {
+                const data: any = await res.json();
+                throw new Error(data.error || "Failed to archive camp");
+            }
+
+            await fetchData();
+            return true;
+        } catch (e: any) {
+            throw e;
+        }
+    };
+
     return {
         camp,
         campProducts,
@@ -140,7 +257,12 @@ export function useCampData(campId: string) {
         loading,
         saveSettings,
         addProduct,
+        updateProduct,
         removeProduct,
+        toggleStatus,
+        forceDeactivate,
+        deleteCamp,
+        archiveCamp,
         refresh: fetchData
     };
 }

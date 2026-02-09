@@ -40,6 +40,22 @@ export interface CampProduct {
     status: 'active' | 'inactive';
 }
 
+export type Purchase = PurchaseRow;
+
+// Internal DB Row type match
+interface PurchaseRow {
+    id: number;
+    guardian_id: number;
+    camp_id: number;
+    product_id: number;
+    quantity: number;
+    registration_state: 'uninvited' | 'invited' | 'in_progress' | 'completed';
+    purchase_timestamp: string;
+    raw_email_id: string;
+    price_at_purchase: number;
+    currency: string;
+}
+
 // --- Spec 003: Email Ingestion Helpers ---
 
 export async function getAdminEmails(db: D1Database): Promise<string[]> {
@@ -73,19 +89,25 @@ export async function createPurchaseTransactions(
 
     if (!guardian) throw new Error("Failed to resolve Guardian ID");
 
-    // 2. Resolve Product (For now, we assume a generic 'Camp Registration' product or find one for the camp)
-    // Simplification: We blindly look for a product linked to this camp or create a placeholder logic
-    // For this MVP, let's assume Product ID 1 is "Standard Registration"
-    // TODO: Improve product resolution in Spec 004
+    // 3. Resolve Product & Price
+    // For this MVP, let's assume Product ID 1 is "Standard Registration" or find from CampProducts
+    // In a real scenario, we'd lookup based on CampProduct association
     const productId = 1;
 
-    // 3. Create Purchase
-    await db.prepare(`
-        INSERT INTO Purchases (guardian_id, camp_id, product_id, quantity, registration_state, purchase_timestamp, raw_email_id)
-        VALUES (?, ?, ?, 1, 'uninvited', datetime('now'), ?)
-    `).bind(guardian.id, data.campId, productId, data.rawEmailId).run();
+    // Fetch current price for this product at this camp
+    const campProduct = await db.prepare("SELECT price FROM CampProducts WHERE camp_id = ? AND product_id = ?")
+        .bind(data.campId, productId)
+        .first<{ price: number }>();
 
-    console.log(`[DB] Created purchase for ${data.guardianEmail} at Camp ID ${data.campId}`);
+    const pricePaid = campProduct?.price || 0;
+
+    // 4. Create Purchase with Snapshot Price
+    await db.prepare(`
+        INSERT INTO Purchases (guardian_id, camp_id, product_id, quantity, registration_state, purchase_timestamp, raw_email_id, price_at_purchase, currency)
+        VALUES (?, ?, ?, 1, 'uninvited', datetime('now'), ?, ?, 'GBP')
+    `).bind(guardian.id, data.campId, productId, data.rawEmailId, pricePaid).run();
+
+    console.log(`[DB] Created purchase for ${data.guardianEmail} at Camp ID ${data.campId} for £${pricePaid}`);
 }
 
 // --- Spec 004: Form Builder ---
@@ -211,6 +233,12 @@ export async function removeProductFromCamp(db: D1Database, campId: number, cpId
         .run();
 }
 
+export async function updateCampProductPrice(db: D1Database, campId: number, cpId: number, newPrice: number) {
+    return await db.prepare("UPDATE CampProducts SET price = ? WHERE id = ? AND camp_id = ?")
+        .bind(newPrice, cpId, campId)
+        .run();
+}
+
 export async function listPurchasesByCamp(db: D1Database, campId: number) {
     return await db.prepare(`
         SELECT p.*, g.full_name as guardian_name, g.email as guardian_email, pr.name as product_name
@@ -222,3 +250,53 @@ export async function listPurchasesByCamp(db: D1Database, campId: number) {
     `).bind(campId).all();
 }
 
+
+export async function deleteCamp(db: D1Database, id: number) {
+    // 1. Check for purchases (safeguard, though API should also check)
+    const purchaseCount = await db.prepare("SELECT COUNT(*) as count FROM Purchases WHERE camp_id = ?").bind(id).first<number>('count');
+    if (purchaseCount && purchaseCount > 0) {
+        throw new Error(`Cannot delete camp with ${purchaseCount} existing purchases.`);
+    }
+
+    // 2. Delete CampSettings first (foreign key constraint)
+    await db.prepare("DELETE FROM CampSettings WHERE camp_id = ?").bind(id).run();
+
+    // 3. Delete CampProducts (foreign key constraint)
+    await db.prepare("DELETE FROM CampProducts WHERE camp_id = ?").bind(id).run();
+
+    // 4. Delete Camp
+    return await db.prepare("DELETE FROM Camps WHERE id = ?").bind(id).run();
+}
+
+// --- System Settings ---
+export async function getSystemSettings(db: D1Database) {
+    return await db.prepare("SELECT * FROM SystemSettings").all();
+}
+
+export async function updateSystemSetting(db: D1Database, key: string, value: string) {
+    return await db.prepare("INSERT OR REPLACE INTO SystemSettings (key, value) VALUES (?, ?)")
+        .bind(key, value)
+        .run();
+}
+
+// --- Form Templates ---
+export async function getFormTemplates(db: D1Database) {
+    // Fetch Forms instead of FormTemplates since forms are built in the form builder
+    return await db.prepare("SELECT id, name, version FROM Forms WHERE is_active = 1 ORDER BY name ASC").all();
+}
+
+export async function createFormFromTemplate(db: D1Database, productId: number, formId: number) {
+    // Simply link the product to the existing form by updating the product's form_template_id
+    // (Note: form_template_id column is actually used to store the form_id)
+    return await db.prepare(
+        "UPDATE Products SET form_template_id = ? WHERE id = ?"
+    ).bind(formId, productId).run();
+}
+
+export async function updateFormFromTemplate(db: D1Database, productId: number, formId: number) {
+    // Simply update the product's form_template_id to point to the selected form
+    // (Note: form_template_id column is actually used to store the form_id)
+    return await db.prepare(
+        "UPDATE Products SET form_template_id = ? WHERE id = ?"
+    ).bind(formId, productId).run();
+}

@@ -29,7 +29,10 @@ export default function FormLibraryModal({ isOpen, onClose, onSelect }: FormLibr
     async function loadForms() {
         setLoading(true);
         try {
-            const res = await fetch('/api/admin/forms', { cache: 'no-store' });
+            const res = await fetch('/api/admin/forms', {
+                cache: 'no-store',
+                headers: { 'X-Admin-Token': 'swedish-camp-admin-2026' }
+            });
             if (res.ok) {
                 const data = await res.json();
                 setForms(Array.isArray(data) ? data : []);
@@ -46,7 +49,10 @@ export default function FormLibraryModal({ isOpen, onClose, onSelect }: FormLibr
         if (!confirm("Are you sure you want to archive this form?")) return;
 
         try {
-            const res = await fetch(`/api/admin/forms/${id}`, { method: 'DELETE' });
+            const res = await fetch(`/api/admin/forms/${id}`, {
+                method: 'DELETE',
+                headers: { 'X-Admin-Token': 'swedish-camp-admin-2026' }
+            });
             if (res.ok) {
                 loadForms();
             } else {
@@ -62,7 +68,10 @@ export default function FormLibraryModal({ isOpen, onClose, onSelect }: FormLibr
         try {
             const res = await fetch(`/api/admin/forms/${id}`, {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Admin-Token': 'swedish-camp-admin-2026'
+                },
                 body: JSON.stringify({ is_active: 1 })
             });
             if (res.ok) {

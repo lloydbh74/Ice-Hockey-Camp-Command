@@ -1,0 +1,8 @@
+name = "swedish-camp-command"
+compatibility_date = "2024-02-05"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "swedish-camp-db"
+database_id = "13cfa3a5-b9fe-4324-b29b-9e6a517b7af4"
+migrations_dir = "migrations"

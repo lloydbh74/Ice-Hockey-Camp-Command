@@ -1,40 +1,82 @@
 import { NextResponse } from 'next/server';
-import { getDb } from '@/lib/db';
+import { getDb, updateFormFromTemplate } from '@/lib/db';
 
 export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
 
-export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(
+    req: Request,
+    context: { params: Promise<{ id: string }> }
+) {
     try {
-        const { id: idStr } = await params;
         const db = await getDb();
-        const body: any = await req.json();
-        const id = parseInt(idStr);
+        if (!db) return NextResponse.json({ error: 'Database binding missing' }, { status: 500 });
 
-        if (isNaN(id)) {
-            return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
+        const { id } = await context.params;
+        const product = await db.prepare("SELECT * FROM Products WHERE id = ?").bind(id).first();
+
+        if (!product) return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+
+        return NextResponse.json(product);
+    } catch (error: any) {
+        console.error('[API] getProduct error:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
+export async function PATCH(
+    req: Request,
+    context: { params: Promise<{ id: string }> }
+) {
+    try {
+        const db = await getDb();
+        if (!db) return NextResponse.json({ error: 'Database binding missing' }, { status: 500 });
+
+        const { id } = await context.params;
+        const { name, description, base_price, form_template_id } = await req.json();
+
+        await db.prepare(
+            "UPDATE Products SET name = ?, description = ?, base_price = ?, form_template_id = ? WHERE id = ?"
+        ).bind(name, description || null, base_price, form_template_id || null, id).run();
+
+        // If a form was selected, link it to the product
+        if (form_template_id) {
+            await updateFormFromTemplate(db, parseInt(id), form_template_id);
         }
 
-        // Simple update logic inline for now to save db.ts bloating
-        const sets: string[] = [];
-        const values: any[] = [];
-
-        ['name', 'description', 'base_price', 'status', 'form_template_id'].forEach(key => {
-            if (body[key] !== undefined) {
-                sets.push(`${key === 'base_price' ? 'base_price' : key} = ?`);
-                values.push(body[key]);
-            }
-        });
-
-        if (sets.length === 0) return NextResponse.json({ message: 'No changes' });
-
-        values.push(id);
-        const result = await db.prepare(`UPDATE Products SET ${sets.join(", ")}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`)
-            .bind(...values)
-            .run();
-
-        return NextResponse.json(result);
+        return NextResponse.json({ success: true });
     } catch (error: any) {
         console.error('[API] updateProduct error:', error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
+export async function DELETE(
+    req: Request,
+    context: { params: Promise<{ id: string }> }
+) {
+    try {
+        const db = await getDb();
+        if (!db) return NextResponse.json({ error: 'Database binding missing' }, { status: 500 });
+
+        const { id } = await context.params;
+
+        // Check if product is used in CampProducts
+        const usage = await db.prepare("SELECT COUNT(*) as count FROM CampProducts WHERE product_id = ?")
+            .bind(id)
+            .first();
+
+        if (usage && (usage as any).count > 0) {
+            return NextResponse.json({
+                error: 'Cannot delete product that is associated with camps. Please remove camp associations first.'
+            }, { status: 400 });
+        }
+
+        await db.prepare("DELETE FROM Products WHERE id = ?").bind(id).run();
+
+        return NextResponse.json({ success: true });
+    } catch (error: any) {
+        console.error('[API] deleteProduct error:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

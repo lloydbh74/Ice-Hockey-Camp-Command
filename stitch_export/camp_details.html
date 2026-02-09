@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Camp Details &amp; Configuration - Winter Elite 2025</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#e1f3fe",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#0f1b23",
+                        "nordic-midnight": "#0f172a",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
+<div class="flex h-screen overflow-hidden">
+<!-- Sidebar: Nordic Midnight -->
+<aside class="w-72 bg-nordic-midnight text-white flex flex-col shrink-0">
+<div class="p-6 flex flex-col gap-8 h-full">
+<div class="flex items-center gap-3">
+<div class="bg-primary/20 rounded-lg p-2 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">landscape</span>
+</div>
+<div class="flex flex-col">
+<h1 class="text-sm font-bold tracking-tight uppercase opacity-90">Swedish Camp Command</h1>
+<p class="text-xs text-slate-400">Admin Portal</p>
+</div>
+</div>
+<nav class="flex flex-col gap-1 flex-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors" href="#">
+<span class="material-symbols-outlined text-slate-400">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">camping</span>
+<span class="text-sm font-medium">Camps</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors" href="#">
+<span class="material-symbols-outlined text-slate-400">group</span>
+<span class="text-sm font-medium">Participants</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors" href="#">
+<span class="material-symbols-outlined text-slate-400">account_balance_wallet</span>
+<span class="text-sm font-medium">Finance</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors" href="#">
+<span class="material-symbols-outlined text-slate-400">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</nav>
+<div class="mt-auto pt-6 border-t border-white/10 flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-sm">help</span>
+<span class="text-sm font-medium">Support</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-sm">logout</span>
+<span class="text-sm font-medium">Logout</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col overflow-y-auto">
+<!-- Top Header -->
+<header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-8 py-4 sticky top-0 z-10">
+<div class="flex items-center justify-between max-w-5xl mx-auto w-full gap-4">
+<div class="flex-1 max-w-xl">
+<input class="w-full text-2xl font-bold bg-transparent border-none focus:ring-0 p-0 text-slate-900 dark:text-white" placeholder="Enter Camp Title..." type="text" value="Winter Elite 2025"/>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+<button class="px-3 py-1.5 text-xs font-bold rounded-md bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white">OPEN</button>
+<button class="px-3 py-1.5 text-xs font-bold rounded-md text-slate-500">CLOSED</button>
+</div>
+<button class="flex items-center gap-2 bg-primary hover:bg-sky-200 text-sky-900 px-5 py-2 rounded-lg font-bold text-sm transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]">save</span>
+                            Save Changes
+                        </button>
+<button class="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Tabs Navigation -->
+<div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-8">
+<div class="flex max-w-5xl mx-auto gap-8">
+<a class="border-b-2 border-sky-500 text-sky-600 dark:text-sky-400 py-4 px-1 text-sm font-semibold flex items-center gap-2" href="#">
+                        Details
+                    </a>
+<a class="border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 py-4 px-1 text-sm font-semibold" href="#">
+                        Pricing
+                    </a>
+<a class="border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 py-4 px-1 text-sm font-semibold" href="#">
+                        Forms
+                    </a>
+<a class="border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 py-4 px-1 text-sm font-semibold" href="#">
+                        Email
+                    </a>
+</div>
+</div>
+<!-- Content Area -->
+<div class="flex-1 p-8 bg-background-light dark:bg-background-dark overflow-y-auto">
+<div class="max-w-5xl mx-auto flex flex-col gap-6">
+<div class="flex flex-col gap-1">
+<h2 class="text-xl font-bold text-slate-900 dark:text-white">Camp Configuration</h2>
+<p class="text-sm text-slate-500">Manage logistics and system settings for Winter Elite 2025</p>
+</div>
+<!-- Card 1: Key Information -->
+<section class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+<div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
+<span class="material-symbols-outlined text-sky-500">info</span>
+<h3 class="font-bold text-slate-900 dark:text-white">Key Information</h3>
+</div>
+<div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-semibold uppercase tracking-wider text-slate-500">Start Date</label>
+<input class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 text-sm focus:border-sky-500 focus:ring-sky-500" type="date" value="2025-01-15"/>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-semibold uppercase tracking-wider text-slate-500">End Date</label>
+<input class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 text-sm focus:border-sky-500 focus:ring-sky-500" type="date" value="2025-01-22"/>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-semibold uppercase tracking-wider text-slate-500">Location</label>
+<select class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 text-sm focus:border-sky-500 focus:ring-sky-500">
+<option>Åre Skicenter, SE</option>
+<option>Sälen, SE</option>
+<option>Riksgränsen, SE</option>
+</select>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-semibold uppercase tracking-wider text-slate-500">Max Capacity</label>
+<input class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 text-sm focus:border-sky-500 focus:ring-sky-500" type="number" value="150"/>
+</div>
+</div>
+</section>
+<!-- Card 2: Pricing -->
+<section class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+<div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
+<span class="material-symbols-outlined text-sky-500">payments</span>
+<h3 class="font-bold text-slate-900 dark:text-white">Pricing &amp; Discounts</h3>
+</div>
+<div class="p-6 flex flex-col gap-8">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-semibold uppercase tracking-wider text-slate-500">Base Price (SEK)</label>
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">kr</span>
+<input class="w-full pl-8 rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 text-sm focus:border-sky-500 focus:ring-sky-500" type="number" value="12500"/>
+</div>
+<p class="text-[11px] text-slate-400 mt-1">Standard registration fee per participant.</p>
+</div>
+<div class="bg-primary/10 dark:bg-sky-900/10 p-4 rounded-xl flex items-start justify-between border border-primary/20">
+<div class="flex flex-col gap-1">
+<p class="text-sm font-bold text-sky-900 dark:text-sky-300">Early Bird Discount</p>
+<p class="text-xs text-sky-700 dark:text-sky-400">Enable reduced pricing for early registrations.</p>
+</div>
+<div class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-sky-500"></div>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-end p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-dashed border-slate-200 dark:border-slate-700">
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-semibold uppercase tracking-wider text-slate-500">Discounted Price (SEK)</label>
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">kr</span>
+<input class="w-full pl-8 rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 text-sm focus:border-sky-500 focus:ring-sky-500" type="number" value="10500"/>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-semibold uppercase tracking-wider text-slate-500">Early Bird Deadline</label>
+<input class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 text-sm focus:border-sky-500 focus:ring-sky-500" type="date" value="2024-11-30"/>
+</div>
+</div>
+</div>
+</section>
+<!-- Card 3: Form Configuration -->
+<section class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden mb-12">
+<div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-sky-500">description</span>
+<h3 class="font-bold text-slate-900 dark:text-white">Form Configuration</h3>
+</div>
+<a class="text-xs font-bold text-sky-600 hover:text-sky-700 flex items-center gap-1" href="#">
+<span class="material-symbols-outlined text-sm">visibility</span>
+                                Preview Form
+                            </a>
+</div>
+<div class="p-6">
+<div class="max-w-md flex flex-col gap-1.5">
+<label class="text-xs font-semibold uppercase tracking-wider text-slate-500">Registration Form Template</label>
+<select class="w-full rounded-lg border-slate-300 dark:border-slate-700 dark:bg-slate-800 text-sm focus:border-sky-500 focus:ring-sky-500">
+<option>Standard Elite Template (v2.4)</option>
+<option>Winter Sports Specialized Form</option>
+<option>Basic Youth Registration</option>
+</select>
+<p class="text-[11px] text-slate-400 mt-1">Select the template that will be shown to participants during sign-up.</p>
+</div>
+</div>
+</section>
+</div>
+</div>
+</main>
+</div>
+</body></html>

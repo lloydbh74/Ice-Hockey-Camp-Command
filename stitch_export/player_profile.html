@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Registration Detail - Johan Andersson</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Inter -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#e1f3fe",
+                        "nordic-midnight": "#0F172A",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#0f1b23",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "sans": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
+<div class="flex h-screen overflow-hidden">
+<!-- Side Navigation Bar -->
+<aside class="w-64 bg-nordic-midnight text-white flex flex-col justify-between shrink-0">
+<div class="flex flex-col gap-6 p-6">
+<!-- Branding -->
+<div class="flex items-center gap-3">
+<div class="bg-primary/20 rounded-lg p-2 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">castle</span>
+</div>
+<div class="flex flex-col">
+<h1 class="text-white text-base font-bold leading-none">Camp Command</h1>
+<p class="text-slate-400 text-xs mt-1">Swedish Camp Admin</p>
+</div>
+</div>
+<!-- Nav Links -->
+<nav class="flex flex-col gap-1 mt-4">
+<div class="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white cursor-pointer transition-colors">
+<span class="material-symbols-outlined">dashboard</span>
+<p class="text-sm font-medium">Dashboard</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-white cursor-pointer">
+<span class="material-symbols-outlined">person_search</span>
+<p class="text-sm font-medium">Registrations</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white cursor-pointer transition-colors">
+<span class="material-symbols-outlined">local_shipping</span>
+<p class="text-sm font-medium">Camp Logistics</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white cursor-pointer transition-colors">
+<span class="material-symbols-outlined">settings</span>
+<p class="text-sm font-medium">System Config</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white cursor-pointer transition-colors">
+<span class="material-symbols-outlined">bar_chart</span>
+<p class="text-sm font-medium">Reports</p>
+</div>
+</nav>
+</div>
+<!-- Footer Nav -->
+<div class="flex flex-col gap-1 p-6 border-t border-slate-800">
+<div class="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white cursor-pointer transition-colors">
+<span class="material-symbols-outlined">help</span>
+<p class="text-sm font-medium">Support</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-rose-400 cursor-pointer transition-colors">
+<span class="material-symbols-outlined">logout</span>
+<p class="text-sm font-medium">Logout</p>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col overflow-y-auto">
+<!-- Top Nav Bar -->
+<header class="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-8 py-3">
+<div class="flex items-center gap-4">
+<div class="relative w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
+<input class="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary" placeholder="Search players..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden md:flex gap-6 text-sm font-medium text-slate-600 dark:text-slate-400">
+<a class="hover:text-nordic-midnight dark:hover:text-white" href="#">Players</a>
+<a class="hover:text-nordic-midnight dark:hover:text-white" href="#">Staff</a>
+<a class="hover:text-nordic-midnight dark:hover:text-white" href="#">Schedule</a>
+</div>
+<div class="flex items-center gap-3">
+<button class="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+</button>
+<div class="h-8 w-px bg-slate-200 dark:bg-slate-800 mx-1"></div>
+<div class="flex items-center gap-2 cursor-pointer">
+<div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 bg-cover bg-center" data-alt="Admin user profile picture" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCSRYDT8ixriO8YXPLih5EJfHnuTAVZ2Ep70rxFmbwHmRrVr415CEt0RpkXexsf9uJw1it7YBkWudw5nUS7M_TIlCBV2kuMwR4tNr_34eeKvSV4Fxxb2eqlXLmPLNKRjv--ZJtweTY7hJ6hBXOkdqCBMMzcYYhOnzR61pjb-18YEVCcbPlxE3muHvUpYmCj34jOI8ao-lTxEpwXRU8YrFeRook3Ro-zT7ZCqGSdVL0T8q8eYOf0tudJmPuVL2h-AaDamMU9pSUH7Q')"></div>
+<span class="text-sm font-semibold hidden sm:inline">Admin User</span>
+</div>
+</div>
+</div>
+</header>
+<div class="p-8 max-w-6xl mx-auto w-full">
+<!-- Breadcrumbs -->
+<nav class="flex items-center gap-2 text-sm font-medium text-slate-500 mb-6">
+<a class="hover:text-primary-700" href="#">Admin</a>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<a class="hover:text-primary-700" href="#">Registrations</a>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<span class="text-slate-900 dark:text-white">Johan Andersson</span>
+</nav>
+<!-- Page Heading -->
+<div class="flex flex-wrap items-end justify-between gap-4 mb-8">
+<div>
+<h2 class="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Johan Andersson</h2>
+<div class="flex items-center gap-3 mt-2">
+<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700 border border-amber-200">PENDING</span>
+<span class="text-slate-500 text-sm">Application ID: #REG-99214</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 px-6 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-lg hover:bg-slate-50 transition-colors">
+<span class="material-symbols-outlined text-xl">close</span>
+                            Reject
+                        </button>
+<button class="flex items-center gap-2 px-6 py-2.5 bg-primary text-slate-900 font-bold rounded-lg hover:bg-opacity-80 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-xl">check</span>
+                            Approve
+                        </button>
+</div>
+</div>
+<!-- 2-Column Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+<!-- LEFT COLUMN -->
+<div class="flex flex-col gap-8">
+<!-- Profile Card -->
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+<div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white">Player Profile</h3>
+<button class="text-primary-600 text-sm font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">edit</span> Edit
+                                </button>
+</div>
+<div class="p-6 flex flex-col sm:flex-row gap-6">
+<div class="w-32 h-32 rounded-lg bg-slate-100 dark:bg-slate-800 shrink-0 bg-cover bg-center border border-slate-200 dark:border-slate-700" data-alt="Portrait photo of Johan Andersson" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAYIa-iOsQRN52LOsF8nocig8bkve84RAr2qFu-zQ_G2AO-zpvoRfmuV3XHCNWkaBt-_MpYJU4R-Au6fGEES1gzSxbCd9Fi0RA2658cEmypzvduNVLtdsxGjaS7Zjz29xxaiXAPH5O-hY9CuJ7r_eEsKwA-ddjDQwqU4Aq_Zr6hY4BPVExgC4Vw3HXerWSDL7na3JezG-pWSqgYZIZyDijVZOR2rz3ig7DNbzqe_U_WCJ0tj6Q3m54uBsr_UhpgH1XAAImO8OHkMw')"></div>
+<div class="flex-1 grid grid-cols-2 gap-y-4 gap-x-2">
+<div>
+<p class="text-[10px] uppercase tracking-wider font-bold text-slate-400">Date of Birth</p>
+<p class="text-sm font-medium mt-0.5">2008-05-14</p>
+</div>
+<div>
+<p class="text-[10px] uppercase tracking-wider font-bold text-slate-400">Position</p>
+<p class="text-sm font-medium mt-0.5">Midfielder</p>
+</div>
+<div>
+<p class="text-[10px] uppercase tracking-wider font-bold text-slate-400">Current Club</p>
+<p class="text-sm font-medium mt-0.5 text-blue-600 dark:text-blue-400">Malmö FF</p>
+</div>
+<div>
+<p class="text-[10px] uppercase tracking-wider font-bold text-slate-400">Jersey Size</p>
+<p class="text-sm font-medium mt-0.5">Medium (Adult)</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Health Info Card -->
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+<div class="p-6 border-b border-slate-100 dark:border-slate-800">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-rose-500">medical_services</span>
+                                    Health Information
+                                </h3>
+</div>
+<div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+<div>
+<p class="text-[10px] uppercase tracking-wider font-bold text-slate-400">Known Allergies</p>
+<div class="flex flex-wrap gap-2 mt-2">
+<span class="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded text-xs font-medium">Peanuts</span>
+<span class="px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded text-xs font-medium">Gluten</span>
+</div>
+</div>
+<div>
+<p class="text-[10px] uppercase tracking-wider font-bold text-slate-400">Insurance Policy #</p>
+<p class="text-sm font-medium mt-1">SE-882199-B7</p>
+<p class="text-xs text-slate-400 mt-0.5">Folksam Insurance</p>
+</div>
+</div>
+</div>
+</div>
+<!-- RIGHT COLUMN -->
+<div class="flex flex-col gap-8">
+<!-- Parent Info Card -->
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+<div class="p-6 border-b border-slate-100 dark:border-slate-800">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white">Guardian Information</h3>
+</div>
+<div class="p-6 flex flex-col gap-4">
+<div class="grid grid-cols-2 gap-4">
+<div>
+<p class="text-[10px] uppercase tracking-wider font-bold text-slate-400">Primary Contact</p>
+<p class="text-sm font-semibold mt-0.5">Erik Andersson</p>
+<p class="text-xs text-slate-500">Father</p>
+</div>
+<div>
+<p class="text-[10px] uppercase tracking-wider font-bold text-slate-400">Phone Number</p>
+<p class="text-sm font-medium mt-0.5">+46 70-123 45 67</p>
+</div>
+</div>
+<div class="pt-4 border-t border-slate-50 dark:border-slate-800">
+<p class="text-[10px] uppercase tracking-wider font-bold text-slate-400">Email Address</p>
+<p class="text-sm font-medium mt-0.5">e.andersson@example.se</p>
+</div>
+<div class="pt-4 border-t border-slate-50 dark:border-slate-800">
+<p class="text-[10px] uppercase tracking-wider font-bold text-slate-400">Emergency Contact</p>
+<div class="mt-2 flex items-center justify-between p-3 bg-primary/20 rounded-lg">
+<div>
+<p class="text-sm font-bold">Anna Andersson</p>
+<p class="text-xs">+46 70-987 65 43 (Work)</p>
+</div>
+<span class="material-symbols-outlined text-slate-500">call</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Payment History Card -->
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+<div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white">Payment History</h3>
+<span class="text-sm font-bold text-slate-900 dark:text-white">Total: 4,500 SEK</span>
+</div>
+<div class="p-0">
+<div class="divide-y divide-slate-100 dark:divide-slate-800">
+<div class="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+<div class="flex items-center gap-3">
+<div class="bg-green-100 dark:bg-green-900/30 p-2 rounded-lg">
+<span class="material-symbols-outlined text-green-600 text-xl">payments</span>
+</div>
+<div>
+<p class="text-sm font-bold text-slate-900 dark:text-white">Deposit</p>
+<p class="text-xs text-slate-400">Paid on 2023-11-12 • Visa *4421</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-sm font-bold text-slate-900 dark:text-white">1,500 SEK</p>
+<span class="text-[10px] font-bold text-green-600 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded">SUCCESS</span>
+</div>
+</div>
+<div class="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+<div class="flex items-center gap-3">
+<div class="bg-amber-100 dark:bg-amber-900/30 p-2 rounded-lg">
+<span class="material-symbols-outlined text-amber-600 text-xl">pending_actions</span>
+</div>
+<div>
+<p class="text-sm font-bold text-slate-900 dark:text-white">Final Balance</p>
+<p class="text-xs text-slate-400">Due by 2024-05-01</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-sm font-bold text-slate-900 dark:text-white">3,000 SEK</p>
+<span class="text-[10px] font-bold text-amber-600 bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded">PENDING</span>
+</div>
+</div>
+</div>
+<div class="p-4 bg-slate-50 dark:bg-slate-800/50 flex justify-center">
+<button class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">Download Statement (PDF)</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

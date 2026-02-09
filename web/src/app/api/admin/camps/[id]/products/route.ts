@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getDb, getCampProducts, associateProductWithCamp, removeProductFromCamp } from '@/lib/db';
+import { getDb, getCampProducts, associateProductWithCamp, removeProductFromCamp, updateCampProductPrice } from '@/lib/db';
 
 export const runtime = 'edge';
 
@@ -55,3 +55,24 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
+
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+    try {
+        const { id: idStr } = await params;
+        const db = await getDb();
+        const campId = parseInt(idStr);
+        const body: any = await req.json();
+
+        if (!body.cpId || body.price === undefined) {
+            return NextResponse.json({ error: 'CampProduct ID (cpId) and Price are required' }, { status: 400 });
+        }
+
+        await updateCampProductPrice(db, campId, body.cpId, body.price);
+
+        return NextResponse.json({ success: true });
+    } catch (error: any) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+}
+
+

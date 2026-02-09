@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Manage Registrations - Swedish Camp Command</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#e1f3fe",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#0f1b23",
+                        "nordic-midnight": "#0F172A",
+                        "glacier-blue": "#E0F2FE",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="flex h-screen overflow-hidden">
+<!-- Sidebar -->
+<aside class="w-64 bg-nordic-midnight text-white flex flex-col shrink-0">
+<div class="p-6 flex items-center gap-3">
+<div class="size-10 rounded-lg bg-glacier-blue flex items-center justify-center text-nordic-midnight">
+<span class="material-symbols-outlined font-bold">landscape</span>
+</div>
+<div>
+<h1 class="text-sm font-bold leading-tight">Swedish Camp</h1>
+<p class="text-[10px] text-slate-400 uppercase tracking-widest">Command Center</p>
+</div>
+</div>
+<nav class="flex-1 px-4 py-4 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 bg-primary/10 text-primary rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">group</span>
+<span class="text-sm font-medium">Registrations</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">local_shipping</span>
+<span class="text-sm font-medium">Logistics</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">calendar_today</span>
+<span class="text-sm font-medium">Camp Schedule</span>
+</a>
+<div class="pt-4 pb-2 px-3">
+<p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">System</p>
+</div>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">manage_accounts</span>
+<span class="text-sm font-medium">User Access</span>
+</a>
+</nav>
+<div class="p-4 mt-auto border-t border-white/5">
+<div class="flex items-center gap-3 p-2">
+<div class="size-8 rounded-full bg-slate-700 flex items-center justify-center text-xs">A</div>
+<div class="overflow-hidden">
+<p class="text-xs font-medium truncate">Admin User</p>
+<p class="text-[10px] text-slate-400 truncate">admin@campcommand.se</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col min-w-0 bg-white dark:bg-background-dark overflow-hidden">
+<!-- Header Section -->
+<header class="h-20 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between px-8 shrink-0">
+<h2 class="text-2xl font-bold text-slate-900 dark:text-white">Manage Registrations</h2>
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 px-4 py-2 bg-glacier-blue text-slate-900 rounded-lg text-sm font-semibold hover:bg-blue-200 transition-colors">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                        Manual Add
+                    </button>
+<button class="flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-lg text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined text-[18px]">download</span>
+                        Export CSV
+                    </button>
+</div>
+</header>
+<!-- Filter Bar -->
+<div class="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 px-8 py-4 flex flex-wrap items-center gap-4 shrink-0">
+<div class="relative min-w-[200px]">
+<span class="absolute inset-y-0 left-3 flex items-center text-slate-400">
+<span class="material-symbols-outlined text-[20px]">filter_list</span>
+</span>
+<select class="w-full pl-10 pr-4 py-2 bg-white dark:bg-background-dark border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none appearance-none">
+<option>All Camps</option>
+<option>Stockholm Summer</option>
+<option>Gothenburg Ice</option>
+<option>Malmö Winter</option>
+</select>
+</div>
+<div class="relative min-w-[180px]">
+<span class="absolute inset-y-0 left-3 flex items-center text-slate-400">
+<span class="material-symbols-outlined text-[20px]">payments</span>
+</span>
+<select class="w-full pl-10 pr-4 py-2 bg-white dark:bg-background-dark border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none appearance-none">
+<option>Payment Status</option>
+<option>Paid</option>
+<option>Pending</option>
+<option>Failed</option>
+</select>
+</div>
+<div class="relative flex-1 min-w-[300px]">
+<span class="absolute inset-y-0 left-3 flex items-center text-slate-400">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</span>
+<input class="w-full pl-10 pr-4 py-2 bg-white dark:bg-background-dark border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-primary focus:border-transparent outline-none" placeholder="Search Player by name or email..." type="text"/>
+</div>
+</div>
+<!-- Table Section -->
+<div class="flex-1 overflow-auto p-8">
+<div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-slate-50 dark:bg-slate-900/80">
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">Player Name</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">Age Group</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">Parent Name</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">Email</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">Camp</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">Payment</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">Reg. Date</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200 dark:border-slate-800 text-center">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+<!-- Row 1 -->
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+<td class="px-6 py-4">
+<span class="text-sm font-semibold text-slate-900 dark:text-white">Erik Larsson</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-600 dark:text-slate-400">U12</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-600 dark:text-slate-400">Johan Larsson</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-500 dark:text-slate-500">j.larsson@email.com</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-600 dark:text-slate-400 font-medium">Stockholm Summer</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                                        Paid
+                                    </span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-500">2023-05-12</span>
+</td>
+<td class="px-6 py-4 text-center">
+<button class="p-1 hover:text-primary transition-colors text-slate-400">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+<td class="px-6 py-4">
+<span class="text-sm font-semibold text-slate-900 dark:text-white">Astrid Berg</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-600 dark:text-slate-400">U10</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-600 dark:text-slate-400">Maja Berg</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-500 dark:text-slate-500">m.berg@email.com</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-600 dark:text-slate-400 font-medium">Gothenburg Ice</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+                                        Pending
+                                    </span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-500">2023-05-14</span>
+</td>
+<td class="px-6 py-4 text-center">
+<button class="p-1 hover:text-primary transition-colors text-slate-400">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+<td class="px-6 py-4">
+<span class="text-sm font-semibold text-slate-900 dark:text-white">Lukas Wallin</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-600 dark:text-slate-400">U14</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-600 dark:text-slate-400">Karin Wallin</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-500 dark:text-slate-500">k.wallin@email.com</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-600 dark:text-slate-400 font-medium">Stockholm Summer</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                                        Failed
+                                    </span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-500">2023-05-15</span>
+</td>
+<td class="px-6 py-4 text-center">
+<button class="p-1 hover:text-primary transition-colors text-slate-400">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+<td class="px-6 py-4">
+<span class="text-sm font-semibold text-slate-900 dark:text-white">Saga Holm</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-600 dark:text-slate-400">U12</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-600 dark:text-slate-400">Olof Holm</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-500 dark:text-slate-500">o.holm@email.com</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-600 dark:text-slate-400 font-medium">Malmö Winter</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                                        Paid
+                                    </span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-500">2023-05-16</span>
+</td>
+<td class="px-6 py-4 text-center">
+<button class="p-1 hover:text-primary transition-colors text-slate-400">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+<td class="px-6 py-4">
+<span class="text-sm font-semibold text-slate-900 dark:text-white">Nils Sund</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-600 dark:text-slate-400">U10</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-600 dark:text-slate-400">Petra Sund</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-500 dark:text-slate-500">p.sund@email.com</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-600 dark:text-slate-400 font-medium">Gothenburg Ice</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                                        Paid
+                                    </span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-500">2023-05-17</span>
+</td>
+<td class="px-6 py-4 text-center">
+<button class="p-1 hover:text-primary transition-colors text-slate-400">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination footer -->
+<div class="mt-6 flex items-center justify-between">
+<p class="text-xs text-slate-500">Showing 1 to 5 of 124 registrations</p>
+<div class="flex items-center gap-2">
+<button class="p-1 border border-slate-200 dark:border-slate-800 rounded hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button class="px-3 py-1 bg-primary/20 text-slate-900 dark:text-white font-semibold text-xs rounded border border-primary/50">1</button>
+<button class="px-3 py-1 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs rounded transition-colors">2</button>
+<button class="px-3 py-1 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs rounded transition-colors">3</button>
+<button class="p-1 border border-slate-200 dark:border-slate-800 rounded hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Admin Dashboard - Swedish Camp Command</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "nordic-midnight": "#0F172A",
+                        "glacier-blue": "#E0F2FE",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .sidebar-active {
+            background-color: rgba(19, 127, 236, 0.2);
+            border-left: 4px solid #137fec;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 h-screen overflow-hidden">
+<div class="flex h-full w-full">
+<!-- Sidebar: Nordic Midnight -->
+<aside class="w-64 bg-nordic-midnight text-white flex flex-col shrink-0">
+<div class="p-6 flex items-center gap-3">
+<div class="w-8 h-8 bg-primary rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-xl">landscape</span>
+</div>
+<div>
+<h1 class="text-sm font-bold leading-none">Swedish Camp</h1>
+<p class="text-[10px] text-slate-400 uppercase tracking-widest mt-1">Command Admin</p>
+</div>
+</div>
+<nav class="flex-1 mt-4 px-3 space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg sidebar-active text-white" href="#">
+<span class="material-symbols-outlined text-primary">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-white/5 hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined">camping</span>
+<span class="text-sm font-medium">Camps</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-white/5 hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined">assignment</span>
+<span class="text-sm font-medium">Registrations</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-white/5 hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="text-sm font-medium">Finances</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-white/5 hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-sm font-medium">System Settings</span>
+</a>
+</nav>
+<div class="p-4 border-t border-slate-800">
+<div class="flex items-center gap-3 px-2 py-2">
+<div class="size-8 rounded-full bg-cover bg-center" data-alt="Admin profile avatar" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBF_vpSsehwggYZ8h-hENdD8IIYudn5t6hi6pktWR-yQeGJ13G3HJHVmgE8GQfIKFa4qgqvkTQSNzG3Mi76IwYBc-ouKf2nUnIPu11W-RQEi5lhRyao9CO52hExPzNPYfGOg7JdDmkAbCA8Gite9gpjE_RdV4jTG3HcyVyZa5AlD0UsFiAo-wRirAD9tyMSjv3G6kHgzYgHZiikCNoiEgM9abDhV4AS38ezU6VLdF5g6k4tkqOO0_LS1rKa-Opx_zyLZ8KS8kfoXw');"></div>
+<div class="flex flex-col">
+<span class="text-xs font-semibold">Erik Johansson</span>
+<span class="text-[10px] text-slate-500">Super Admin</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col overflow-y-auto">
+<!-- Header -->
+<header class="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-background-dark px-8 flex items-center justify-between sticky top-0 z-10">
+<h2 class="text-xl font-bold text-slate-800 dark:text-white">Dashboard Overview</h2>
+<div class="flex items-center gap-6">
+<div class="relative w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+<input class="w-full pl-10 pr-4 py-1.5 text-sm bg-slate-100 dark:bg-slate-800 border-none rounded-lg focus:ring-2 focus:ring-primary/50" placeholder="Search camps or users..." type="text"/>
+</div>
+<div class="flex items-center gap-3">
+<button class="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-background-dark"></span>
+</button>
+</div>
+</div>
+</header>
+<!-- Dashboard Content -->
+<div class="p-8 space-y-8">
+<!-- Stats Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Active Camps -->
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-3">
+<div class="flex justify-between items-start">
+<div class="p-2 bg-glacier-blue dark:bg-blue-900/30 rounded-lg">
+<span class="material-symbols-outlined text-primary">camping</span>
+</div>
+<span class="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded">+2%</span>
+</div>
+<div>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Active Camps</p>
+<h3 class="text-2xl font-bold text-slate-900 dark:text-white mt-1">12</h3>
+</div>
+</div>
+<!-- Total Registrations -->
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-3">
+<div class="flex justify-between items-start">
+<div class="p-2 bg-glacier-blue dark:bg-blue-900/30 rounded-lg">
+<span class="material-symbols-outlined text-primary">groups</span>
+</div>
+<span class="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded">+15%</span>
+</div>
+<div>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Total Registrations</p>
+<h3 class="text-2xl font-bold text-slate-900 dark:text-white mt-1">143</h3>
+</div>
+</div>
+<!-- Revenue -->
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-3">
+<div class="flex justify-between items-start">
+<div class="p-2 bg-glacier-blue dark:bg-blue-900/30 rounded-lg">
+<span class="material-symbols-outlined text-primary">payments</span>
+</div>
+<span class="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded">+8%</span>
+</div>
+<div>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Revenue</p>
+<h3 class="text-2xl font-bold text-slate-900 dark:text-white mt-1">SEK 1.2M</h3>
+</div>
+</div>
+<!-- Pending Approvals -->
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-3">
+<div class="flex justify-between items-start">
+<div class="p-2 bg-glacier-blue dark:bg-blue-900/30 rounded-lg">
+<span class="material-symbols-outlined text-primary">verified_user</span>
+</div>
+<span class="text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded">-1%</span>
+</div>
+<div>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Pending Approvals</p>
+<h3 class="text-2xl font-bold text-slate-900 dark:text-white mt-1">5</h3>
+</div>
+</div>
+</div>
+<!-- Main Layout Body: Trends & Activity/Actions -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Left: Trends & Activity -->
+<div class="lg:col-span-2 space-y-8">
+<!-- Chart Section -->
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-lg font-bold text-slate-800 dark:text-white">Registration Trends</h3>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 bg-primary rounded-full"></span>
+<span class="text-xs text-slate-500 uppercase font-semibold">Weekly Signups</span>
+</div>
+</div>
+<div class="h-64 flex flex-col">
+<svg class="w-full h-full" fill="none" preserveaspectratio="none" viewbox="0 0 500 150">
+<defs>
+<lineargradient id="chartGradient" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#137fec" stop-opacity="0.2"></stop>
+<stop offset="100%" stop-color="#137fec" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
+<path d="M0 120 C 50 110, 100 80, 150 90 C 200 100, 250 40, 300 50 C 350 60, 400 20, 450 10 L 500 40 V 150 H 0 Z" fill="url(#chartGradient)"></path>
+<path d="M0 120 C 50 110, 100 80, 150 90 C 200 100, 250 40, 300 50 C 350 60, 400 20, 450 10 L 500 40" fill="none" stroke="#137fec" stroke-linecap="round" stroke-width="3"></path>
+</svg>
+<div class="flex justify-between px-2 pt-4 border-t border-slate-100 dark:border-slate-800">
+<span class="text-xs text-slate-400 font-medium">Mon</span>
+<span class="text-xs text-slate-400 font-medium">Tue</span>
+<span class="text-xs text-slate-400 font-medium">Wed</span>
+<span class="text-xs text-slate-400 font-medium">Thu</span>
+<span class="text-xs text-slate-400 font-medium">Fri</span>
+<span class="text-xs text-slate-400 font-medium">Sat</span>
+<span class="text-xs text-slate-400 font-medium">Sun</span>
+</div>
+</div>
+</div>
+<!-- Recent Activity -->
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+<div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+<h3 class="font-bold text-slate-800 dark:text-white">Recent Activity</h3>
+<button class="text-xs text-primary font-bold hover:underline">View All</button>
+</div>
+<div class="divide-y divide-slate-100 dark:divide-slate-800">
+<div class="px-6 py-4 flex items-center gap-4">
+<div class="w-2 h-2 rounded-full bg-green-500"></div>
+<div class="flex-1">
+<p class="text-sm font-medium text-slate-800 dark:text-slate-200"><span class="font-bold">Johan Svensson</span> registered for Winter Camp 2024</p>
+<p class="text-xs text-slate-400 mt-0.5">2 minutes ago</p>
+</div>
+<span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded">Signup</span>
+</div>
+<div class="px-6 py-4 flex items-center gap-4">
+<div class="w-2 h-2 rounded-full bg-blue-500"></div>
+<div class="flex-1">
+<p class="text-sm font-medium text-slate-800 dark:text-slate-200">Payment verified for <span class="font-bold text-primary underline">Order #8829</span></p>
+<p class="text-xs text-slate-400 mt-0.5">15 minutes ago</p>
+</div>
+<span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded">Finance</span>
+</div>
+<div class="px-6 py-4 flex items-center gap-4">
+<div class="w-2 h-2 rounded-full bg-amber-500"></div>
+<div class="flex-1">
+<p class="text-sm font-medium text-slate-800 dark:text-slate-200">Approval pending for <span class="font-bold">Stockholm Youth Retreat</span></p>
+<p class="text-xs text-slate-400 mt-0.5">1 hour ago</p>
+</div>
+<span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded">Logistic</span>
+</div>
+<div class="px-6 py-4 flex items-center gap-4">
+<div class="w-2 h-2 rounded-full bg-slate-300"></div>
+<div class="flex-1">
+<p class="text-sm font-medium text-slate-800 dark:text-slate-200">System settings updated by <span class="font-bold">Admin Erik</span></p>
+<p class="text-xs text-slate-400 mt-0.5">3 hours ago</p>
+</div>
+<span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded">System</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right: Quick Actions -->
+<div class="space-y-6">
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<h3 class="font-bold text-slate-800 dark:text-white mb-6">Quick Actions</h3>
+<div class="space-y-3">
+<button class="w-full flex items-center justify-between p-4 bg-primary text-white rounded-lg hover:bg-primary/90 transition-all group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined">add_circle</span>
+<span class="font-bold text-sm tracking-wide uppercase">Create Camp</span>
+</div>
+<span class="material-symbols-outlined transition-transform group-hover:translate-x-1">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between p-4 bg-glacier-blue text-slate-800 rounded-lg hover:bg-blue-200 transition-all group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">verified</span>
+<span class="font-bold text-sm tracking-wide uppercase">Verify Payment</span>
+</div>
+<span class="material-symbols-outlined transition-transform group-hover:translate-x-1">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-all group border border-slate-100 dark:border-slate-700">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined">mail</span>
+<span class="font-bold text-sm tracking-wide uppercase">Broadcast Update</span>
+</div>
+<span class="material-symbols-outlined transition-transform group-hover:translate-x-1">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- System Status Card -->
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<h3 class="font-bold text-slate-800 dark:text-white mb-4">System Status</h3>
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<span class="text-sm text-slate-500">Database</span>
+<span class="text-xs font-bold text-green-500 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Online
+                                    </span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-sm text-slate-500">API Latency</span>
+<span class="text-xs font-bold text-slate-800 dark:text-slate-200">24ms</span>
+</div>
+<div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[94%]"></div>
+</div>
+<p class="text-[10px] text-slate-400 text-center">Server load: 42% (Normal)</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

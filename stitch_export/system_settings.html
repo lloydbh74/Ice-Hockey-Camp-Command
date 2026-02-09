@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>System Settings - Swedish Camp Command</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#e1f3fe",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#0f1b23",
+                        "nordic-midnight": "#0F172A",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-[#0d161c] dark:text-slate-200">
+<div class="flex min-h-screen">
+<!-- Sidebar -->
+<aside class="w-72 bg-nordic-midnight text-white flex flex-col fixed h-full z-10">
+<div class="p-6 flex flex-col gap-8">
+<!-- Brand/Logo -->
+<div class="flex items-center gap-3">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-slate-700" data-alt="Swedish camp logo depicting a mountain peak" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBM0GYNBPRGi1f8ArF_Grzqvxfilt8w4_zPafBR0Rs_QwgCuYKm93mQfT0Me55V2cOHJk8IoYe6PZlp737UVrB1BsnpDZE4qlSzls4RAcI5QInus5o3c_ETIwt8TlnSPfVHSP8eG-MNcj03Z_d_TdobumFJJd7lIMFAd5okwWigUFT23Ixxv8ZOL5541vX7XliSi2kx5L5kOuojy2mYTXwenWFc80a-nLzxG6J7AZMnSntIyM-v749Ptf1ggkI92k9oyv4Ac2gaKw");'></div>
+<div class="flex flex-col">
+<h1 class="text-white text-base font-semibold leading-tight">Swedish Camp</h1>
+<p class="text-slate-400 text-xs font-medium uppercase tracking-wider">Admin Command</p>
+</div>
+</div>
+<!-- Navigation -->
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-[24px]">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-[24px]">camping</span>
+<span class="text-sm font-medium">Camps</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-[24px]">assignment</span>
+<span class="text-sm font-medium">Registrations</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary text-nordic-midnight font-semibold shadow-sm shadow-primary/20" href="#">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">settings</span>
+<span class="text-sm">System Settings</span>
+</a>
+</nav>
+</div>
+<div class="mt-auto p-6">
+<div class="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50 flex flex-col gap-2">
+<p class="text-xs text-slate-400 font-medium">LOGGED IN AS</p>
+<div class="flex items-center gap-2">
+<div class="size-2 bg-green-500 rounded-full animate-pulse"></div>
+<p class="text-sm font-medium text-white truncate">bjorn.admin@camp.se</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 ml-72">
+<div class="max-w-5xl mx-auto px-8 py-10">
+<!-- Breadcrumbs -->
+<nav class="flex items-center gap-2 mb-4">
+<a class="text-slate-500 dark:text-slate-400 text-sm font-medium hover:text-slate-800 transition-colors" href="#">Admin</a>
+<span class="text-slate-300 dark:text-slate-600">/</span>
+<span class="text-slate-900 dark:text-white text-sm font-semibold">System Settings</span>
+</nav>
+<!-- Page Header -->
+<header class="mb-10">
+<h2 class="text-[#0d161c] dark:text-white text-4xl font-black leading-tight tracking-tight mb-2">System Settings</h2>
+<p class="text-slate-500 dark:text-slate-400 text-lg max-w-2xl">Manage camp logistics, user access controls, and core system configurations.</p>
+</header>
+<div class="flex flex-col gap-10">
+<!-- Section 1: Admin Access -->
+<section class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+<div class="p-6 border-b border-slate-100 dark:border-slate-800">
+<h3 class="text-[#0d161c] dark:text-white text-xl font-bold">Admin Access</h3>
+<p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Manage who has administrative control over the camp system.</p>
+</div>
+<!-- Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead class="bg-slate-50 dark:bg-slate-800/50">
+<tr>
+<th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Email Address</th>
+<th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Role</th>
+<th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Status</th>
+<th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+<tr>
+<td class="px-6 py-4 text-sm font-medium text-slate-900 dark:text-slate-200">bjorn.admin@camp.se</td>
+<td class="px-6 py-4">
+<span class="px-2.5 py-1 text-xs font-medium rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">Owner</span>
+</td>
+<td class="px-6 py-4">
+<span class="flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+<span class="size-1.5 rounded-full bg-emerald-600"></span> Active
+                                            </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-xs font-bold text-slate-400 cursor-not-allowed uppercase tracking-wide" disabled="">Remove</button>
+</td>
+</tr>
+<tr>
+<td class="px-6 py-4 text-sm font-medium text-slate-900 dark:text-slate-200">astrid.manager@camp.se</td>
+<td class="px-6 py-4">
+<span class="px-2.5 py-1 text-xs font-medium rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">Admin</span>
+</td>
+<td class="px-6 py-4">
+<span class="flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+<span class="size-1.5 rounded-full bg-emerald-600"></span> Active
+                                            </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-xs font-bold text-red-500 dark:text-red-400 hover:text-red-700 transition-colors uppercase tracking-wide">Remove</button>
+</td>
+</tr>
+<tr>
+<td class="px-6 py-4 text-sm font-medium text-slate-900 dark:text-slate-200">erik.staff@camp.se</td>
+<td class="px-6 py-4">
+<span class="px-2.5 py-1 text-xs font-medium rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">Admin</span>
+</td>
+<td class="px-6 py-4">
+<span class="flex items-center gap-1.5 text-xs font-medium text-amber-500">
+<span class="size-1.5 rounded-full bg-amber-500"></span> Pending
+                                            </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors uppercase tracking-wide">Cancel</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Add User Footer -->
+<div class="p-6 bg-slate-50 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800">
+<form class="flex gap-3 items-end">
+<div class="flex-1 max-w-sm">
+<label class="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2" for="new_email">Add New Administrator</label>
+<input class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all dark:text-white" id="new_email" placeholder="email@address.se" type="email"/>
+</div>
+<button class="bg-primary hover:bg-[#c9e8fc] text-nordic-midnight font-bold py-2 px-6 rounded-lg text-sm transition-all shadow-sm" type="submit">
+                                    Add User
+                                </button>
+</form>
+</div>
+</section>
+<!-- Section 2: SMTP Configuration -->
+<section class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+<div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+<div>
+<h3 class="text-[#0d161c] dark:text-white text-xl font-bold">SMTP Configuration</h3>
+<p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Configure email server settings for system notifications.</p>
+</div>
+<span class="material-symbols-outlined text-slate-300 dark:text-slate-700 text-4xl">mail</span>
+</div>
+<div class="p-8">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="flex flex-col gap-2">
+<label class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">SMTP Host</label>
+<input class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all dark:text-white" type="text" value="smtp.camp-command.se"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Port</label>
+<input class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all dark:text-white" type="number" value="587"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Username</label>
+<input class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all dark:text-white" type="text" value="notifications@camp-command.se"/>
+</div>
+<div class="flex flex-col gap-2 relative">
+<label class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Password</label>
+<input class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all dark:text-white" type="password" value="••••••••••••"/>
+<button class="absolute right-3 top-[34px] text-slate-400 hover:text-slate-600 transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+</div>
+</div>
+<div class="mt-10 pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
+<button class="px-6 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" type="button">
+                                    Discard
+                                </button>
+<button class="bg-nordic-midnight text-white px-8 py-2.5 text-sm font-semibold rounded-lg hover:bg-slate-800 transition-colors shadow-lg shadow-nordic-midnight/10" type="submit">
+                                    Save Changes
+                                </button>
+</div>
+</div>
+</section>
+<!-- Background Decor (Nordic Vibes) -->
+<div class="mt-4 flex items-center justify-center p-12 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-50/50 dark:bg-slate-900/50">
+<div class="text-center flex flex-col items-center">
+<div class="size-16 bg-primary/20 rounded-full flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-primary text-3xl">terminal</span>
+</div>
+<h4 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-widest">Version Control</h4>
+<p class="text-xs text-slate-500 mt-1 uppercase tracking-wider">v2.4.1 - Stockholm Node</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>
