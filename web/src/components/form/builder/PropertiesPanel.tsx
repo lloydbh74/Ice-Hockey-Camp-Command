@@ -8,6 +8,7 @@ interface FormField {
     label: string;
     required: boolean;
     options?: string[];
+    imageOptions?: { label: string; imageUrl: string }[];
     headingLevel?: 'h1' | 'h2' | 'h3' | 'h4';
 }
 
@@ -23,6 +24,8 @@ export default function PropertiesPanel({ field, onChange, onDelete }: Propertie
     const [selectedTextRange, setSelectedTextRange] = useState<{ start: number; end: number } | null>(null);
     const [currentLinkData, setCurrentLinkData] = useState<{ type: 'url' | 'phone' | 'email'; value: string } | null>(null);
     const activeTextareaRef = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [currentUploadIndex, setCurrentUploadIndex] = useState<number | null>(null);
 
     if (!field) {
         return (
@@ -48,6 +51,57 @@ export default function PropertiesPanel({ field, onChange, onDelete }: Propertie
     const handleDeleteOption = (index: number) => {
         const currentOptions = field.options || [];
         onChange({ options: currentOptions.filter((_, i) => i !== index) });
+    };
+
+    const handleAddImageOption = () => {
+        const currentOptions = field.imageOptions || [];
+        onChange({ imageOptions: [...currentOptions, { label: `Option ${currentOptions.length + 1}`, imageUrl: "" }] });
+    };
+
+    const handleUpdateImageOption = (index: number, updates: Partial<{ label: string; imageUrl: string }>) => {
+        const currentOptions = field.imageOptions || [];
+        const newOptions = [...currentOptions];
+        newOptions[index] = { ...newOptions[index], ...updates };
+        onChange({ imageOptions: newOptions });
+    };
+
+    const handleDeleteImageOption = (index: number) => {
+        const currentOptions = field.imageOptions || [];
+        onChange({ imageOptions: currentOptions.filter((_, i) => i !== index) });
+    };
+
+    const handleImageUpload = (index: number) => {
+        setCurrentUploadIndex(index);
+        fileInputRef.current?.click();
+    };
+
+    const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || currentUploadIndex === null) return;
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const res = await fetch("/api/admin/upload", {
+                method: "POST",
+                headers: { "X-Admin-Token": "swedish-camp-admin-2026" },
+                body: formData
+            });
+
+            if (res.ok) {
+                const data: any = await res.json();
+                handleUpdateImageOption(currentUploadIndex, { imageUrl: data.url });
+            } else {
+                alert("Upload failed");
+            }
+        } catch (err) {
+            console.error("Upload error:", err);
+            alert("Upload error");
+        } finally {
+            setCurrentUploadIndex(null);
+            e.target.value = ""; // Reset
+        }
     };
 
     const handleLinkClick = () => {
@@ -87,6 +141,13 @@ export default function PropertiesPanel({ field, onChange, onDelete }: Propertie
 
     return (
         <div className="flex flex-col h-full bg-white dark:bg-slate-900 relative">
+            <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={onFileChange}
+            />
             <LinkInsertionModal
                 key={linkModalOpen ? 'open' : 'closed'}
                 isOpen={linkModalOpen}
@@ -190,7 +251,7 @@ export default function PropertiesPanel({ field, onChange, onDelete }: Propertie
                 )}
 
                 {/* Options Editor */}
-                {(field.type === 'select' || field.type === 'checkbox' || field.type === 'radio' || field.type === 'image_choice') && (
+                {(field.type === 'select' || field.type === 'checkbox' || field.type === 'radio') && (
                     <div className="space-y-4 pt-4 border-t border-slate-100">
                         <div className="flex items-center justify-between">
                             <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Options</label>
@@ -201,35 +262,78 @@ export default function PropertiesPanel({ field, onChange, onDelete }: Propertie
                                 <span className="material-symbols-outlined text-sm">add</span> Add Option
                             </button>
                         </div>
+                        {/* ... existing text options logic ... */}
+                    </div>
+                )}
 
-                        <div className="space-y-3">
-                            {(field.options || []).map((option, idx) => (
-                                <div key={idx} className="flex items-center gap-2 group">
-                                    <div className="flex-1 relative">
-                                        <input
-                                            type="text"
-                                            value={option}
-                                            onChange={(e) => handleUpdateOption(idx, e.target.value)}
-                                            className="w-full pl-3 pr-8 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-                                        />
-                                    </div>
+                {/* Image Options Editor */}
+                {field.type === 'image_choice' && (
+                    <div className="space-y-4 pt-4 border-t border-slate-100">
+                        <div className="flex items-center justify-between">
+                            <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Image Choices</label>
+                            <button
+                                onClick={handleAddImageOption}
+                                className="text-sm font-medium text-primary hover:text-blue-700 flex items-center gap-1"
+                            >
+                                <span className="material-symbols-outlined text-sm">add</span> Add Choice
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            {(field.imageOptions || []).map((opt, idx) => (
+                                <div key={idx} className="p-3 border border-slate-200 dark:border-slate-800 rounded-lg space-y-3 bg-slate-50/50 dark:bg-slate-900/50 group relative">
                                     <button
-                                        onClick={() => handleDeleteOption(idx)}
-                                        className="p-2 text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                                        onClick={() => handleDeleteImageOption(idx)}
+                                        className="absolute right-2 top-2 p-1 text-slate-300 hover:text-red-500 transition-colors"
                                         title="Delete option"
                                     >
                                         <span className="material-symbols-outlined text-lg">close</span>
                                     </button>
+
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Label</label>
+                                        <input
+                                            type="text"
+                                            value={opt.label}
+                                            onChange={(e) => handleUpdateImageOption(idx, { label: e.target.value })}
+                                            className="w-full px-3 py-1.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-sm outline-none focus:ring-1 focus:ring-primary"
+                                            placeholder="Option label"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Image</label>
+                                        <div className="flex gap-2">
+                                            <div
+                                                onClick={() => handleImageUpload(idx)}
+                                                className="w-12 h-12 rounded border-2 border-dashed border-slate-200 dark:border-slate-700 flex items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all overflow-hidden shrink-0"
+                                            >
+                                                {opt.imageUrl ? (
+                                                    <img src={opt.imageUrl} alt="" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <span className="material-symbols-outlined text-slate-300 text-lg">add_a_photo</span>
+                                                )}
+                                            </div>
+                                            <input
+                                                type="text"
+                                                value={opt.imageUrl}
+                                                onChange={(e) => handleUpdateImageOption(idx, { imageUrl: e.target.value })}
+                                                className="flex-1 px-3 py-1.5 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded text-xs outline-none focus:ring-1 focus:ring-primary"
+                                                placeholder="Image URL (or upload)"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
                             ))}
-                            {(!field.options || field.options.length === 0) && (
-                                <div className="text-sm text-slate-500 dark:text-slate-400 italic p-2 border border-dashed border-slate-300 dark:border-slate-800 rounded bg-slate-50 dark:bg-slate-900/50">
-                                    No options added yet.
+                            {(!field.imageOptions || field.imageOptions.length === 0) && (
+                                <div className="text-sm text-slate-500 italic p-4 border border-dashed border-slate-200 rounded text-center">
+                                    No image choices added yet.
                                 </div>
                             )}
                         </div>
                     </div>
                 )}
+
             </div>
 
             {/* Footer Actions */}

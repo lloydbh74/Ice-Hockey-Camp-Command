@@ -129,10 +129,26 @@ export function SortableCanvasItem({ id, field, isSelected, onSelect, onDelete }
                                 </select>
                             )}
                             {field.type === 'image_choice' && (
-                                <div className="grid grid-cols-3 gap-2">
-                                    {[1, 2, 3].map(i => (
-                                        <div key={i} className="aspect-square bg-slate-100 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 flex items-center justify-center">
-                                            <span className="material-symbols-outlined text-slate-300 dark:text-slate-600">image</span>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                    {(field.imageOptions && field.imageOptions.length > 0
+                                        ? field.imageOptions
+                                        : [
+                                            { label: 'Option 1', imageUrl: '' },
+                                            { label: 'Option 2', imageUrl: '' },
+                                            { label: 'Option 3', imageUrl: '' }
+                                        ]
+                                    ).map((opt: any, idx: number) => (
+                                        <div key={idx} className="flex flex-col gap-1.5">
+                                            <div className="aspect-square bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center overflow-hidden">
+                                                {opt.imageUrl ? (
+                                                    <img src={opt.imageUrl} alt={opt.label} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <span className="material-symbols-outlined text-slate-300 dark:text-slate-600">image</span>
+                                                )}
+                                            </div>
+                                            <div className="text-[10px] text-center font-medium text-slate-500 dark:text-slate-400 truncate px-1">
+                                                {opt.label}
+                                            </div>
                                         </div>
                                     ))}
                                 </div>

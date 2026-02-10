@@ -6,17 +6,19 @@ import WizardNavigation from './WizardNavigation';
 
 interface FormField {
     id: string;
-    type: string;
+    type: 'text' | 'select' | 'checkbox' | 'radio' | 'image_choice' | 'heading' | 'paragraph' | 'bullet' | 'divider' | 'separator';
     label: string;
-    description?: string;
-    required?: boolean;
-    options?: { label: string; value: string }[];
-    placeholder?: string;
+    required: boolean;
+    options?: string[];
+    imageOptions?: { label: string; imageUrl: string }[];
+    headingLevel?: 'h1' | 'h2' | 'h3' | 'h4';
 }
 
 interface PublicFormRendererProps {
     formId: number;
     schema: FormField[];
+    purchaseId?: number;
+    registrationToken?: string;
 }
 
 export default function PublicFormRenderer({ formId, schema }: PublicFormRendererProps) {
@@ -34,7 +36,7 @@ export default function PublicFormRenderer({ formId, schema }: PublicFormRendere
         let stepIndex = 0;
 
         schema.forEach(field => {
-            if (field.type === 'section_divider') {
+            if (field.type === 'divider') {
                 stepIndex++;
                 grouped[stepIndex] = [];
             } else {
@@ -51,16 +53,23 @@ export default function PublicFormRenderer({ formId, schema }: PublicFormRendere
     const onSubmit = async (data: any) => {
         setIsSubmitting(true);
         try {
-            const res = await fetch(`/api/forms/${formId}/submit`, {
+            // Use the new registration submit endpoint
+            const res = await fetch(`/api/registration/submit`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data),
+                body: JSON.stringify({
+                    purchaseId,
+                    formId,
+                    formData: data,
+                    registrationToken
+                }),
             });
 
             if (res.ok) {
                 setIsSubmitted(true);
             } else {
-                alert("Something went wrong with your submission. Please try again.");
+                const err = await res.json() as any;
+                alert(`Submission failed: ${err.error || 'Unknown error'}`);
             }
         } catch (error) {
             console.error("Submission failed", error);
@@ -129,65 +138,103 @@ export default function PublicFormRenderer({ formId, schema }: PublicFormRendere
                                     <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">{field.label}</p>
                                 )}
 
-                                {field.type === 'text_input' && (
+                                {field.type === 'text' && (
                                     <input
                                         id={`field-${field.id}`}
                                         type="text"
-                                        placeholder={field.placeholder}
                                         {...methods.register(field.id, { required: field.required })}
                                         aria-required={field.required}
                                         aria-invalid={!!methods.formState.errors[field.id]}
-                                        aria-describedby={methods.formState.errors[field.id] ? `error-${field.id}` : field.description ? `desc-${field.id}` : undefined}
-                                        className="w-full p-3 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0F2FE] focus:border-[#E0F2FE] transition-all"
+                                        className="w-full p-3 bg-white border border-slate-200 dark:border-slate-800 dark:bg-slate-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                                     />
                                 )}
 
                                 {field.type === 'checkbox' && (
-                                    <label className="flex items-start gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-all">
-                                        <input
-                                            id={`field-${field.id}`}
-                                            type="checkbox"
-                                            {...methods.register(field.id)}
-                                            aria-invalid={!!methods.formState.errors[field.id]}
-                                            className="mt-1 w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
-                                        />
-                                        <span className="text-sm text-slate-700">{field.label}</span>
-                                    </label>
-                                )}
-
-                                {field.type === 'dropdown' && (
-                                    <select
-                                        id={`field-${field.id}`}
-                                        {...methods.register(field.id, { required: field.required })}
-                                        aria-required={field.required}
-                                        aria-invalid={!!methods.formState.errors[field.id]}
-                                        className="w-full p-3 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E0F2FE] focus:border-[#E0F2FE] transition-all appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.75rem_center] bg-no-repeat"
-                                    >
-                                        <option value="">Select an option...</option>
-                                        {field.options?.map(opt => (
-                                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                        ))}
-                                    </select>
-                                )}
-
-                                {field.type === 'radio_group' && (
-                                    <div className="space-y-2" role="radiogroup" aria-labelledby={`field-${field.id}`} aria-required={field.required}>
-                                        {field.options?.map(opt => (
-                                            <label key={opt.value} className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-all">
+                                    <div className="space-y-2">
+                                        {field.options?.map((opt, idx) => (
+                                            <label key={idx} className="flex items-center gap-3 p-3 border border-slate-200 dark:border-slate-800 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
                                                 <input
-                                                    type="radio"
-                                                    value={opt.value}
+                                                    type="checkbox"
+                                                    value={opt}
                                                     {...methods.register(field.id, { required: field.required })}
-                                                    className="w-4 h-4 border-slate-300 text-primary focus:ring-primary"
+                                                    className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
                                                 />
-                                                <span className="text-sm text-slate-700">{opt.label}</span>
+                                                <span className="text-sm text-slate-700 dark:text-slate-300">{opt}</span>
                                             </label>
                                         ))}
                                     </div>
                                 )}
 
+                                {field.type === 'select' && (
+                                    <select
+                                        id={`field-${field.id}`}
+                                        {...methods.register(field.id, { required: field.required })}
+                                        aria-required={field.required}
+                                        aria-invalid={!!methods.formState.errors[field.id]}
+                                        className="w-full p-3 bg-white border border-slate-200 dark:border-slate-800 dark:bg-slate-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                    >
+                                        <option value="">Select an option...</option>
+                                        {field.options?.map((opt, idx) => (
+                                            <option key={idx} value={opt}>{opt}</option>
+                                        ))}
+                                    </select>
+                                )}
+
+                                {field.type === 'radio' && (
+                                    <div className="space-y-2">
+                                        {field.options?.map((opt, idx) => (
+                                            <label key={idx} className="flex items-center gap-3 p-3 border border-slate-200 dark:border-slate-800 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
+                                                <input
+                                                    type="radio"
+                                                    value={opt}
+                                                    {...methods.register(field.id, { required: field.required })}
+                                                    className="w-4 h-4 border-slate-300 text-primary focus:ring-primary"
+                                                />
+                                                <span className="text-sm text-slate-700 dark:text-slate-300">{opt}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {field.type === 'image_choice' && (
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                        {field.imageOptions?.map((opt, idx) => (
+                                            <label
+                                                key={idx}
+                                                className={`flex flex-col gap-2 p-2 border rounded-xl cursor-pointer transition-all hover:shadow-md
+                                                    ${methods.watch(field.id) === opt.label ? 'border-primary ring-2 ring-primary/10 bg-primary/5' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900'}
+                                                `}
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    value={opt.label}
+                                                    {...methods.register(field.id, { required: field.required })}
+                                                    className="hidden"
+                                                />
+                                                <div className="aspect-square rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 overflow-hidden flex items-center justify-center">
+                                                    {opt.imageUrl ? (
+                                                        <img src={opt.imageUrl} alt={opt.label} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <span className="material-symbols-outlined text-slate-300">image</span>
+                                                    )}
+                                                </div>
+                                                <div className="text-xs font-bold text-center text-slate-700 dark:text-slate-300 py-1">
+                                                    {opt.label}
+                                                </div>
+                                            </label>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {field.type === 'bullet' && (
+                                    <div className="flex items-start gap-2">
+                                        <span className="text-slate-400 mt-1.5">•</span>
+                                        <p className="text-slate-600 dark:text-slate-400 leading-relaxed">{field.label}</p>
+                                    </div>
+                                )}
+
                                 {field.type === 'separator' && (
-                                    <div className="h-px bg-slate-100 my-4" />
+                                    <hr className="border-slate-100 dark:border-slate-800 my-4" />
                                 )}
 
                                 {methods.formState.errors[field.id] && (

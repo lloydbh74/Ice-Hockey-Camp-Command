@@ -55,6 +55,8 @@ interface PurchaseRow {
     raw_email_id: string;
     price_at_purchase: number;
     currency: string;
+    registration_token?: string;
+    registration_data?: string;
 }
 
 // --- Spec 003: Email Ingestion Helpers ---
@@ -267,6 +269,16 @@ export async function listPurchasesByCamp(db: D1Database, campId: number) {
         WHERE p.camp_id = ?
         ORDER BY p.purchase_timestamp DESC
     `).bind(campId).all();
+}
+
+export async function getPurchaseByToken(db: D1Database, token: string) {
+    return await db.prepare(`
+        SELECT p.*, g.full_name as guardian_name, g.email as guardian_email, pr.name as product_name
+        FROM Purchases p
+        JOIN Guardians g ON p.guardian_id = g.id
+        JOIN Products pr ON p.product_id = pr.id
+        WHERE p.registration_token = ?
+    `).bind(token).first<any>();
 }
 
 

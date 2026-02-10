@@ -1,0 +1,90 @@
+import { D1Database } from "@cloudflare/workers-types";
+
+export interface EmailOptions {
+    to: string;
+    subject: string;
+    text: string;
+    html: string;
+}
+
+export class EmailService {
+    /**
+     * Sends an email using the configured SMTP settings in SystemSettings.
+     * Note: On Cloudflare Workers, this typically requires an external API 
+     * (Postmark, Resend, or a custom SMTP Relay worker) unless using a 
+     * specific DMARC-compliant integration.
+     */
+    static async sendEmail(db: D1Database, options: EmailOptions): Promise<boolean> {
+        try {
+            // 1. Fetch SMTP/Email settings
+            const { results } = await db.prepare("SELECT key, value FROM SystemSettings WHERE key IN ('smtp_host', 'smtp_port', 'smtp_username', 'support_email')").all();
+
+            const settings: Record<string, string> = {};
+            results?.forEach((row: any) => settings[row.key] = row.value);
+
+            console.log(`[EmailService] Mock Sending email to ${options.to}`);
+            console.log(`[EmailService] Subject: ${options.subject}`);
+
+            // FOR MVP/LOCAL DEV: We log the email content.
+            // In Production, this would call an API like Resend or Postmark.
+            // TODO: Integrate with a real provider once API keys are provided.
+
+            return true;
+        } catch (error) {
+            console.error("[EmailService] Error sending email:", error);
+            return false;
+        }
+    }
+
+    static async sendRegistrationInvitation(db: D1Database, data: {
+        to: string,
+        guardianName: string,
+        productName: string,
+        token: string
+    }) {
+        const registrationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/registration/${data.token}`;
+
+        return await this.sendEmail(db, {
+            to: data.to,
+            subject: `Action Required: Register for ${data.productName}`,
+            text: `Hi ${data.guardianName},\n\nThank you for your purchase of ${data.productName}. Please complete the player registration form here: ${registrationUrl}`,
+            html: `
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; rounded: 12px;">
+                    <h2 style="color: #0f172a;">Welcome to Swedish Camp!</h2>
+                    <p>Hi <strong>${data.guardianName}</strong>,</p>
+                    <p>Thank you for your purchase of <strong>${data.productName}</strong>. To ensure everything is ready for your player, please complete the final registration step below:</p>
+                    <div style="margin: 30px 0; text-align: center;">
+                        <a href="${registrationUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Complete Registration</a>
+                    </div>
+                    <p style="color: #64748b; font-size: 14px;">If the button doesn't work, copy and paste this link: <br/> ${registrationUrl}</p>
+                </div>
+            `
+        });
+    }
+
+    static async sendRegistrationReminder(db: D1Database, data: {
+        to: string,
+        guardianName: string,
+        productName: string,
+        token: string
+    }) {
+        const registrationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/registration/${data.token}`;
+
+        return await this.sendEmail(db, {
+            to: data.to,
+            subject: `Reminder: Complete your ${data.productName} registration`,
+            text: `Hi ${data.guardianName},\n\nThis is a friendly reminder to complete your player registration for ${data.productName}: ${registrationUrl}`,
+            html: `
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; rounded: 12px;">
+                    <h2 style="color: #0f172a;">Friendly Reminder</h2>
+                    <p>Hi <strong>${data.guardianName}</strong>,</p>
+                    <p>We're looking forward to seeing you at <strong>${data.productName}</strong>! We noticed your player registration is still incomplete.</p>
+                    <p>Please take a moment to finish it now so we can finalize logistics:</p>
+                    <div style="margin: 30px 0; text-align: center;">
+                        <a href="${registrationUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Finish Registration Now</a>
+                    </div>
+                </div>
+            `
+        });
+    }
+}

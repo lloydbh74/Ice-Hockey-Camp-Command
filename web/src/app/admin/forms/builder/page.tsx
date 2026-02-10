@@ -14,6 +14,7 @@ interface FormField {
     label: string;
     required: boolean;
     options?: string[];
+    imageOptions?: { label: string; imageUrl: string }[];
     headingLevel?: 'h1' | 'h2' | 'h3' | 'h4';
 }
 

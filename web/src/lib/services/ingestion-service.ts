@@ -1,5 +1,6 @@
 import { D1Database } from "@cloudflare/workers-types";
-import { getProductBySku, Product, logIngestion } from "@/lib/db";
+import { getDb, getProductBySku, getAdminEmails, logIngestion } from '@/lib/db';
+import { EmailService } from './email-service';
 import { z } from "zod";
 
 export const IngestionSchema = z.object({
@@ -76,12 +77,14 @@ export class IngestionService {
 
             // 5. Prepare Batch
             for (const { mapping, quantity } of productMappings) {
+                const registrationToken = crypto.randomUUID();
                 batchedStatements.push(
                     db.prepare(`
                         INSERT INTO Purchases (
                             guardian_id, camp_id, product_id, quantity, registration_state, 
-                            purchase_timestamp, raw_email_id, price_at_purchase, currency
-                        ) VALUES (?, ?, ?, ?, 'uninvited', ?, ?, ?, ?)
+                            purchase_timestamp, raw_email_id, price_at_purchase, currency,
+                            registration_token
+                        ) VALUES (?, ?, ?, ?, 'uninvited', ?, ?, ?, ?, ?)
                     `).bind(
                         guardian.id,
                         mapping.campId,
@@ -90,9 +93,20 @@ export class IngestionService {
                         payload.orderDate || new Date().toISOString(),
                         payload.rawEmailId,
                         mapping.price,
-                        payload.currency || 'SEK'
+                        payload.currency || 'SEK',
+                        registrationToken
                     )
                 );
+
+                // 5.5. Trigger first invitation email
+                // Note: In a full worker environment, we might use a Queue or wait for the batch to succeed.
+                // For MVP, we trigger it here.
+                await EmailService.sendRegistrationInvitation(db, {
+                    to: payload.guardianEmail,
+                    guardianName: payload.guardianName,
+                    productName: mapping.product.name,
+                    token: registrationToken
+                });
             }
 
             // 6. Add Log entry to the same batch for atomicity
