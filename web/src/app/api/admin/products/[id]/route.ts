@@ -33,11 +33,11 @@ export async function PATCH(
         if (!db) return NextResponse.json({ error: 'Database binding missing' }, { status: 500 });
 
         const { id } = await context.params;
-        const { name, description, base_price, form_template_id } = await req.json();
+        const { name, description, base_price, form_template_id, sku } = await req.json() as any;
 
         await db.prepare(
-            "UPDATE Products SET name = ?, description = ?, base_price = ?, form_template_id = ? WHERE id = ?"
-        ).bind(name, description || null, base_price, form_template_id || null, id).run();
+            "UPDATE Products SET name = ?, description = ?, base_price = ?, form_template_id = ?, sku = ? WHERE id = ?"
+        ).bind(name, description || null, base_price, form_template_id || null, sku || null, id).run();
 
         // If a form was selected, link it to the product
         if (form_template_id) {

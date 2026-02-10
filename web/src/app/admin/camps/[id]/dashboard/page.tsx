@@ -9,6 +9,8 @@ interface Registration {
     guardian_email: string;
     product_name: string;
     amount: number;
+    price_at_purchase: number;
+    currency: string;
     registration_state: string;
     purchase_timestamp: string;
 }
@@ -49,7 +51,15 @@ export default function CampDashboardPage({ params }: { params: Promise<{ id: st
     if (loading) return <div className="p-8 animate-pulse text-slate-400 font-bold uppercase tracking-widest text-xs">Loading Dashboard...</div>;
     if (!camp) return <div className="p-8 text-red-500 font-bold">Camp not found.</div>;
 
+    const getCurrencySymbol = (currency?: string) => {
+        if (currency === 'GBP') return '£';
+        if (currency === 'SEK') return 'kr ';
+        if (currency === 'EUR') return '€';
+        return '';
+    };
+
     const totalRevenue = registrations.reduce((sum, r) => sum + (r.amount || 0), 0);
+    const mainCurrency = registrations.length > 0 ? registrations[0].currency : 'GBP';
 
     return (
         <div className="p-8 max-w-6xl mx-auto space-y-8">
@@ -75,7 +85,7 @@ export default function CampDashboardPage({ params }: { params: Promise<{ id: st
                 </div>
                 <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
                     <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Revenue</div>
-                    <div className="text-3xl font-black text-primary">£{totalRevenue.toLocaleString()}</div>
+                    <div className="text-3xl font-black text-primary">{getCurrencySymbol(mainCurrency)}{totalRevenue.toLocaleString()}</div>
                 </div>
                 <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
                     <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Target Fulfillment</div>
@@ -104,7 +114,7 @@ export default function CampDashboardPage({ params }: { params: Promise<{ id: st
                                     <td className="px-6 py-4 font-bold text-slate-900 dark:text-white">{reg.guardian_name}</td>
                                     <td className="px-6 py-4 text-slate-500">{reg.guardian_email}</td>
                                     <td className="px-6 py-4 font-medium text-slate-700 dark:text-slate-300">{reg.product_name}</td>
-                                    <td className="px-6 py-4 text-right font-mono font-bold text-slate-900 dark:text-white">£{reg.amount.toLocaleString()}</td>
+                                    <td className="px-6 py-4 text-right font-mono font-bold text-slate-900 dark:text-white">{getCurrencySymbol(reg.currency)}{reg.amount.toLocaleString()}</td>
                                     <td className="px-6 py-4 text-right text-slate-400 text-xs">
                                         {new Date(reg.purchase_timestamp).toLocaleDateString()}
                                     </td>

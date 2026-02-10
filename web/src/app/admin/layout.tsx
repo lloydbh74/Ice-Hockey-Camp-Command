@@ -33,6 +33,10 @@ export default function AdminLayout({
             <span className="material-symbols-outlined transition-transform group-hover:scale-110" aria-hidden="true">assignment</span>
             <span className="text-sm font-medium">Registrations</span>
           </Link>
+          <Link href="/admin/ingestion-logs" className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-white/5 hover:text-white transition-all group">
+            <span className="material-symbols-outlined transition-transform group-hover:scale-110" aria-hidden="true">history</span>
+            <span className="text-sm font-medium">Ingestion Logs</span>
+          </Link>
           <div className="pt-6 pb-2 px-4 uppercase text-[10px] font-bold text-slate-500 tracking-widest">Settings</div>
           <Link href="/admin/settings/camps" className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-white/5 hover:text-white transition-all group">
             <span className="material-symbols-outlined transition-transform group-hover:scale-110" aria-hidden="true">camping</span>

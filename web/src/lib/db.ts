@@ -24,6 +24,7 @@ export interface Camp {
 export interface Product {
     id: number;
     name: string;
+    sku?: string;
     description?: string;
     base_price: number;
     status: 'active' | 'deactivated';
@@ -58,9 +59,29 @@ interface PurchaseRow {
 
 // --- Spec 003: Email Ingestion Helpers ---
 
+export async function getProductBySku(db: D1Database, sku: string): Promise<{ product: Product; campId: number; price: number } | null> {
+    // Find product by SKU and get its associated camp and price from CampProducts
+    // We assume a SKU uniquely identifies a specific product-camp offering for ingestion
+    const result = await db.prepare(`
+        SELECT p.*, cp.camp_id, cp.price
+        FROM Products p
+        INNER JOIN CampProducts cp ON p.id = cp.product_id
+        WHERE p.sku = ?
+        LIMIT 1
+    `).bind(sku).first<any>();
+
+    if (!result) return null;
+
+    const { camp_id, price, ...productData } = result;
+    return {
+        product: productData as Product,
+        campId: camp_id,
+        price: price || 0
+    };
+}
+
 export async function getAdminEmails(db: D1Database): Promise<string[]> {
     const result = await db.prepare("SELECT value FROM SystemSettings WHERE key = 'admin_emails'").first<string>('value');
-    console.log(`[DB] getAdminEmails result: ${JSON.stringify(result)}`);
     if (!result) return [];
     return result.split(',').map(e => e.trim());
 }
@@ -106,8 +127,6 @@ export async function createPurchaseTransactions(
         INSERT INTO Purchases (guardian_id, camp_id, product_id, quantity, registration_state, purchase_timestamp, raw_email_id, price_at_purchase, currency)
         VALUES (?, ?, ?, 1, 'uninvited', datetime('now'), ?, ?, 'GBP')
     `).bind(guardian.id, data.campId, productId, data.rawEmailId, pricePaid).run();
-
-    console.log(`[DB] Created purchase for ${data.guardianEmail} at Camp ID ${data.campId} for £${pricePaid}`);
 }
 
 // --- Spec 004: Form Builder ---
@@ -241,7 +260,7 @@ export async function updateCampProductPrice(db: D1Database, campId: number, cpI
 
 export async function listPurchasesByCamp(db: D1Database, campId: number) {
     return await db.prepare(`
-        SELECT p.*, g.full_name as guardian_name, g.email as guardian_email, pr.name as product_name
+        SELECT p.*, p.price_at_purchase as amount, g.full_name as guardian_name, g.email as guardian_email, pr.name as product_name
         FROM Purchases p
         JOIN Guardians g ON p.guardian_id = g.id
         JOIN Products pr ON p.product_id = pr.id
@@ -299,4 +318,31 @@ export async function updateFormFromTemplate(db: D1Database, productId: number, 
     return await db.prepare(
         "UPDATE Products SET form_template_id = ? WHERE id = ?"
     ).bind(formId, productId).run();
+}
+// --- Ingestion Hardening (Spec 003) ---
+
+export async function logIngestion(db: D1Database, data: {
+    raw_email_id: string;
+    status: 'success' | 'failure';
+    message: string;
+    details?: any;
+}) {
+    return await db.prepare(`
+        INSERT INTO IngestionLogs (raw_email_id, status, message, details)
+        VALUES (?, ?, ?, ?)
+    `).bind(
+        data.raw_email_id,
+        data.status,
+        data.message,
+        data.details ? JSON.stringify(data.details) : null
+    ).run();
+}
+
+export async function getIngestionToken(db: D1Database): Promise<string> {
+    const result = await db.prepare("SELECT value FROM SystemSettings WHERE key = 'ingestion_token'").first<string>('value');
+    return result || 'swedish-camp-ingest-2026'; // Fallback to current placeholder
+}
+
+export async function getIngestionLogs(db: D1Database, limit: number = 50) {
+    return await db.prepare("SELECT * FROM IngestionLogs ORDER BY created_at DESC LIMIT ?").bind(limit).all();
 }

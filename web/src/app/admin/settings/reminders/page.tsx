@@ -38,7 +38,7 @@ export default function ReminderSettingsPage() {
             });
             if (!res.ok) throw new Error("Failed to fetch camps");
 
-            const campsData: Camp[] = await res.json();
+            const campsData = await res.json() as Camp[];
 
             // Fetch settings for each camp
             const campsWithSettings = await Promise.all(
@@ -46,7 +46,7 @@ export default function ReminderSettingsPage() {
                     const settingsRes = await fetch(`/api/admin/camps/${camp.id}/settings`, {
                         headers: { 'X-Admin-Token': ADMIN_TOKEN }
                     });
-                    const settings = await settingsRes.json();
+                    const settings = await settingsRes.json() as CampSettings;
                     return { ...camp, settings };
                 })
             );
@@ -84,7 +84,8 @@ export default function ReminderSettingsPage() {
                 setEditingCamp(null);
                 fetchCamps();
             } else {
-                alert("Failed to save settings");
+                const error = await res.json() as { error: string };
+                alert(`Failed to save: ${error.error}`);
             }
         } catch (e) {
             console.error("Failed to save settings", e);
@@ -125,8 +126,8 @@ export default function ReminderSettingsPage() {
                                 </td>
                                 <td className="px-6 py-4 text-center">
                                     <span className={`text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter ${camp.settings.reminders_enabled === 1
-                                            ? 'bg-green-100 text-green-700'
-                                            : 'bg-slate-100 text-slate-600'
+                                        ? 'bg-green-100 text-green-700'
+                                        : 'bg-slate-100 text-slate-600'
                                         }`}>
                                         {camp.settings.reminders_enabled === 1 ? 'Active' : 'Disabled'}
                                     </span>

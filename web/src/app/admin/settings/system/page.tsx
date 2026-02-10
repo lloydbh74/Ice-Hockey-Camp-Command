@@ -30,7 +30,7 @@ export default function SystemSettingsPage() {
             });
             if (!res.ok) throw new Error("Failed to fetch settings");
 
-            const data = await res.json();
+            const data = await res.json() as any;
             setSettings(data);
             setEditedSettings(data);
         } catch (e) {
@@ -56,7 +56,7 @@ export default function SystemSettingsPage() {
                 setSettings(editedSettings);
                 alert("Settings saved successfully!");
             } else {
-                const error = await res.json();
+                const error = await res.json() as any;
                 alert(`Failed to save: ${error.error}`);
             }
         } catch (e: any) {
@@ -129,7 +129,7 @@ export default function SystemSettingsPage() {
                                     onChange={e => setEditedSettings({ ...editedSettings, support_email: e.target.value })}
                                     className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all dark:text-white"
                                 />
-                                <p className="text-xs text-slate-500 dark:text-slate-400">Used in "Reply-To" headers</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">Used in &quot;Reply-To&quot; headers</p>
                             </div>
                             <div className="flex flex-col gap-2">
                                 <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">SMTP Host</label>
@@ -196,7 +196,7 @@ export default function SystemSettingsPage() {
                         <div className="flex-1">
                             <div className="font-bold text-amber-900 dark:text-amber-100 text-sm">Unsaved Changes</div>
                             <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
-                                You have unsaved changes. Click "Save Changes" to apply them.
+                                You have unsaved changes. Click &quot;Save Changes&quot; to apply them.
                             </p>
                         </div>
                     </div>

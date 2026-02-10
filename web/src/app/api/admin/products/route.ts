@@ -25,11 +25,11 @@ export async function POST(req: Request) {
         const db = await getDb();
         if (!db) return NextResponse.json({ error: 'Database binding missing' }, { status: 500 });
 
-        const { name, description, base_price, form_template_id } = await req.json();
+        const { name, description, base_price, form_template_id, sku } = await req.json() as any;
 
         const result = await db.prepare(
-            "INSERT INTO Products (name, description, base_price, status, form_template_id) VALUES (?, ?, ?, 'active', ?)"
-        ).bind(name, description || null, base_price, form_template_id || null).run();
+            "INSERT INTO Products (name, description, base_price, status, form_template_id, sku) VALUES (?, ?, ?, 'active', ?, ?)"
+        ).bind(name, description || null, base_price, form_template_id || null, sku || null).run();
 
         // If a form template was selected, create the Form
         if (form_template_id && result.meta.last_row_id) {
