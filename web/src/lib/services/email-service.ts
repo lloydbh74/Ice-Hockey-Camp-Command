@@ -87,4 +87,26 @@ export class EmailService {
             `
         });
     }
+
+    static async sendAdminMagicLink(db: D1Database, data: {
+        to: string,
+        token: string
+    }) {
+        const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/admin/auth/verify?token=${data.token}`;
+
+        return await this.sendEmail(db, {
+            to: data.to,
+            subject: `Admin Login - Swedish Camp Command`,
+            text: `Click the link to log in to the admin dashboard: ${loginUrl}`,
+            html: `
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
+                    <h2 style="color: #0f172a;">Swedish Camp Admin Login</h2>
+                    <p>Click the button below to sign in to the Swedish Camp Command dashboard. This link will expire in 15 minutes.</p>
+                    <div style="margin: 30px 0; text-align: center;">
+                        <a href="${loginUrl}" style="background-color: #0f172a; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">Sign In to Dashboard</a>
+                    </div>
+                </div>
+            `
+        });
+    }
 }

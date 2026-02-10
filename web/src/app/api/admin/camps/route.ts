@@ -13,7 +13,7 @@ export async function GET() {
         }
 
         const { results } = await listCamps(db);
-        return NextResponse.json(results || []);
+        return NextResponse.json({ results: results || [] });
     } catch (error: any) {
         console.error('[API] listCamps error:', error);
         return NextResponse.json({

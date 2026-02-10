@@ -1,11 +1,25 @@
+"use client";
+
 import Link from "next/link";
 import React from "react";
+import { usePathname } from "next/navigation";
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const isLoginPage = pathname === "/admin/login";
+
+  if (isLoginPage) {
+    return (
+      <div className="bg-background-light dark:bg-background-dark font-sans text-slate-900 dark:text-slate-100 min-h-screen">
+        {children}
+      </div>
+    );
+  }
+
   return (
     <div className="flex bg-background-light dark:bg-background-dark font-sans text-slate-900 dark:text-slate-100 min-h-screen">
       {/* Sidebar: Nordic Midnight */}

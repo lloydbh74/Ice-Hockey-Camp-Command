@@ -171,11 +171,21 @@ export async function publishFormVersion(
 }
 
 export async function getActiveForm(db: D1Database, productId: number) {
-    return await db.prepare("SELECT * FROM Forms WHERE product_id = ? AND is_published = 1 ORDER BY created_at DESC").bind(productId).first();
+    // 1. Try to find a specifically published form for this product
+    const form = await db.prepare("SELECT * FROM Forms WHERE product_id = ? AND is_published = 1 ORDER BY id DESC").bind(productId).first<any>();
+    if (form) return form;
+
+    // 2. Fallback: Check if the product has a default form template assigned
+    return await db.prepare(`
+        SELECT ft.id, ft.name, ft.schema_json, 'template' as source
+        FROM Products p
+        JOIN FormTemplates ft ON p.form_template_id = ft.id
+        WHERE p.id = ?
+    `).bind(productId).first<any>();
 }
 
 export async function getFormHistory(db: D1Database, productId: number) {
-    return await db.prepare("SELECT * FROM Forms WHERE product_id = ? ORDER BY created_at DESC").bind(productId).all();
+    return await db.prepare("SELECT * FROM Forms WHERE product_id = ? ORDER BY id DESC").bind(productId).all();
 }
 
 // --- Spec 002: Camp & Product Management ---
@@ -258,6 +268,17 @@ export async function updateCampProductPrice(db: D1Database, campId: number, cpI
     return await db.prepare("UPDATE CampProducts SET price = ? WHERE id = ? AND camp_id = ?")
         .bind(newPrice, cpId, campId)
         .run();
+}
+
+export async function listAllPurchases(db: D1Database) {
+    return await db.prepare(`
+        SELECT p.*, p.price_at_purchase as amount, g.full_name as guardian_name, g.email as guardian_email, pr.name as product_name, c.name as camp_name
+        FROM Purchases p
+        JOIN Guardians g ON p.guardian_id = g.id
+        JOIN Products pr ON p.product_id = pr.id
+        JOIN Camps c ON p.camp_id = c.id
+        ORDER BY p.purchase_timestamp DESC
+    `).all();
 }
 
 export async function listPurchasesByCamp(db: D1Database, campId: number) {
@@ -357,4 +378,111 @@ export async function getIngestionToken(db: D1Database): Promise<string> {
 
 export async function getIngestionLogs(db: D1Database, limit: number = 50) {
     return await db.prepare("SELECT * FROM IngestionLogs ORDER BY created_at DESC LIMIT ?").bind(limit).all();
+}
+// --- Admin Authentication (Spec 005) ---
+
+export async function createMagicLink(db: D1Database, email: string, token: string, expiresAt: Date) {
+    return await db.prepare(`
+        INSERT INTO MagicLinks (token, email, expires_at)
+        VALUES (?, ?, ?)
+    `).bind(token, email, expiresAt.toISOString()).run();
+}
+
+export async function getMagicLink(db: D1Database, token: string) {
+    return await db.prepare(`
+        SELECT * FROM MagicLinks WHERE token = ? AND used = 0
+    `).bind(token).first<any>();
+}
+
+export async function markMagicLinkUsed(db: D1Database, token: string) {
+    return await db.prepare(`
+        UPDATE MagicLinks SET used = 1 WHERE token = ?
+    `).bind(token).run();
+}
+
+export async function createAdminSession(db: D1Database, sessionId: string, email: string, expiresAt: Date) {
+    return await db.prepare(`
+        INSERT INTO AdminSessions (id, email, expires_at)
+        VALUES (?, ?, ?)
+    `).bind(sessionId, email, expiresAt.toISOString()).run();
+}
+
+export async function getAdminSession(db: D1Database, sessionId: string) {
+    return await db.prepare(`
+        SELECT * FROM AdminSessions WHERE id = ?
+    `).bind(sessionId).first<any>();
+}
+
+export async function deleteAdminSession(db: D1Database, sessionId: string) {
+    return await db.prepare(`
+        DELETE FROM AdminSessions WHERE id = ?
+    `).bind(sessionId).run();
+}
+// --- Reporting & Dashboards (Spec 005) ---
+
+export async function getCampSummary(db: D1Database, campId: number) {
+    return await db.prepare(`
+        SELECT 
+            COUNT(*) as total_purchases,
+            SUM(CASE WHEN registration_state = 'completed' THEN 1 ELSE 0 END) as completed_registrations,
+            SUM(CASE WHEN registration_state != 'completed' THEN 1 ELSE 0 END) as missing_registrations
+        FROM Purchases
+        WHERE camp_id = ?
+    `).bind(campId).first<{
+        total_purchases: number;
+        completed_registrations: number;
+        missing_registrations: number;
+    }>();
+}
+
+export async function getAttendanceList(db: D1Database, campId: number) {
+    return await db.prepare(`
+        SELECT 
+            r.id as registration_id,
+            r.form_response_json,
+            r.registration_timestamp,
+            p.full_name as player_name,
+            p.date_of_birth,
+            g.full_name as guardian_name,
+            pr.name as product_name,
+            pu.registration_state
+        FROM Registrations r
+        JOIN Players p ON r.player_id = p.id
+        JOIN Purchases pu ON r.purchase_id = pu.id
+        JOIN Guardians g ON pu.guardian_id = g.id
+        JOIN Products pr ON pu.product_id = pr.id
+        WHERE pu.camp_id = ?
+        ORDER BY p.full_name ASC
+    `).bind(campId).all();
+}
+
+export async function getKitOrderSummary(db: D1Database, campId: number) {
+    const { results } = await db.prepare(`
+        SELECT form_response_json
+        FROM Registrations r
+        JOIN Purchases pu ON r.purchase_id = pu.id
+        WHERE pu.camp_id = ? AND pu.registration_state = 'completed'
+    `).bind(campId).all();
+
+    const summary: Record<string, Record<string, number>> = {};
+
+    results?.forEach((row: any) => {
+        try {
+            const responses = JSON.parse(row.form_response_json || '{}');
+            Object.entries(responses).forEach(([key, value]) => {
+                const lowerKey = key.toLowerCase();
+                if ((lowerKey.includes('size') || lowerKey.includes('jersey') || lowerKey.includes('socks')) && value) {
+                    const itemType = key.split(/_/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                    const size = String(value);
+
+                    if (!summary[itemType]) summary[itemType] = {};
+                    summary[itemType][size] = (summary[itemType][size] || 0) + 1;
+                }
+            });
+        } catch (e) {
+            console.error("Failed to parse registration JSON", e);
+        }
+    });
+
+    return summary;
 }
