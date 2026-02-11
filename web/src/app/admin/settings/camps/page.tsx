@@ -30,7 +30,8 @@ export default function CampManagementPage() {
                 throw new Error(errorData.error || "Failed to fetch camps");
             }
             const data = await res.json();
-            setCamps(Array.isArray(data) ? data : []);
+            // Handle both { results: [...] } and plain array formats
+            setCamps(data.results || data || []);
         } catch (e: any) {
             console.error("Failed to fetch camps", e);
             // Optionally set an error state here if we add one

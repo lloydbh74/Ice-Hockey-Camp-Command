@@ -85,6 +85,13 @@ export default function CampDashboardPage() {
                 <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 p-8 rounded-3xl lg:col-span-1">
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Reports & Actions</h3>
                     <nav className="space-y-3">
+                        <Link href={`/admin/camps/${id}/schedule`} className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl hover:from-blue-600 hover:to-blue-700 transition-all group shadow-lg shadow-blue-500/20">
+                            <div className="flex items-center gap-3">
+                                <span className="material-symbols-outlined">calendar_month</span>
+                                <span className="text-sm font-semibold">Camp Schedule Planner</span>
+                            </div>
+                            <span className="material-symbols-outlined text-sm">chevron_right</span>
+                        </Link>
                         <Link href={`/admin/camps/${id}/attendance`} className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:border-blue-500 transition-all group">
                             <div className="flex items-center gap-3">
                                 <span className="material-symbols-outlined text-slate-400 group-hover:text-blue-500 transition-colors">event_available</span>

@@ -41,6 +41,36 @@ export interface CampProduct {
     status: 'active' | 'inactive';
 }
 
+export interface CampDay {
+    id: number;
+    camp_id: number;
+    date: string;
+    label?: string;
+    status: 'active' | 'archived';
+}
+
+export interface Stream {
+    id: number;
+    camp_id: number;
+    name: string;
+    status: 'active' | 'archived';
+}
+
+export interface Session {
+    id: number;
+    camp_day_id: number;
+    name: string;
+    description?: string;
+    start_time: string;
+    end_time: string;
+    location?: string;
+}
+
+export interface SessionStream {
+    session_id: number;
+    stream_id: number;
+}
+
 export type Purchase = PurchaseRow;
 
 // Internal DB Row type match
@@ -253,9 +283,29 @@ export async function getCampProducts(db: D1Database, campId: number) {
 }
 
 export async function associateProductWithCamp(db: D1Database, data: { campId: number; productId: number; price: number }) {
-    return await db.prepare("INSERT INTO CampProducts (camp_id, product_id, price) VALUES (?, ?, ?)")
+    // 1. Get product details to check if it's a primary product (has form_template_id)
+    const product = await db.prepare("SELECT * FROM Products WHERE id = ?").bind(data.productId).first<Product>();
+
+    // 2. Associate product with camp
+    const result = await db.prepare("INSERT INTO CampProducts (camp_id, product_id, price) VALUES (?, ?, ?)")
         .bind(data.campId, data.productId, data.price)
         .run();
+
+    // 3. If it's a primary product, ensure a matching stream exists
+    if (product && product.form_template_id) {
+        // Check if stream already exists
+        const existingStream = await db.prepare("SELECT * FROM Streams WHERE camp_id = ? AND name = ? AND status = 'active'")
+            .bind(data.campId, product.name)
+            .first();
+
+        if (!existingStream) {
+            await db.prepare("INSERT INTO Streams (camp_id, name) VALUES (?, ?)")
+                .bind(data.campId, product.name)
+                .run();
+        }
+    }
+
+    return result;
 }
 
 export async function removeProductFromCamp(db: D1Database, campId: number, cpId: number) {
@@ -485,4 +535,134 @@ export async function getKitOrderSummary(db: D1Database, campId: number) {
     });
 
     return summary;
+}
+
+// --- Spec 006: Camp Day Planner ---
+
+export async function getCampDays(db: D1Database, campId: number) {
+    const result = await db.prepare("SELECT * FROM CampDays WHERE camp_id = ? AND status = 'active' ORDER BY date ASC").bind(campId).all<CampDay>();
+    return result.results;
+}
+
+export async function createCampDay(db: D1Database, data: { camp_id: number; date: string; label?: string }) {
+    return await db.prepare("INSERT INTO CampDays (camp_id, date, label) VALUES (?, ?, ?)")
+        .bind(data.camp_id, data.date, data.label || null)
+        .run();
+}
+
+export async function updateCampDay(db: D1Database, id: number, data: Partial<CampDay>) {
+    const allowedFields = ['date', 'label', 'status'];
+    const sets: string[] = [];
+    const values: any[] = [];
+    Object.entries(data).forEach(([key, value]) => {
+        if (allowedFields.includes(key) && value !== undefined) {
+            sets.push(`${key} = ?`);
+            values.push(value);
+        }
+    });
+    if (sets.length === 0) return;
+    values.push(id);
+    return await db.prepare(`UPDATE CampDays SET ${sets.join(", ")} WHERE id = ?`).bind(...values).run();
+}
+
+export async function deleteCampDay(db: D1Database, id: number) {
+    // Soft delete if sessions exist, otherwise hard delete could be allowed but let's stick to safe defaults
+    const sessionCount = await db.prepare("SELECT COUNT(*) as count FROM Sessions WHERE camp_day_id = ?").bind(id).first<number>('count');
+    if (sessionCount && sessionCount > 0) {
+        // Soft delete
+        return await db.prepare("UPDATE CampDays SET status = 'archived' WHERE id = ?").bind(id).run();
+    }
+    return await db.prepare("DELETE FROM CampDays WHERE id = ?").bind(id).run();
+}
+
+export async function getStreams(db: D1Database, campId: number) {
+    const result = await db.prepare("SELECT * FROM Streams WHERE camp_id = ? AND status = 'active' ORDER BY name ASC").bind(campId).all<Stream>();
+    return result.results;
+}
+
+export async function createStream(db: D1Database, data: { camp_id: number; name: string }) {
+    return await db.prepare("INSERT INTO Streams (camp_id, name) VALUES (?, ?)")
+        .bind(data.camp_id, data.name)
+        .run();
+}
+
+export async function updateStream(db: D1Database, id: number, data: Partial<Stream>) {
+    const allowedFields = ['name', 'status'];
+    const sets: string[] = [];
+    const values: any[] = [];
+    Object.entries(data).forEach(([key, value]) => {
+        if (allowedFields.includes(key) && value !== undefined) {
+            sets.push(`${key} = ?`);
+            values.push(value);
+        }
+    });
+    if (sets.length === 0) return;
+    values.push(id);
+    return await db.prepare(`UPDATE Streams SET ${sets.join(", ")} WHERE id = ?`).bind(...values).run();
+}
+
+export async function deleteStream(db: D1Database, id: number) {
+    // Check usage
+    const usageCount = await db.prepare("SELECT COUNT(*) as count FROM SessionStreams WHERE stream_id = ?").bind(id).first<number>('count');
+    if (usageCount && usageCount > 0) {
+        return await db.prepare("UPDATE Streams SET status = 'archived' WHERE id = ?").bind(id).run();
+    }
+    return await db.prepare("DELETE FROM Streams WHERE id = ?").bind(id).run();
+}
+
+export async function getSessionsForDay(db: D1Database, campDayId: number) {
+    // Get sessions and their streams
+    const { results } = await db.prepare(`
+        SELECT s.*, GROUP_CONCAT(ss.stream_id) as stream_ids
+        FROM Sessions s
+        LEFT JOIN SessionStreams ss ON s.id = ss.session_id
+        WHERE s.camp_day_id = ?
+        GROUP BY s.id
+        ORDER BY s.start_time ASC
+    `).bind(campDayId).all<any>();
+
+    return results?.map(r => ({
+        ...r,
+        stream_ids: r.stream_ids ? r.stream_ids.split(',').map(Number) : []
+    })) || [];
+}
+
+export async function createSession(db: D1Database, data: Session) {
+    return await db.prepare(`
+        INSERT INTO Sessions (camp_day_id, name, description, start_time, end_time, location)
+        VALUES (?, ?, ?, ?, ?, ?)
+    `).bind(data.camp_day_id, data.name, data.description || null, data.start_time, data.end_time, data.location || null).run();
+}
+
+export async function updateSession(db: D1Database, id: number, data: Partial<Session>) {
+    const allowedFields = ['name', 'description', 'start_time', 'end_time', 'location'];
+    const sets: string[] = [];
+    const values: any[] = [];
+    Object.entries(data).forEach(([key, value]) => {
+        if (allowedFields.includes(key) && value !== undefined) {
+            sets.push(`${key} = ?`);
+            values.push(value);
+        }
+    });
+    if (sets.length === 0) return;
+    values.push(id);
+    return await db.prepare(`UPDATE Sessions SET ${sets.join(", ")} WHERE id = ?`).bind(...values).run();
+}
+
+export async function deleteSession(db: D1Database, id: number) {
+    await db.prepare("DELETE FROM SessionStreams WHERE session_id = ?").bind(id).run();
+    return await db.prepare("DELETE FROM Sessions WHERE id = ?").bind(id).run();
+}
+
+export async function assignSessionStreams(db: D1Database, sessionId: number, streamIds: number[]) {
+    // Clear existing
+    await db.prepare("DELETE FROM SessionStreams WHERE session_id = ?").bind(sessionId).run();
+
+    if (streamIds.length === 0) return;
+
+    // Bulk insert (D1 doesn't support generic bulk insert easily, so loop or query builder)
+    // For simplicity/safety with prepared statements:
+    const stmt = db.prepare("INSERT INTO SessionStreams (session_id, stream_id) VALUES (?, ?)");
+    const batch = streamIds.map(sid => stmt.bind(sessionId, sid));
+    return await db.batch(batch);
 }

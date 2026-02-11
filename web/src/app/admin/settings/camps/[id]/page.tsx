@@ -195,6 +195,14 @@ export default function CampDetailPage({ params }: { params: Promise<{ id: strin
                         <h2 className="text-sm font-bold uppercase tracking-widest mb-6 opacity-60">Camp Actions</h2>
 
                         <div className="space-y-4">
+                            {/* Schedule Button */}
+                            <Link
+                                href={`/admin/camps/${campId}/schedule`}
+                                className="w-full py-3 bg-blue-500 hover:bg-blue-600 text-white border border-blue-400/20 rounded-xl font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
+                            >
+                                <span className="material-symbols-outlined text-sm">calendar_month</span>
+                                Camp Schedule
+                            </Link>
                             {camp.purchase_count && camp.purchase_count > 0 ? (
                                 <>
                                     <button
