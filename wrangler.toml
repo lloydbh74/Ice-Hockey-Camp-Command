@@ -6,5 +6,5 @@ pages_build_output_dir = "web/.vercel/output/static"
 [[d1_databases]]
 binding = "DB"
 database_name = "swedish-camp-db"
-database_id = "13cfa3a5-b9fe-4324-b29b-9e6a517b7af4"
+database_id = "17e1e9bd-f623-4a17-864a-e64dc25fcc8e"
 migrations_dir = "migrations"
