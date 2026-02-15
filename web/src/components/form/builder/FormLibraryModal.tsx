@@ -34,7 +34,7 @@ export default function FormLibraryModal({ isOpen, onClose, onSelect }: FormLibr
                 headers: { 'X-Admin-Token': 'swedish-camp-admin-2026' }
             });
             if (res.ok) {
-                const data = await res.json();
+                const data = await res.json() as any;
                 setForms(Array.isArray(data) ? data : []);
             }
         } catch (error) {

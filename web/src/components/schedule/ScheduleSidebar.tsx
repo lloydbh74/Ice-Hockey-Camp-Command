@@ -25,7 +25,7 @@ export function ScheduleSidebar({ campId, selectedDayId, onSelectDay, onStreamsU
         try {
             const res = await fetch(`/api/admin/camps/${campId}/days`);
             if (!res.ok) throw new Error('Failed to fetch days');
-            const data = await res.json();
+            const data = await res.json() as any;
             setDays(data.results || []);
 
             // Auto-select first day if none selected and days exist

@@ -19,7 +19,7 @@ export function StreamManager({ campId, onUpdate }: StreamManagerProps) {
         try {
             const res = await fetch(`/api/admin/camps/${campId}/streams`);
             if (!res.ok) throw new Error('Failed to fetch streams');
-            const data = await res.json();
+            const data = await res.json() as any;
             setStreams(data.results || []);
         } catch (err: any) {
             setError(err.message);
@@ -49,7 +49,7 @@ export function StreamManager({ campId, onUpdate }: StreamManagerProps) {
             });
 
             if (!res.ok) {
-                const data = await res.json();
+                const data = await res.json() as any;
                 throw new Error(data.error || 'Failed to create stream');
             }
 
@@ -70,7 +70,7 @@ export function StreamManager({ campId, onUpdate }: StreamManagerProps) {
             });
 
             if (!res.ok) {
-                const data = await res.json();
+                const data = await res.json() as any;
                 throw new Error(data.error || 'Failed to delete stream');
             }
 

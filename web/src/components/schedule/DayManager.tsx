@@ -20,7 +20,7 @@ export function DayManager({ campId, onUpdate }: DayManagerProps) {
         try {
             const res = await fetch(`/api/admin/camps/${campId}/days`);
             if (!res.ok) throw new Error('Failed to fetch days');
-            const data = await res.json();
+            const data = await res.json() as any;
             setDays(data.results || []);
         } catch (err: any) {
             setError(err.message);
@@ -50,7 +50,7 @@ export function DayManager({ campId, onUpdate }: DayManagerProps) {
             });
 
             if (!res.ok) {
-                const data = await res.json();
+                const data = await res.json() as any;
                 throw new Error(data.error || 'Failed to create day');
             }
 
@@ -72,7 +72,7 @@ export function DayManager({ campId, onUpdate }: DayManagerProps) {
             });
 
             if (!res.ok) {
-                const data = await res.json();
+                const data = await res.json() as any;
                 throw new Error(data.error || 'Failed to delete day');
             }
 

@@ -52,7 +52,7 @@ export function SessionEditForm({ session, campId, dayId, streams, onClose, onSu
             });
 
             if (!res.ok) {
-                const data = await res.json();
+                const data = await res.json() as any;
                 throw new Error(data.error || 'Failed to update session');
             }
 
@@ -182,8 +182,8 @@ export function SessionEditForm({ session, campId, dayId, streams, onClose, onSu
                                     type="button"
                                     onClick={() => toggleStream(stream.id)}
                                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border ${formData.stream_ids.includes(stream.id)
-                                            ? 'bg-primary text-white border-primary'
-                                            : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
+                                        ? 'bg-primary text-white border-primary'
+                                        : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
                                         }`}
                                 >
                                     {stream.name}

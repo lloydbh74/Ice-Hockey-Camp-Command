@@ -50,7 +50,7 @@ export function TimelineGrid({ campId, dayId, streams, onSessionUpdate }: Timeli
         try {
             const res = await fetch(`/api/admin/camps/${campId}/days/${dayId}/sessions`);
             if (res.ok) {
-                const data = await res.json();
+                const data = await res.json() as any;
                 setSessions(data.results || []);
             }
         } catch (e) {
