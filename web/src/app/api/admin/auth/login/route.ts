@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, getAdminEmails, createMagicLink } from '@/lib/db';
 import { EmailService } from '@/lib/services/email-service';
-import { crypto } from '@cloudflare/next-on-pages';
+
 
 export const runtime = 'edge';
 
