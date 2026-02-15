@@ -39,8 +39,8 @@ export default function CampDashboardPage({ params }: { params: Promise<{ id: st
                 fetch(`/api/admin/camps/${campId}`, { headers }),
                 fetch(`/api/admin/camps/${campId}/registrations`, { headers })
             ]);
-            if (campRes.ok) setCamp(await campRes.json());
-            if (regRes.ok) setRegistrations(await regRes.json());
+            if (campRes.ok) setCamp(await campRes.json() as any);
+            if (regRes.ok) setRegistrations(await regRes.json() as any);
         } catch (e) {
             console.error("Failed to fetch dashboard data", e);
         } finally {

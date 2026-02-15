@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
         }
 
         // 2. Parse Body
-        const body = await req.json();
+        const body = await req.json() as any;
 
         // 3. Process Ingestion
         const result = await IngestionService.processIngestion(db, body);

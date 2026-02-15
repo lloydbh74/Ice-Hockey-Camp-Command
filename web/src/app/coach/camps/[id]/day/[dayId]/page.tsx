@@ -49,8 +49,8 @@ export default function CoachDayView({ params }: { params: Promise<{ id: string;
 
                 if (!sessionsRes.ok || !streamsRes.ok) throw new Error("Failed to load schedule data");
 
-                const sessionsData = await sessionsRes.json();
-                const streamsData = await streamsRes.json();
+                const sessionsData = await sessionsRes.json() as any;
+                const streamsData = await streamsRes.json() as any;
 
                 setSessions(sessionsData.results || []);
                 setStreams(streamsData.results || []);
