@@ -1,7 +1,6 @@
-"use client";
-
 import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 interface Session {
     id: number;
@@ -20,6 +19,9 @@ interface Stream {
 
 export default function CoachDayView({ params }: { params: Promise<{ id: string; dayId: string }> }) {
     const resolvedParams = use(params);
+    const searchParams = useSearchParams();
+    const streamIdParam = searchParams.get('streamId');
+
     const campId = resolvedParams.id;
     const dayId = resolvedParams.dayId;
 
@@ -28,6 +30,13 @@ export default function CoachDayView({ params }: { params: Promise<{ id: string;
     const [selectedStreamId, setSelectedStreamId] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    // Initial filter from query param
+    useEffect(() => {
+        if (streamIdParam && !isNaN(parseInt(streamIdParam))) {
+            setSelectedStreamId(parseInt(streamIdParam));
+        }
+    }, [streamIdParam]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -90,8 +99,8 @@ export default function CoachDayView({ params }: { params: Promise<{ id: string;
                     <button
                         onClick={() => setSelectedStreamId(null)}
                         className={`px-4 py-2 rounded-full whitespace-nowrap text-xs font-black uppercase tracking-widest transition-all ${selectedStreamId === null
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-white/5 text-slate-400 hover:bg-white/10'
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-white/5 text-slate-400 hover:bg-white/10'
                             }`}
                     >
                         All Groups
@@ -101,8 +110,8 @@ export default function CoachDayView({ params }: { params: Promise<{ id: string;
                             key={stream.id}
                             onClick={() => setSelectedStreamId(stream.id)}
                             className={`px-4 py-2 rounded-full whitespace-nowrap text-xs font-black uppercase tracking-widest transition-all ${selectedStreamId === stream.id
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-white/5 text-slate-400 hover:bg-white/10'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-white/5 text-slate-400 hover:bg-white/10'
                                 }`}
                         >
                             {stream.name}
