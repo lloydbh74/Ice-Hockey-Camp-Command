@@ -21,7 +21,7 @@ interface PublicFormRendererProps {
     registrationToken?: string;
 }
 
-export default function PublicFormRenderer({ formId, schema }: PublicFormRendererProps) {
+export default function PublicFormRenderer({ formId, schema, purchaseId, registrationToken }: PublicFormRendererProps) {
     const [currentStep, setCurrentStep] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
