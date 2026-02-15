@@ -6,7 +6,7 @@ export const runtime = 'edge';
 export async function POST(request: NextRequest) {
     try {
         const db = await getDb();
-        const body = await request.json();
+        const body = await request.json() as any;
         const { purchaseId, formId, formData, registrationToken } = body;
 
         if (!purchaseId || !formId || !formData || !registrationToken) {

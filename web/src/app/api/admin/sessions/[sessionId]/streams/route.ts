@@ -24,7 +24,7 @@ export async function POST(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const body = await request.json();
+        const body = await request.json() as any;
         const { stream_ids } = body;
 
         if (!Array.isArray(stream_ids)) {

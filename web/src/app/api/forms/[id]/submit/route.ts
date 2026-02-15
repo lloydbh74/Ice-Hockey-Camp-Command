@@ -17,7 +17,7 @@ export async function POST(request: NextRequest, props: RouteContext) {
     }
 
     try {
-        const body = await request.json();
+        const body = await request.json() as any;
 
         // FUTURE: In a real implementation, we would validate against the schema here.
         // For now, we log the submission and return success to unblock frontend dev.

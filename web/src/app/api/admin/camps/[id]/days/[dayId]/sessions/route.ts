@@ -57,7 +57,7 @@ export async function POST(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const body = await request.json();
+        const body = await request.json() as any;
         const { name, description, start_time, end_time, location, stream_ids } = body;
 
         if (!name || !start_time || !end_time) {
