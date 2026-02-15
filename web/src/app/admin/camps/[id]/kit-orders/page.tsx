@@ -18,7 +18,7 @@ export default function KitOrderSummaryPage() {
     useEffect(() => {
         fetch(`/api/admin/camps/${id}/kit-orders`)
             .then((res) => res.json())
-            .then((data) => {
+            .then((data: any) => {
                 setItems(data);
                 setLoading(false);
             })

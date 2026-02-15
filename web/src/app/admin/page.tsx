@@ -17,7 +17,7 @@ export default function AdminDashboardPage() {
     useEffect(() => {
         fetch("/api/admin/camps")
             .then((res) => res.json())
-            .then((data) => {
+            .then((data: any) => {
                 setCamps(data.results || []);
                 setLoading(false);
             })

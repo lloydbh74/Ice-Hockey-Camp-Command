@@ -23,7 +23,7 @@ export default function CampDashboardPage() {
     useEffect(() => {
         fetch(`/api/admin/camps/${id}/summary`)
             .then((res) => res.json())
-            .then((data) => {
+            .then((data: any) => {
                 setData(data);
                 setLoading(false);
             })

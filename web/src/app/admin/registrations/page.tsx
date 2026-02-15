@@ -29,7 +29,7 @@ function RegistrationsContent() {
 
         fetch(url)
             .then((res) => res.json())
-            .then((data) => {
+            .then((data: any) => {
                 setRegistrations(data.results || []);
                 setLoading(false);
             })
