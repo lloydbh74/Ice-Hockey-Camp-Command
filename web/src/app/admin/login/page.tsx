@@ -18,7 +18,7 @@ export default function AdminLoginPage() {
                 body: JSON.stringify({ email }),
             });
 
-            const data = await response.json();
+            const data = await response.json() as any;
 
             if (response.ok) {
                 setStatus("success");
@@ -40,7 +40,7 @@ export default function AdminLoginPage() {
             const response = await fetch("/api/admin/auth/dev-login", {
                 method: "POST",
             });
-            const data = await response.json();
+            const data = await response.json() as any;
 
             if (response.ok) {
                 // Redirect manually since we set the cookie
