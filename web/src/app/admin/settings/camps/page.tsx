@@ -29,7 +29,7 @@ export default function CampManagementPage() {
                 const errorData: any = await res.json();
                 throw new Error(errorData.error || "Failed to fetch camps");
             }
-            const data = await res.json();
+            const data = await res.json() as any;
             // Handle both { results: [...] } and plain array formats
             setCamps(data.results || data || []);
         } catch (e: any) {

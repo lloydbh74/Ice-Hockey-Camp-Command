@@ -31,7 +31,7 @@ export default function CampSchedulePage() {
         try {
             const res = await fetch(`/api/admin/camps/${campId}/streams`);
             if (res.ok) {
-                const data = await res.json();
+                const data = await res.json() as any;
                 setStreams(data.results || []);
             }
         } catch (e) {

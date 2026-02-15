@@ -57,7 +57,7 @@ export default function ProductRepositoryPage() {
                 headers: { 'X-Admin-Token': 'swedish-camp-admin-2026' }
             });
             if (res.ok) {
-                const data = await res.json();
+                const data = await res.json() as any;
                 setFormTemplates(Array.isArray(data) ? data : []);
             }
         } catch (e) {

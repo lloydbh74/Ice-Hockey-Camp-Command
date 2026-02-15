@@ -23,7 +23,7 @@ export default function CoachCampLanding({ params }: { params: Promise<{ id: str
             try {
                 const res = await fetch(`/api/public/camps/${campId}/days`);
                 if (!res.ok) throw new Error("Failed to fetch schedule");
-                const data = await res.json();
+                const data = await res.json() as any;
                 setDays(data.results || []);
 
                 // If there's only one day, auto-redirect

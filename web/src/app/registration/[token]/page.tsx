@@ -35,7 +35,7 @@ export default function RegistrationPage({ params }: { params: Promise<{ token: 
     const fetchContext = async () => {
         try {
             const res = await fetch(`/api/registration/context/${token}`);
-            const data = await res.json();
+            const data = await res.json() as any;
 
             if (res.ok) {
                 setContext(data);
