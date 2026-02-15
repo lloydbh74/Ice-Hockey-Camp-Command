@@ -26,7 +26,7 @@ export default function AttendanceListPage() {
     useEffect(() => {
         fetch(`/api/admin/camps/${id}/attendance`)
             .then((res) => res.json())
-            .then((data: { results: AttendanceRecord[] }) => {
+            .then((data: any) => {
                 setAttendance(data.results || []);
                 setLoading(false);
             })
