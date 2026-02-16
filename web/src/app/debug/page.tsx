@@ -1,6 +1,4 @@
 
-export const runtime = 'edge';
-
 export default function DebugPage() {
     return (
         <div className="p-10 font-mono text-sm bg-black text-green-400 min-h-screen">
