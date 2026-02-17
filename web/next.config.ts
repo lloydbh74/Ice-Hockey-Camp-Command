@@ -11,7 +11,10 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  /* config options here */
+  webpack: (config) => {
+    config.externals.push(/^(cloudflare:.*)$/);
+    return config;
+  },
 };
 
 export default nextConfig;
