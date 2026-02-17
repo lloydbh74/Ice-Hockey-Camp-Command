@@ -7,7 +7,11 @@ interface Env {
 }
 
 export async function getDb() {
-    const { env } = getRequestContext() as unknown as { env: Env };
+    const context = getRequestContext();
+    if (!context || !context.env) {
+        throw new Error('D1 Database context is not available. Ensure you are running on Cloudflare Edge Runtime.');
+    }
+    const { env } = context as unknown as { env: Env };
     return env.DB;
 }
 
