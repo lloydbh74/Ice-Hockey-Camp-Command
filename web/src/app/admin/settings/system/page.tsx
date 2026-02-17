@@ -13,6 +13,7 @@ interface SystemSettings {
     smtp_host?: string;
     smtp_port?: string;
     smtp_username?: string;
+    smtp_password?: string;
     [key: string]: string | undefined;
 }
 
@@ -21,6 +22,9 @@ export default function SystemSettingsPage() {
     const [editedSettings, setEditedSettings] = useState<SystemSettings>({});
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [testing, setTesting] = useState(false);
+    const [testEmail, setTestEmail] = useState("");
+    const [showTestDialog, setShowTestDialog] = useState(false);
 
     useEffect(() => {
         fetchSettings();
@@ -67,6 +71,33 @@ export default function SystemSettingsPage() {
             alert(`Failed to save settings: ${e.message}`);
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleTestEmail = async () => {
+        if (!testEmail) return alert("Please enter a test email address");
+        setTesting(true);
+        try {
+            const res = await fetch("/api/admin/system-settings/test-email", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    'X-Admin-Token': ADMIN_TOKEN
+                },
+                body: JSON.stringify({ to: testEmail })
+            });
+
+            const data = await res.json() as any;
+            if (res.ok) {
+                alert("Test email sent successfully! Please check your inbox (and spam folder).");
+                setShowTestDialog(false);
+            } else {
+                alert(`Failed to send test email: ${data.error}`);
+            }
+        } catch (e: any) {
+            alert(`Error: ${e.message}`);
+        } finally {
+            setTesting(false);
         }
     };
 
@@ -164,34 +195,95 @@ export default function SystemSettingsPage() {
                                     className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all dark:text-white"
                                 />
                             </div>
+                            <div className="flex flex-col gap-2">
+                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">SMTP Password</label>
+                                <input
+                                    type="password"
+                                    value={editedSettings.smtp_password || ''}
+                                    onChange={e => setEditedSettings({ ...editedSettings, smtp_password: e.target.value })}
+                                    placeholder="••••••••"
+                                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all dark:text-white"
+                                />
+                            </div>
                         </div>
-                        <div className="mt-10 pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
+                        <div className="mt-10 pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
                             <button
                                 type="button"
-                                onClick={() => setEditedSettings(settings)}
-                                disabled={!hasChanges}
-                                className="px-6 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                onClick={() => {
+                                    setTestEmail(editedSettings.support_email || '');
+                                    setShowTestDialog(true);
+                                }}
+                                className="px-6 py-2.5 text-sm font-semibold text-primary hover:bg-primary/5 rounded-lg transition-colors flex items-center gap-2"
                             >
-                                Discard
+                                <span className="material-symbols-outlined text-lg">test_reliable</span>
+                                Send Test Email
                             </button>
-                            <button
-                                type="button"
-                                onClick={handleSave}
-                                disabled={!hasChanges || saving}
-                                className="bg-nordic-midnight text-white px-8 py-2.5 text-sm font-semibold rounded-lg hover:bg-slate-800 transition-colors shadow-lg shadow-nordic-midnight/10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                            >
-                                {saving ? (
-                                    <>
-                                        <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
-                                        Saving...
-                                    </>
-                                ) : (
-                                    'Save Changes'
-                                )}
-                            </button>
+                            <div className="flex gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setEditedSettings(settings)}
+                                    disabled={!hasChanges}
+                                    className="px-6 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    Discard
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleSave}
+                                    disabled={!hasChanges || saving}
+                                    className="bg-nordic-midnight text-white px-8 py-2.5 text-sm font-semibold rounded-lg hover:bg-slate-800 transition-colors shadow-lg shadow-nordic-midnight/10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                >
+                                    {saving ? (
+                                        <>
+                                            <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
+                                            Saving...
+                                        </>
+                                    ) : (
+                                        'Save Changes'
+                                    )}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </section>
+
+                {/* Test Email Modal */}
+                {showTestDialog && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/50 backdrop-blur-sm">
+                        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-sm w-full p-8">
+                            <h3 className="text-xl font-bold dark:text-white mb-2">Send Test Email</h3>
+                            <p className="text-slate-500 text-sm mb-6">Verify your system email settings by sending a test message.</p>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="text-xs font-bold text-slate-500 uppercase">Recipent Email</label>
+                                    <input
+                                        type="email"
+                                        value={testEmail}
+                                        onChange={e => setTestEmail(e.target.value)}
+                                        className="w-full mt-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2 text-sm dark:text-white outline-none focus:ring-2 focus:ring-primary/50"
+                                    />
+                                </div>
+
+                                <div className="flex gap-3 pt-2">
+                                    <button
+                                        onClick={() => setShowTestDialog(false)}
+                                        className="flex-1 px-4 py-2 text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleTestEmail}
+                                        disabled={testing}
+                                        className="flex-1 px-4 py-2 text-sm font-bold bg-primary text-white rounded-lg hover:bg-blue-600 transition-all flex items-center justify-center gap-2"
+                                    >
+                                        {testing ? <span className="material-symbols-outlined text-lg animate-spin">progress_activity</span> : <span>Send Now</span>}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {hasChanges && (
                     <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 flex items-start gap-3">
