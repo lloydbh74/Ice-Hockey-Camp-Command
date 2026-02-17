@@ -53,14 +53,14 @@ export class ReminderService {
                 if (daysSinceLastEvent >= reminder_cadence_days) {
                     console.log(`[ReminderService] Sending reminder to ${purchase.guardian_email} for Purchase ${purchase.id}`);
 
-                    const success = await EmailService.sendRegistrationReminder(db, {
+                    const result = await EmailService.sendRegistrationReminder(db, {
                         to: purchase.guardian_email,
                         guardianName: purchase.guardian_name,
                         productName: purchase.product_name,
                         token: purchase.registration_token
                     });
 
-                    if (success) {
+                    if (result.success) {
                         // 5. Record the reminder
                         // (Using registration_token as the reminder token for simplicity)
                         await db.prepare("INSERT INTO Reminders (purchase_id, sent_at, token, expires_at) VALUES (?, CURRENT_TIMESTAMP, ?, ?)")

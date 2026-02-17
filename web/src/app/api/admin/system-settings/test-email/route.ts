@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
 
         const db = await getDb();
 
-        await EmailService.sendEmail(db, {
+        const result = await EmailService.sendEmail(db, {
             to,
             subject: 'SMTP Configuration Test - Swedish Camp Command',
             text: 'If you see this, your SMTP configuration is correct and working from Cloudflare Edge!',
@@ -24,6 +24,10 @@ export async function POST(request: NextRequest) {
                 </div>
             `
         });
+
+        if (!result.success) {
+            return NextResponse.json({ error: result.error || 'Unknown SMTP error' }, { status: 500 });
+        }
 
         return NextResponse.json({ success: true });
     } catch (e: any) {

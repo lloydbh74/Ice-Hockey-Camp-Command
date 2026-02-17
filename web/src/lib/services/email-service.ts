@@ -10,11 +10,10 @@ export interface EmailOptions {
 export class EmailService {
     /**
      * Sends an email using the configured SMTP settings in SystemSettings.
-     * Note: On Cloudflare Workers, this typically requires an external API 
-     * (Postmark, Resend, or a custom SMTP Relay worker) unless using a 
-     * specific DMARC-compliant integration.
+     * Returns a result object with success status and optional error message.
      */
-    static async sendEmail(db: D1Database, options: EmailOptions): Promise<boolean> {
+    static async sendEmail(db: D1Database, options: EmailOptions): Promise<{ success: boolean; error?: string }> {
+        let socket: any;
         try {
             // 1. Fetch SMTP settings
             const { results } = await db.prepare("SELECT key, value FROM SystemSettings WHERE key IN ('smtp_host', 'smtp_port', 'smtp_username', 'smtp_password', 'support_email')").all();
@@ -25,7 +24,7 @@ export class EmailService {
             if (!settings.smtp_host || !settings.smtp_username || !settings.smtp_password) {
                 console.warn("[EmailService] Missing SMTP credentials, falling back to mock logs.");
                 console.log(`[MOCK EMAIL] To: ${options.to} | Subject: ${options.subject}`);
-                return true;
+                return { success: true };
             }
 
             const host = settings.smtp_host;
@@ -36,45 +35,69 @@ export class EmailService {
 
             console.log(`[EmailService] Attempting real SMTP delivery to ${options.to} via ${host}:${port}`);
 
-            // Cloudflare Edge TCP Socket sending
-            // We use a simplified SMTP flow: HELO -> AUTH LOGIN -> MAIL FROM -> RCPT TO -> DATA -> QUIT
-            // Note: Cloudflare's connect() API requires 'connect_direct' permissions in wrangler.toml
-
-            // DYNAMIC IMPORT FIX: Using a variable prevents Webpack from statically analyzing the protocol
             const SOCKET_MODULE = `cloudflare:sockets`;
             const { connect } = await import(SOCKET_MODULE);
-            const socket = connect({ hostname: host, port: port });
-            const writer = socket.writable.getWriter();
-            const reader = socket.readable.getReader();
+
+            socket = connect({ hostname: host, port: port });
+            let writer = socket.writable.getWriter();
+            let reader = socket.readable.getReader();
             const decoder = new TextDecoder();
             const encoder = new TextEncoder();
 
-            async function sendCommand(cmd: string) {
-                await writer.write(encoder.encode(cmd + "\r\n"));
+            async function receive() {
                 const { value } = await reader.read();
-                const response = decoder.decode(value);
-                console.log(`[SMTP] > ${cmd} | < ${response.trim()}`);
-                return response;
+                if (!value) throw new Error("Connection closed unexpectedly");
+                const resp = decoder.decode(value);
+                console.log(`[SMTP] < ${resp.trim()}`);
+                return resp;
+            }
+
+            async function sendCommand(cmd: string) {
+                console.log(`[SMTP] > ${cmd.startsWith("AUTH") || cmd.length > 20 ? cmd.split(" ")[0] : cmd}`);
+                await writer.write(encoder.encode(cmd + "\r\n"));
+                return await receive();
             }
 
             // Initial greeting
-            const { value: initialResponse } = await reader.read();
-            console.log(`[SMTP] Connect: ${decoder.decode(initialResponse).trim()}`);
+            const initial = await receive();
+            if (!initial.startsWith("220")) throw new Error(`Invalid greeting: ${initial}`);
 
             await sendCommand(`EHLO ${host}`);
 
+            // STARTTLS for port 587
+            if (port === 587) {
+                const startTlsResp = await sendCommand("STARTTLS");
+                if (startTlsResp.startsWith("220")) {
+                    console.log("[SMTP] Upgrading to TLS...");
+                    const secureSocket = socket.startTls();
+
+                    // After startTls, old reader/writer are invalid
+                    writer = secureSocket.writable.getWriter();
+                    reader = secureSocket.readable.getReader();
+
+                    // HELO again over TLS
+                    await sendCommand(`EHLO ${host}`);
+                } else {
+                    console.warn("[SMTP] STARTTLS not supported or failed, proceeding in cleartext (risky)");
+                }
+            }
+
             // AUTH LOGIN
-            await sendCommand("AUTH LOGIN");
+            const authResp = await sendCommand("AUTH LOGIN");
+            if (!authResp.startsWith("334")) throw new Error(`AUTH LOGIN failed: ${authResp}`);
+
             await sendCommand(btoa(user));
-            await sendCommand(btoa(pass));
+            const passResp = await sendCommand(btoa(pass));
+            if (!passResp.startsWith("235")) throw new Error(`Authentication failed: ${passResp}`);
 
             // Transaction
             await sendCommand(`MAIL FROM:<${from}>`);
-            await sendCommand(`RCPT TO:<${options.to}>`);
+            const rcptResp = await sendCommand(`RCPT TO:<${options.to}>`);
+            if (!rcptResp.startsWith("250")) throw new Error(`Recipient rejected: ${rcptResp}`);
 
             // DATA
-            await writer.write(encoder.encode("DATA\r\n"));
-            await reader.read(); // Wait for 354
+            const dataResp = await sendCommand("DATA");
+            if (!dataResp.startsWith("354")) throw new Error(`DATA command failed: ${dataResp}`);
 
             const message = [
                 `From: ${from}`,
@@ -82,22 +105,24 @@ export class EmailService {
                 `Subject: ${options.subject}`,
                 `Content-Type: text/html; charset=UTF-8`,
                 `MIME-Version: 1.0`,
+                `Date: ${new Date().toUTCString()}`,
                 ``,
                 options.html,
                 `.`
             ].join("\r\n");
 
-            await sendCommand(message);
+            const finalResp = await sendCommand(message);
+            if (!finalResp.startsWith("250")) throw new Error(`Message delivery failed: ${finalResp}`);
+
             await sendCommand("QUIT");
-
-            await writer.close();
-            await reader.cancel();
-
-            return true;
+            return { success: true };
         } catch (error: any) {
             console.error("[EmailService] SMTP Error:", error);
-            // Don't crash the whole worker, just return false
-            return false;
+            return { success: false, error: error.message };
+        } finally {
+            if (socket) {
+                try { socket.close(); } catch (e) { }
+            }
         }
     }
 
@@ -106,7 +131,7 @@ export class EmailService {
         guardianName: string,
         productName: string,
         token: string
-    }) {
+    }): Promise<{ success: boolean; error?: string }> {
         const registrationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/registration/${data.token}`;
 
         return await this.sendEmail(db, {
@@ -114,7 +139,7 @@ export class EmailService {
             subject: `Action Required: Register for ${data.productName}`,
             text: `Hi ${data.guardianName},\n\nThank you for your purchase of ${data.productName}. Please complete the player registration form here: ${registrationUrl}`,
             html: `
-                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; rounded: 12px;">
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
                     <h2 style="color: #0f172a;">Welcome to Swedish Camp!</h2>
                     <p>Hi <strong>${data.guardianName}</strong>,</p>
                     <p>Thank you for your purchase of <strong>${data.productName}</strong>. To ensure everything is ready for your player, please complete the final registration step below:</p>
@@ -132,7 +157,7 @@ export class EmailService {
         guardianName: string,
         productName: string,
         token: string
-    }) {
+    }): Promise<{ success: boolean; error?: string }> {
         const registrationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/registration/${data.token}`;
 
         return await this.sendEmail(db, {
@@ -140,7 +165,7 @@ export class EmailService {
             subject: `Reminder: Complete your ${data.productName} registration`,
             text: `Hi ${data.guardianName},\n\nThis is a friendly reminder to complete your player registration for ${data.productName}: ${registrationUrl}`,
             html: `
-                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; rounded: 12px;">
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
                     <h2 style="color: #0f172a;">Friendly Reminder</h2>
                     <p>Hi <strong>${data.guardianName}</strong>,</p>
                     <p>We're looking forward to seeing you at <strong>${data.productName}</strong>! We noticed your player registration is still incomplete.</p>
@@ -156,7 +181,7 @@ export class EmailService {
     static async sendAdminMagicLink(db: D1Database, data: {
         to: string,
         token: string
-    }) {
+    }): Promise<{ success: boolean; error?: string }> {
         const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/admin/auth/verify?token=${data.token}`;
 
         return await this.sendEmail(db, {

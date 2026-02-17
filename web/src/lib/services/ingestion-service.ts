@@ -101,12 +101,16 @@ export class IngestionService {
                 // 5.5. Trigger first invitation email
                 // Note: In a full worker environment, we might use a Queue or wait for the batch to succeed.
                 // For MVP, we trigger it here.
-                await EmailService.sendRegistrationInvitation(db, {
+                const emailResult = await EmailService.sendRegistrationInvitation(db, {
                     to: payload.guardianEmail,
                     guardianName: payload.guardianName,
                     productName: mapping.product.name,
                     token: registrationToken
                 });
+
+                if (!emailResult.success) {
+                    console.warn(`[Ingestion] Failed to send invitation email: ${emailResult.error}`);
+                }
             }
 
             // 6. Add Log entry to the same batch for atomicity
