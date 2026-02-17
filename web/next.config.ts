@@ -11,8 +11,10 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  webpack: (config) => {
-    config.externals.push(/^(cloudflare:.*)$/);
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals.push('cloudflare:sockets');
+    }
     return config;
   },
 };
