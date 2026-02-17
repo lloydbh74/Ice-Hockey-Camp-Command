@@ -215,7 +215,7 @@ export default function SystemSettingsPage() {
                                 }}
                                 className="px-5 py-2.5 text-sm font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-xl transition-all flex items-center gap-2 group border border-transparent hover:border-blue-500/50"
                             >
-                                <span className="material-symbols-outlined text-xl transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5">forward_to_inbox</span>
+                                <span className="material-symbols-outlined text-xl">forward_to_inbox</span>
                                 Send Test Email
                             </button>
                             <div className="flex gap-3">
@@ -256,7 +256,7 @@ export default function SystemSettingsPage() {
 
                             <div className="space-y-4">
                                 <div>
-                                    <label className="text-xs font-bold text-slate-500 uppercase">Recipent Email</label>
+                                    <label className="text-xs font-bold text-slate-500 uppercase">Recipient Email</label>
                                     <input
                                         type="email"
                                         value={testEmail}
