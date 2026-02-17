@@ -1,0 +1,10 @@
+name = "swedish-camp-command"
+compatibility_date = "2024-11-18"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".vercel/output/static"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "swedish-camp-db"
+database_id = "17e1e9bd-f623-4a17-864a-e64dc25fcc8e"
+migrations_dir = "migrations"
