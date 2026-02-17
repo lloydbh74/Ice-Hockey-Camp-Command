@@ -16,22 +16,85 @@ export class EmailService {
      */
     static async sendEmail(db: D1Database, options: EmailOptions): Promise<boolean> {
         try {
-            // 1. Fetch SMTP/Email settings
-            const { results } = await db.prepare("SELECT key, value FROM SystemSettings WHERE key IN ('smtp_host', 'smtp_port', 'smtp_username', 'support_email')").all();
+            // 1. Fetch SMTP settings
+            const { results } = await db.prepare("SELECT key, value FROM SystemSettings WHERE key IN ('smtp_host', 'smtp_port', 'smtp_username', 'smtp_password', 'support_email')").all();
 
             const settings: Record<string, string> = {};
             results?.forEach((row: any) => settings[row.key] = row.value);
 
-            console.log(`[EmailService] Mock Sending email to ${options.to}`);
-            console.log(`[EmailService] Subject: ${options.subject}`);
+            if (!settings.smtp_host || !settings.smtp_username || !settings.smtp_password) {
+                console.warn("[EmailService] Missing SMTP credentials, falling back to mock logs.");
+                console.log(`[MOCK EMAIL] To: ${options.to} | Subject: ${options.subject}`);
+                return true;
+            }
 
-            // FOR MVP/LOCAL DEV: We log the email content.
-            // In Production, this would call an API like Resend or Postmark.
-            // TODO: Integrate with a real provider once API keys are provided.
+            const host = settings.smtp_host;
+            const port = parseInt(settings.smtp_port || '587');
+            const user = settings.smtp_username;
+            const pass = settings.smtp_password;
+            const from = settings.support_email || user;
+
+            console.log(`[EmailService] Attempting real SMTP delivery to ${options.to} via ${host}:${port}`);
+
+            // Cloudflare Edge TCP Socket sending
+            // We use a simplified SMTP flow: HELO -> AUTH LOGIN -> MAIL FROM -> RCPT TO -> DATA -> QUIT
+            // Note: Cloudflare's connect() API requires 'connect_direct' permissions in wrangler.toml
+
+            const { connect } = await import('cloudflare:sockets');
+            const socket = connect({ hostname: host, port: port });
+            const writer = socket.writable.getWriter();
+            const reader = socket.readable.getReader();
+            const decoder = new TextDecoder();
+            const encoder = new TextEncoder();
+
+            async function sendCommand(cmd: string) {
+                await writer.write(encoder.encode(cmd + "\r\n"));
+                const { value } = await reader.read();
+                const response = decoder.decode(value);
+                console.log(`[SMTP] > ${cmd} | < ${response.trim()}`);
+                return response;
+            }
+
+            // Initial greeting
+            const { value: initialResponse } = await reader.read();
+            console.log(`[SMTP] Connect: ${decoder.decode(initialResponse).trim()}`);
+
+            await sendCommand(`EHLO ${host}`);
+
+            // AUTH LOGIN
+            await sendCommand("AUTH LOGIN");
+            await sendCommand(btoa(user));
+            await sendCommand(btoa(pass));
+
+            // Transaction
+            await sendCommand(`MAIL FROM:<${from}>`);
+            await sendCommand(`RCPT TO:<${options.to}>`);
+
+            // DATA
+            await writer.write(encoder.encode("DATA\r\n"));
+            await reader.read(); // Wait for 354
+
+            const message = [
+                `From: ${from}`,
+                `To: ${options.to}`,
+                `Subject: ${options.subject}`,
+                `Content-Type: text/html; charset=UTF-8`,
+                `MIME-Version: 1.0`,
+                ``,
+                options.html,
+                `.`
+            ].join("\r\n");
+
+            await sendCommand(message);
+            await sendCommand("QUIT");
+
+            await writer.close();
+            await reader.cancel();
 
             return true;
-        } catch (error) {
-            console.error("[EmailService] Error sending email:", error);
+        } catch (error: any) {
+            console.error("[EmailService] SMTP Error:", error);
+            // Don't crash the whole worker, just return false
             return false;
         }
     }
