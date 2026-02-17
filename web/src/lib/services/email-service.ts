@@ -40,7 +40,9 @@ export class EmailService {
             // We use a simplified SMTP flow: HELO -> AUTH LOGIN -> MAIL FROM -> RCPT TO -> DATA -> QUIT
             // Note: Cloudflare's connect() API requires 'connect_direct' permissions in wrangler.toml
 
-            const { connect } = await import('cloudflare:sockets');
+            // DYNAMIC IMPORT FIX: Using a variable prevents Webpack from statically analyzing the protocol
+            const SOCKET_MODULE = `cloudflare:sockets`;
+            const { connect } = await import(SOCKET_MODULE);
             const socket = connect({ hostname: host, port: port });
             const writer = socket.writable.getWriter();
             const reader = socket.readable.getReader();
