@@ -1,6 +1,6 @@
 import { getRequestContext } from '@cloudflare/next-on-pages';
 
-export const runtime = 'edge';
+
 
 interface Env {
     DB: D1Database;
