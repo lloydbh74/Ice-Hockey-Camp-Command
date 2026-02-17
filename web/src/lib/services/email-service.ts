@@ -1,4 +1,6 @@
 import { D1Database } from "@cloudflare/workers-types";
+// @ts-ignore - cloudflare:sockets is a built-in module
+import { connect } from 'cloudflare:sockets';
 
 export interface EmailOptions {
     to: string;
@@ -15,6 +17,11 @@ export class EmailService {
     static async sendEmail(db: D1Database, options: EmailOptions): Promise<{ success: boolean; error?: string }> {
         let socket: any;
         try {
+            // Check if socket capability is available
+            if (typeof connect !== 'function') {
+                throw new Error("Cloudflare TCP sockets are not available in this environment. Please ensure 'nodejs_compat' is enabled in your Cloudflare project settings.");
+            }
+
             // 1. Fetch SMTP settings
             const { results } = await db.prepare("SELECT key, value FROM SystemSettings WHERE key IN ('smtp_host', 'smtp_port', 'smtp_username', 'smtp_password', 'support_email')").all();
 
@@ -34,9 +41,6 @@ export class EmailService {
             const from = settings.support_email || user;
 
             console.log(`[EmailService] Attempting real SMTP delivery to ${options.to} via ${host}:${port}`);
-
-            const SOCKET_MODULE = `cloudflare:sockets`;
-            const { connect } = await import(SOCKET_MODULE);
 
             socket = connect({ hostname: host, port: port });
             let writer = socket.writable.getWriter();
