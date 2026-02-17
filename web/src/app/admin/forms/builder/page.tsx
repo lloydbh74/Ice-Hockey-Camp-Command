@@ -1,5 +1,8 @@
 "use client";
 
+export const runtime = 'edge';
+
+
 import { useState, useEffect, useRef } from "react";
 import { DndContext, DragOverlay, DragStartEvent, DragEndEvent, useSensor, useSensors, PointerSensor, closestCenter } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable";

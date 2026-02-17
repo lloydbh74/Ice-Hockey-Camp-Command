@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getRequestContext } from '@cloudflare/next-on-pages';
 import { getDb } from '@/lib/db';
 import { ReminderService } from '@/lib/services/reminder-service';
 
@@ -10,7 +11,9 @@ export const runtime = 'edge';
  */
 export async function GET(request: NextRequest) {
     const authHeader = request.headers.get('Authorization');
-    const cronSecret = process.env.CRON_SECRET || 'swedish-camp-cron-2026';
+    const { env } = getRequestContext() as any;
+    const cronSecret = env.CRON_SECRET || 'swedish-camp-cron-2026';
+
 
     // Simple secret check
     if (authHeader !== `Bearer ${cronSecret}` && request.nextUrl.searchParams.get('token') !== cronSecret) {

@@ -1,5 +1,8 @@
 "use client";
 
+export const runtime = 'edge';
+
+
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { ScheduleSidebar } from '@/components/schedule/ScheduleSidebar';

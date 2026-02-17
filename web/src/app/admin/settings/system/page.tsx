@@ -1,5 +1,8 @@
 "use client";
 
+export const runtime = 'edge';
+
+
 import React, { useState, useEffect } from "react";
 
 const ADMIN_TOKEN = 'swedish-camp-admin-2026';
