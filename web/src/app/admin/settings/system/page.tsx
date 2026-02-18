@@ -10,10 +10,7 @@ const ADMIN_TOKEN = 'swedish-camp-admin-2026';
 interface SystemSettings {
     admin_emails?: string;
     support_email?: string;
-    smtp_host?: string;
-    smtp_port?: string;
-    smtp_username?: string;
-    smtp_password?: string;
+    brevo_api_key?: string;
     [key: string]: string | undefined;
 }
 
@@ -144,66 +141,38 @@ export default function SystemSettingsPage() {
                     </div>
                 </section>
 
-                {/* SMTP Configuration */}
+                {/* Email Configuration */}
                 <section className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
                     <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
                         <div>
                             <h3 className="text-[#0d161c] dark:text-white text-xl font-bold">Email Configuration</h3>
-                            <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">Configure support email for system notifications.</p>
+                            <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">Configure Brevo API for transactional emails (300/day free).</p>
                         </div>
                         <span className="material-symbols-outlined text-slate-400 dark:text-slate-600 text-4xl">mail</span>
                     </div>
                     <div className="p-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="flex flex-col gap-2">
-                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Support Email</label>
+                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Support / From Email</label>
                                 <input
                                     type="email"
                                     value={editedSettings.support_email || ''}
                                     onChange={e => setEditedSettings({ ...editedSettings, support_email: e.target.value })}
+                                    placeholder="info@swedishcamp.com"
                                     className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all dark:text-white"
                                 />
-                                <p className="text-xs text-slate-500 dark:text-slate-400">Used in &quot;Reply-To&quot; headers</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">Used as the &quot;From&quot; address on all emails</p>
                             </div>
                             <div className="flex flex-col gap-2">
-                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">SMTP Host</label>
-                                <input
-                                    type="text"
-                                    value={editedSettings.smtp_host || ''}
-                                    onChange={e => setEditedSettings({ ...editedSettings, smtp_host: e.target.value })}
-                                    placeholder="smtp.example.com"
-                                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all dark:text-white"
-                                />
-                            </div>
-                            <div className="flex flex-col gap-2">
-                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">SMTP Port</label>
-                                <input
-                                    type="number"
-                                    value={editedSettings.smtp_port || ''}
-                                    onChange={e => setEditedSettings({ ...editedSettings, smtp_port: e.target.value })}
-                                    placeholder="587"
-                                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all dark:text-white"
-                                />
-                            </div>
-                            <div className="flex flex-col gap-2">
-                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">SMTP Username</label>
-                                <input
-                                    type="text"
-                                    value={editedSettings.smtp_username || ''}
-                                    onChange={e => setEditedSettings({ ...editedSettings, smtp_username: e.target.value })}
-                                    placeholder="notifications@example.com"
-                                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all dark:text-white"
-                                />
-                            </div>
-                            <div className="flex flex-col gap-2">
-                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">SMTP Password</label>
+                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Brevo API Key</label>
                                 <input
                                     type="password"
-                                    value={editedSettings.smtp_password || ''}
-                                    onChange={e => setEditedSettings({ ...editedSettings, smtp_password: e.target.value })}
-                                    placeholder="••••••••"
-                                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all dark:text-white"
+                                    value={editedSettings.brevo_api_key || ''}
+                                    onChange={e => setEditedSettings({ ...editedSettings, brevo_api_key: e.target.value })}
+                                    placeholder="xsmtpsib-..."
+                                    className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm font-mono focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all dark:text-white"
                                 />
+                                <p className="text-xs text-slate-500 dark:text-slate-400">Get yours from <a href="https://app.brevo.com/settings/keys/api" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">brevo.com/settings/keys</a></p>
                             </div>
                         </div>
                         <div className="mt-10 pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
