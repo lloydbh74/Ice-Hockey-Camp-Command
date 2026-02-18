@@ -28,6 +28,12 @@ export async function POST(req: Request) {
         const templateName = 'Swedish Hockey Camp 2025 Comprehensive';
         const templateDescription = 'Detailed registration form matching the official 2025 Google Form.';
 
+        // Check if template already exists
+        const exists = await db.prepare("SELECT id FROM FormTemplates WHERE name = ?").bind(templateName).first();
+        if (exists) {
+            return NextResponse.json({ error: 'Template already exists. Use a different name or delete it first.' }, { status: 409 });
+        }
+
         const schema = [
             // SECTION 1: Participant Information
             { id: 's1_h', type: 'heading', label: 'Hockey Sweden Camp 3 Day Camp Registration Form', required: false, headingLevel: 'h1' },
