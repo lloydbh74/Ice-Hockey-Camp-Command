@@ -265,7 +265,33 @@ export default function PropertiesPanel({ field, onChange, onDelete }: Propertie
                                 <span className="material-symbols-outlined text-sm">add</span> Add Option
                             </button>
                         </div>
-                        {/* ... existing text options logic ... */}
+                        <div className="space-y-3">
+                            {(field.options || []).map((opt, idx) => (
+                                <div key={idx} className="flex items-center gap-2 group">
+                                    <div className="flex-1 border border-slate-200 dark:border-slate-800 rounded flex items-center bg-white dark:bg-slate-900 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
+                                        <input
+                                            type="text"
+                                            value={opt}
+                                            onChange={(e) => handleUpdateOption(idx, e.target.value)}
+                                            className="w-full px-3 py-1.5 text-sm bg-transparent outline-none text-slate-700 dark:text-slate-300"
+                                            placeholder={`Option ${idx + 1}`}
+                                        />
+                                    </div>
+                                    <button
+                                        onClick={() => handleDeleteOption(idx)}
+                                        className="p-1.5 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                                        title="Delete option"
+                                    >
+                                        <span className="material-symbols-outlined text-[18px]">close</span>
+                                    </button>
+                                </div>
+                            ))}
+                            {(!field.options || field.options.length === 0) && (
+                                <div className="text-sm text-slate-500 italic p-4 border border-dashed border-slate-200 rounded text-center">
+                                    No options added yet.
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
 
