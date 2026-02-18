@@ -14,9 +14,16 @@ interface Registration {
     product_name: string;
     camp_name?: string;
     amount: number;
+    currency: string;
     registration_state: string;
     purchase_timestamp: string;
 }
+
+const getCurrencySymbol = (currency?: string) => {
+    if (currency === 'GBP' || currency === 'SEK') return '£';
+    if (currency === 'EUR') return '€';
+    return '£'; // Default to GBP as per user request
+};
 
 function RegistrationsContent() {
     const searchParams = useSearchParams();
@@ -96,7 +103,7 @@ function RegistrationsContent() {
                                     {row.camp_name && <div className="text-[10px] text-slate-400 font-bold uppercase">{row.camp_name}</div>}
                                 </td>
                                 <td className="px-6 py-4 text-sm font-bold text-slate-900 dark:text-white">
-                                    {row.amount} SEK
+                                    {getCurrencySymbol(row.currency)}{row.amount}
                                 </td>
                                 <td className="px-6 py-4">
                                     <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${row.registration_state === 'completed' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'}`}>

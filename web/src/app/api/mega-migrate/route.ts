@@ -37,7 +37,7 @@ export async function GET() {
         await checkAndAddColumn('CampProducts', 'updated_at', 'TEXT DEFAULT CURRENT_TIMESTAMP');
 
         await checkAndAddColumn('Purchases', 'price_at_purchase', 'REAL');
-        await checkAndAddColumn('Purchases', 'currency', 'TEXT DEFAULT "SEK"');
+        await checkAndAddColumn('Purchases', 'currency', 'TEXT DEFAULT "GBP"');
         await checkAndAddColumn('Purchases', 'updated_at', 'TEXT DEFAULT CURRENT_TIMESTAMP');
 
         return NextResponse.json({ success: true, changes: results });

@@ -93,7 +93,7 @@ export class IngestionService {
                         payload.orderDate || new Date().toISOString(),
                         payload.rawEmailId,
                         mapping.price,
-                        payload.currency || 'SEK',
+                        payload.currency || 'GBP',
                         registrationToken
                     )
                 );

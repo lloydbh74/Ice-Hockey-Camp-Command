@@ -55,10 +55,9 @@ export default function CampDashboardPage({ params }: { params: Promise<{ id: st
     if (!camp) return <div className="p-8 text-red-500 font-bold">Camp not found.</div>;
 
     const getCurrencySymbol = (currency?: string) => {
-        if (currency === 'GBP') return '£';
-        if (currency === 'SEK') return 'kr ';
+        if (currency === 'GBP' || currency === 'SEK') return '£';
         if (currency === 'EUR') return '€';
-        return '';
+        return '£'; // Default to GBP
     };
 
     const totalRevenue = registrations.reduce((sum, r) => sum + (r.amount || 0), 0);
