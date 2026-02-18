@@ -174,7 +174,7 @@ export default function PropertiesPanel({ field, onChange, onDelete }: Propertie
                 {!['divider', 'separator'].includes(field.type) && (
                     <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                            <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+                            <label htmlFor="field-content-input" className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                                 {['heading', 'paragraph', 'bullet'].includes(field.type) ? 'Content' : 'Label'}
                             </label>
                         </div>
@@ -199,6 +199,7 @@ export default function PropertiesPanel({ field, onChange, onDelete }: Propertie
 
                             {['heading', 'bullet'].includes(field.type) ? (
                                 <input
+                                    id="field-content-input"
                                     ref={activeTextareaRef as React.Ref<HTMLInputElement>}
                                     type="text"
                                     value={field.label}
@@ -208,6 +209,7 @@ export default function PropertiesPanel({ field, onChange, onDelete }: Propertie
                                 />
                             ) : (
                                 <textarea
+                                    id="field-content-input"
                                     ref={activeTextareaRef as any}
                                     value={field.label}
                                     onChange={(e) => onChange({ label: e.target.value })}
@@ -222,8 +224,9 @@ export default function PropertiesPanel({ field, onChange, onDelete }: Propertie
                 {/* Heading Level - Only for Headings */}
                 {field.type === 'heading' && (
                     <div className="space-y-3">
-                        <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Heading Level</label>
+                        <label htmlFor="heading-level-select" className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Heading Level</label>
                         <select
+                            id="heading-level-select"
                             value={field.headingLevel || 'h2'}
                             onChange={(e) => onChange({ headingLevel: e.target.value as any })}
                             className="w-full p-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-md text-slate-700 dark:text-slate-300 focus:ring-2 focus:ring-primary outline-none"

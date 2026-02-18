@@ -58,7 +58,9 @@ function RegistrationsContent() {
                 </div>
 
                 <div className="flex items-center gap-2">
+                    <label htmlFor="status-filter" className="text-xs font-bold text-slate-500 uppercase tracking-widest">Filter:</label>
                     <select
+                        id="status-filter"
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
                         className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-blue-500/20"

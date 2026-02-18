@@ -2,8 +2,18 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Swedish Camp Command",
-  description: "Management system for Swedish Ice Hockey Camps",
+  title: "Swedish Camp Command | Elite Ice Hockey Training Management",
+  description: "The definitive management system for Swedish Ice Hockey Camps. Professional coaching, elite facilities, and seamless camp coordination.",
+  keywords: ["Ice Hockey", "Swedish hockey", "hockey training", "camp management", "scouting"],
+  authors: [{ name: "Swedish Camp Command" }],
+  openGraph: {
+    title: "Swedish Camp Command | Elite Ice Hockey Training Management",
+    description: "Manage and coordinate elite ice hockey camps in Sweden with ease.",
+    type: "website",
+    locale: "en_GB",
+    url: "https://swedish-camp-command.com", // Placeholder URL
+    siteName: "Swedish Camp Command",
+  },
 };
 
 export const runtime = 'edge';

@@ -5,12 +5,12 @@
 
 import { Button } from "@/components/ui/button"
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -37,11 +37,17 @@ export function AuthLayout() {
           <TabsTrigger value="login">Login</TabsTrigger>
           <TabsTrigger value="register">Register</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="login">
-          <Card>
-            <CardHeader>
-              <CardTitle>Login</CardTitle>
+          <Card className="border-slate-200 dark:border-slate-800 shadow-xl">
+            <CardHeader className="space-y-1">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-2xl font-black tracking-tight">Login</CardTitle>
+                <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                  <span className="material-symbols-outlined text-xs">lock</span>
+                  SSL Secure
+                </div>
+              </div>
               <CardDescription>
                 Enter your credentials to access your account.
               </CardDescription>
@@ -55,6 +61,7 @@ export function AuthLayout() {
                     type="email"
                     placeholder="m@example.com"
                     required
+                    className="bg-background-light dark:bg-background-dark border-slate-200 dark:border-slate-800"
                   />
                 </div>
                 <div className="space-y-2">
@@ -63,13 +70,14 @@ export function AuthLayout() {
                     id="password"
                     type="password"
                     required
+                    className="bg-background-light dark:bg-background-dark border-slate-200 dark:border-slate-800"
                   />
                 </div>
               </CardContent>
               <CardFooter className="flex flex-col space-y-4">
-                <Button 
-                  type="submit" 
-                  className="w-full"
+                <Button
+                  type="submit"
+                  className="w-full bg-[#1a1a1a] dark:bg-zinc-50 dark:text-black font-bold hover:opacity-90 transition-opacity"
                   disabled={isLoading}
                 >
                   {isLoading ? "Signing in..." : "Sign in"}
@@ -77,7 +85,7 @@ export function AuthLayout() {
                 <Button
                   type="button"
                   variant="link"
-                  className="w-full text-sm text-muted-foreground"
+                  className="w-full text-xs text-muted-foreground hover:text-primary"
                 >
                   Forgot password?
                 </Button>
@@ -85,11 +93,17 @@ export function AuthLayout() {
             </form>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="register">
-          <Card>
-            <CardHeader>
-              <CardTitle>Create an account</CardTitle>
+          <Card className="border-slate-200 dark:border-slate-800 shadow-xl">
+            <CardHeader className="space-y-1">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-2xl font-black tracking-tight">Create an account</CardTitle>
+                <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                  <span className="material-symbols-outlined text-xs">lock</span>
+                  SSL Secure
+                </div>
+              </div>
               <CardDescription>
                 Enter your information to create an account.
               </CardDescription>
@@ -102,6 +116,7 @@ export function AuthLayout() {
                     id="name"
                     placeholder="John Doe"
                     required
+                    className="bg-background-light dark:bg-background-dark border-slate-200 dark:border-slate-800"
                   />
                 </div>
                 <div className="space-y-2">
@@ -111,6 +126,7 @@ export function AuthLayout() {
                     type="email"
                     placeholder="m@example.com"
                     required
+                    className="bg-background-light dark:bg-background-dark border-slate-200 dark:border-slate-800"
                   />
                 </div>
                 <div className="space-y-2">
@@ -119,6 +135,7 @@ export function AuthLayout() {
                     id="register-password"
                     type="password"
                     required
+                    className="bg-background-light dark:bg-background-dark border-slate-200 dark:border-slate-800"
                   />
                 </div>
                 <div className="space-y-2">
@@ -127,13 +144,14 @@ export function AuthLayout() {
                     id="confirm-password"
                     type="password"
                     required
+                    className="bg-background-light dark:bg-background-dark border-slate-200 dark:border-slate-800"
                   />
                 </div>
               </CardContent>
               <CardFooter>
-                <Button 
-                  type="submit" 
-                  className="w-full"
+                <Button
+                  type="submit"
+                  className="w-full bg-[#1a1a1a] dark:bg-zinc-50 dark:text-black font-bold hover:opacity-90 transition-opacity"
                   disabled={isLoading}
                 >
                   {isLoading ? "Creating account..." : "Create account"}
