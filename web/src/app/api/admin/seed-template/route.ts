@@ -20,7 +20,7 @@ export async function POST(req: Request) {
         const db = await getDb();
 
         // Verify admin token
-        const settings = await db.prepare('SELECT admin_token FROM SystemSettings LIMIT 1').get<{ admin_token: string }>();
+        const settings = await db.prepare('SELECT admin_token FROM SystemSettings LIMIT 1').first<{ admin_token: string }>();
         if (!settings || settings.admin_token !== adminToken) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
