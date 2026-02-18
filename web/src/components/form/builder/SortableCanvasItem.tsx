@@ -101,6 +101,9 @@ export function SortableCanvasItem({ id, field, isSelected, onSelect, onDelete }
                             {field.type === 'text' && (
                                 <input type="text" disabled className="w-full border border-slate-300 dark:border-slate-700 rounded px-3 py-2 bg-slate-50 dark:bg-slate-800 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500" placeholder="Text answer" />
                             )}
+                            {field.type === 'date' && (
+                                <input type="date" disabled className="w-full border border-slate-300 dark:border-slate-700 rounded px-3 py-2 bg-slate-50 dark:bg-slate-800 text-sm text-slate-900 dark:text-slate-100" />
+                            )}
                             {field.type === 'checkbox' && (
                                 <div className="space-y-2">
                                     {(field.options && field.options.length > 0 ? field.options : ['Option 1', 'Option 2']).map((opt: string, idx: number) => (

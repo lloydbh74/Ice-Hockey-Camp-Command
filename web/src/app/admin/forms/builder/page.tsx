@@ -13,7 +13,7 @@ import PropertiesPanel from "@/components/form/builder/PropertiesPanel";
 
 interface FormField {
     id: string;
-    type: 'text' | 'select' | 'checkbox' | 'radio' | 'image_choice' | 'heading' | 'paragraph' | 'bullet' | 'divider' | 'separator';
+    type: 'text' | 'select' | 'checkbox' | 'radio' | 'image_choice' | 'date' | 'heading' | 'paragraph' | 'bullet' | 'divider' | 'separator';
     label: string;
     required: boolean;
     options?: string[];
@@ -413,6 +413,7 @@ export default function FormBuilderPage() {
                                 <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-3 uppercase tracking-wider">Inputs</h3>
                                 <div className="space-y-2">
                                     <DraggableToolboxItem onClick={() => handleAddItem('text')} type="text" label="Text Input" icon={<span className="material-symbols-outlined">short_text</span>} />
+                                    <DraggableToolboxItem onClick={() => handleAddItem('date')} type="date" label="Date Input" icon={<span className="material-symbols-outlined">calendar_today</span>} />
                                     <DraggableToolboxItem onClick={() => handleAddItem('checkbox')} type="checkbox" label="Checkbox" icon={<span className="material-symbols-outlined">check_box</span>} />
                                     <DraggableToolboxItem onClick={() => handleAddItem('radio')} type="radio" label="Radio Group" icon={<span className="material-symbols-outlined">radio_button_checked</span>} />
                                     <DraggableToolboxItem onClick={() => handleAddItem('select')} type="select" label="Dropdown" icon={<span className="material-symbols-outlined">arrow_drop_down_circle</span>} />

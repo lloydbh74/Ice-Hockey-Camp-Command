@@ -4,7 +4,7 @@ import LinkInsertionModal from "./LinkInsertionModal";
 
 interface FormField {
     id: string;
-    type: 'text' | 'select' | 'checkbox' | 'radio' | 'image_choice' | 'heading' | 'paragraph' | 'bullet' | 'divider' | 'separator';
+    type: 'text' | 'select' | 'checkbox' | 'radio' | 'image_choice' | 'date' | 'heading' | 'paragraph' | 'bullet' | 'divider' | 'separator';
     label: string;
     required: boolean;
     options?: string[];
