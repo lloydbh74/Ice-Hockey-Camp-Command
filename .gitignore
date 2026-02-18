@@ -29,5 +29,9 @@ yarn-error.log*
 *.swp
 *.swo
 
+# Sensitive / scratch files
+scratchpad.md
+*.csv
+
 # Cloudflare / Wrangler
 .wrangler/

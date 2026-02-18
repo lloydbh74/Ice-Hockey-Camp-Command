@@ -3,12 +3,20 @@
 export const runtime = 'edge';
 
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 export default function AdminLoginPage() {
     const [email, setEmail] = useState("");
     const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
     const [message, setMessage] = useState("");
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get('token');
+        if (token) {
+            window.location.href = `/api/admin/auth/verify?token=${token}`;
+        }
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
