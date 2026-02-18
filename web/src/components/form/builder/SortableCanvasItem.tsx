@@ -42,8 +42,23 @@ export function SortableCanvasItem({ id, field, isSelected, onSelect, onDelete }
 
             <div className="ml-8 pr-8">
                 {/* Structural Components */}
-                {['heading', 'paragraph', 'bullet', 'divider', 'separator'].includes(field.type) ? (
+                {['heading', 'paragraph', 'bullet', 'divider', 'separator', 'image'].includes(field.type) ? (
                     <div className="pointer-events-none">
+                        {field.type === 'image' && (
+                            <div className="my-4">
+                                {field.imageUrl ? (
+                                    <div className="rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+                                        <img src={field.imageUrl} alt={field.imageAlt || 'Reference Image'} className="w-full h-auto max-h-[400px] object-contain mx-auto" />
+                                    </div>
+                                ) : (
+                                    <div className="aspect-[16/9] rounded-lg border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex flex-col items-center justify-center text-slate-400 dark:text-slate-600">
+                                        <span className="material-symbols-outlined text-4xl mb-2">image</span>
+                                        <p className="text-sm font-medium">Static Image</p>
+                                        <p className="text-[10px] opacity-60">Add URL in properties</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                         {field.type === 'heading' && (
                             <div className={`font-bold text-slate-800 dark:text-slate-100 ${field.headingLevel === 'h1' ? 'text-4xl' :
                                 field.headingLevel === 'h3' ? 'text-xl' :
@@ -87,7 +102,7 @@ export function SortableCanvasItem({ id, field, isSelected, onSelect, onDelete }
                             </div>
                         )}
                         {field.type === 'separator' && (
-                            <hr className="border-slate-200 dark:border-slate-800 my-2" />
+                            <hr className="border-slate-300 dark:border-slate-700 my-4" />
                         )}
                     </div>
                 ) : (
@@ -99,10 +114,10 @@ export function SortableCanvasItem({ id, field, isSelected, onSelect, onDelete }
                         {/* Input Fields */}
                         <div className="pointer-events-none">
                             {field.type === 'text' && (
-                                <input type="text" disabled className="w-full border border-slate-300 dark:border-slate-700 rounded px-3 py-2 bg-slate-50 dark:bg-slate-800 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500" placeholder="Text answer" />
+                                <input type="text" disabled className="w-full border border-slate-400 dark:border-slate-700 rounded px-3 py-2 bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500" placeholder="Text answer" />
                             )}
                             {field.type === 'date' && (
-                                <input type="date" disabled className="w-full border border-slate-300 dark:border-slate-700 rounded px-3 py-2 bg-slate-50 dark:bg-slate-800 text-sm text-slate-900 dark:text-slate-100" />
+                                <input type="date" disabled className="w-full border border-slate-400 dark:border-slate-700 rounded px-3 py-2 bg-white dark:bg-slate-700 text-sm text-slate-900 dark:text-slate-100" />
                             )}
                             {field.type === 'checkbox' && (
                                 <div className="space-y-2">

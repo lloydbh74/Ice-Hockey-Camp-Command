@@ -6,13 +6,15 @@ import WizardNavigation from './WizardNavigation';
 
 interface FormField {
     id: string;
-    type: 'text' | 'select' | 'checkbox' | 'radio' | 'image_choice' | 'date' | 'heading' | 'paragraph' | 'bullet' | 'divider' | 'separator';
+    type: 'text' | 'select' | 'checkbox' | 'radio' | 'image_choice' | 'date' | 'image' | 'heading' | 'paragraph' | 'bullet' | 'divider' | 'separator';
     label: string;
     required: boolean;
     options?: string[];
     imageOptions?: { label: string; imageUrl: string }[];
     headingLevel?: 'h1' | 'h2' | 'h3' | 'h4';
     description?: string;
+    imageUrl?: string;
+    imageAlt?: string;
 }
 
 interface PublicFormRendererProps {
@@ -146,7 +148,7 @@ export default function PublicFormRenderer({ formId, schema, purchaseId, registr
                                         {...methods.register(field.id, { required: field.required })}
                                         aria-required={field.required}
                                         aria-invalid={!!methods.formState.errors[field.id]}
-                                        className="w-full p-3 bg-white border border-slate-200 dark:border-slate-800 dark:bg-slate-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                        className="w-full p-3 bg-white border border-slate-300 dark:border-slate-800 dark:bg-slate-800 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                                     />
                                 )}
 
@@ -157,7 +159,7 @@ export default function PublicFormRenderer({ formId, schema, purchaseId, registr
                                         {...methods.register(field.id, { required: field.required })}
                                         aria-required={field.required}
                                         aria-invalid={!!methods.formState.errors[field.id]}
-                                        className="w-full p-3 bg-white border border-slate-200 dark:border-slate-800 dark:bg-slate-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                        className="w-full p-3 bg-white border border-slate-300 dark:border-slate-800 dark:bg-slate-800 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                                     />
                                 )}
 
@@ -183,7 +185,7 @@ export default function PublicFormRenderer({ formId, schema, purchaseId, registr
                                         {...methods.register(field.id, { required: field.required })}
                                         aria-required={field.required}
                                         aria-invalid={!!methods.formState.errors[field.id]}
-                                        className="w-full p-3 bg-white border border-slate-200 dark:border-slate-800 dark:bg-slate-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                        className="w-full p-3 bg-white border border-slate-300 dark:border-slate-800 dark:bg-slate-800 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                                     >
                                         <option value="">Select an option...</option>
                                         {field.options?.map((opt, idx) => (
@@ -246,7 +248,13 @@ export default function PublicFormRenderer({ formId, schema, purchaseId, registr
                                 )}
 
                                 {field.type === 'separator' && (
-                                    <hr className="border-slate-100 dark:border-slate-800 my-4" />
+                                    <hr className="border-slate-300 dark:border-slate-700 my-6" />
+                                )}
+
+                                {field.type === 'image' && field.imageUrl && (
+                                    <div className="my-4 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+                                        <img src={field.imageUrl} alt={field.imageAlt || ''} className="w-full h-auto max-h-[600px] object-contain mx-auto" />
+                                    </div>
                                 )}
 
                                 {methods.formState.errors[field.id] && (

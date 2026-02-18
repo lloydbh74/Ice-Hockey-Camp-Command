@@ -4,12 +4,14 @@ import LinkInsertionModal from "./LinkInsertionModal";
 
 interface FormField {
     id: string;
-    type: 'text' | 'select' | 'checkbox' | 'radio' | 'image_choice' | 'date' | 'heading' | 'paragraph' | 'bullet' | 'divider' | 'separator';
+    type: 'text' | 'select' | 'checkbox' | 'radio' | 'image_choice' | 'date' | 'image' | 'heading' | 'paragraph' | 'bullet' | 'divider' | 'separator';
     label: string;
     required: boolean;
     options?: string[];
     imageOptions?: { label: string; imageUrl: string }[];
     headingLevel?: 'h1' | 'h2' | 'h3' | 'h4';
+    imageUrl?: string;
+    imageAlt?: string;
 }
 
 interface PropertiesPanelProps {
@@ -239,8 +241,34 @@ export default function PropertiesPanel({ field, onChange, onDelete }: Propertie
                     </div>
                 )}
 
+                {/* Static Image Settings */}
+                {field.type === 'image' && (
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Image URL</label>
+                            <input
+                                type="text"
+                                value={field.imageUrl || ""}
+                                onChange={(e) => onChange({ imageUrl: e.target.value })}
+                                className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900 dark:text-slate-100"
+                                placeholder="https://example.com/image.jpg"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Accessibility Alt Text</label>
+                            <input
+                                type="text"
+                                value={field.imageAlt || ""}
+                                onChange={(e) => onChange({ imageAlt: e.target.value })}
+                                className="w-full px-3 py-2 text-sm bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-900 dark:text-slate-100"
+                                placeholder="e.g. Jersey size chart"
+                            />
+                        </div>
+                    </div>
+                )}
+
                 {/* Required Toggle */}
-                {!['heading', 'paragraph', 'bullet', 'divider', 'separator'].includes(field.type) && (
+                {!['heading', 'paragraph', 'bullet', 'divider', 'separator', 'image'].includes(field.type) && (
                     <div className="flex items-center gap-3">
                         <input
                             type="checkbox"

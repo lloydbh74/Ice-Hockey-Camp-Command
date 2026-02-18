@@ -13,12 +13,14 @@ import PropertiesPanel from "@/components/form/builder/PropertiesPanel";
 
 interface FormField {
     id: string;
-    type: 'text' | 'select' | 'checkbox' | 'radio' | 'image_choice' | 'date' | 'heading' | 'paragraph' | 'bullet' | 'divider' | 'separator';
+    type: 'text' | 'select' | 'checkbox' | 'radio' | 'image_choice' | 'date' | 'image' | 'heading' | 'paragraph' | 'bullet' | 'divider' | 'separator';
     label: string;
     required: boolean;
     options?: string[];
     imageOptions?: { label: string; imageUrl: string }[];
     headingLevel?: 'h1' | 'h2' | 'h3' | 'h4';
+    imageUrl?: string;
+    imageAlt?: string;
 }
 
 import FormLibraryModal from "@/components/form/builder/FormLibraryModal";
@@ -408,6 +410,7 @@ export default function FormBuilderPage() {
                                 <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-3 uppercase tracking-wider">Structure</h3>
                                 <div className="space-y-2">
                                     <DraggableToolboxItem onClick={() => handleAddItem('heading')} type="heading" label="Heading" icon={<span className="material-symbols-outlined">title</span>} />
+                                    <DraggableToolboxItem onClick={() => handleAddItem('image')} type="image" label="Static Image" icon={<span className="material-symbols-outlined">image</span>} />
                                     <DraggableToolboxItem onClick={() => handleAddItem('paragraph')} type="paragraph" label="Paragraph" icon={<span className="material-symbols-outlined">notes</span>} />
                                     <DraggableToolboxItem onClick={() => handleAddItem('bullet')} type="bullet" label="Bullet Point" icon={<span className="material-symbols-outlined">format_list_bulleted</span>} />
                                     <DraggableToolboxItem onClick={() => handleAddItem('divider')} type="divider" label="Section Divider" icon={<span className="material-symbols-outlined">check_box_outline_blank</span>} />
