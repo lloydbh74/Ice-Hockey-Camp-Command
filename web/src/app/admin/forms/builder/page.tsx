@@ -370,6 +370,13 @@ export default function FormBuilderPage() {
                             Library
                         </button>
                         <button
+                            onClick={() => window.open(`/register/${currentFormId}`, '_blank')}
+                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                        >
+                            <span className="material-symbols-outlined text-[18px]">open_in_new</span>
+                            Test
+                        </button>
+                        <button
                             onClick={() => setIsModalOpen(true)}
                             className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-blue-600 shadow-sm transition-colors"
                         >

@@ -6,7 +6,7 @@ import WizardNavigation from './WizardNavigation';
 
 interface FormField {
     id: string;
-    type: 'text' | 'select' | 'checkbox' | 'radio' | 'image_choice' | 'heading' | 'paragraph' | 'bullet' | 'divider' | 'separator';
+    type: 'text' | 'select' | 'checkbox' | 'radio' | 'image_choice' | 'date' | 'heading' | 'paragraph' | 'bullet' | 'divider' | 'separator';
     label: string;
     required: boolean;
     options?: string[];
@@ -143,6 +143,17 @@ export default function PublicFormRenderer({ formId, schema, purchaseId, registr
                                     <input
                                         id={`field-${field.id}`}
                                         type="text"
+                                        {...methods.register(field.id, { required: field.required })}
+                                        aria-required={field.required}
+                                        aria-invalid={!!methods.formState.errors[field.id]}
+                                        className="w-full p-3 bg-white border border-slate-200 dark:border-slate-800 dark:bg-slate-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                    />
+                                )}
+
+                                {field.type === 'date' && (
+                                    <input
+                                        id={`field-${field.id}`}
+                                        type="date"
                                         {...methods.register(field.id, { required: field.required })}
                                         aria-required={field.required}
                                         aria-invalid={!!methods.formState.errors[field.id]}
