@@ -130,7 +130,18 @@ export default function FormBuilderPage() {
             headingLevel: type === 'heading' ? 'h2' : undefined,
             options: []
         };
-        updateSchema((prev) => [...prev, newItem]);
+
+        updateSchema((prev) => {
+            if (selectedFieldId) {
+                const index = prev.findIndex(f => f.id === selectedFieldId);
+                if (index !== -1) {
+                    const next = [...prev];
+                    next.splice(index, 0, newItem);
+                    return next;
+                }
+            }
+            return [...prev, newItem];
+        });
         setSelectedFieldId(newItem.id);
     };
 
@@ -146,7 +157,7 @@ export default function FormBuilderPage() {
         if (!over) return;
 
         // Dropping a Toolbox Item onto Canvas
-        if (active.data.current?.type === 'toolbox-item' && over.id === 'canvas-droppable') {
+        if (active.data.current?.type === 'toolbox-item') {
             const newItem: FormField = {
                 id: crypto.randomUUID(),
                 type: active.data.current.itemType,
@@ -157,7 +168,19 @@ export default function FormBuilderPage() {
                 headingLevel: active.data.current.itemType === 'heading' ? 'h2' : undefined,
                 options: []
             };
-            updateSchema((prev) => [...prev, newItem]);
+
+            updateSchema((prev) => {
+                // If dropped over a specific item, insert it there
+                const overIndex = prev.findIndex(item => item.id === over.id);
+                if (overIndex !== -1) {
+                    const next = [...prev];
+                    next.splice(overIndex, 0, newItem);
+                    return next;
+                }
+                // Otherwise append (e.g. if dropped on the general droppable container)
+                return [...prev, newItem];
+            });
+
             setSelectedFieldId(newItem.id);
             return;
         }
