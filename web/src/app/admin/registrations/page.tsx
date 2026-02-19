@@ -144,7 +144,11 @@ function RegistrationsContent() {
 
             if (res.ok) {
                 const data = await res.json() as any;
-                if (isBulk) alert(`Successfully sent ${data.summary.success} reminders. ${data.summary.failures} failed.`);
+                if (isBulk) {
+                    alert(`Successfully sent ${data.summary.success} reminders. ${data.summary.failures} failed.`);
+                } else {
+                    alert("Reminder sent successfully!");
+                }
                 // Refresh to show status changes
                 fetchRegistrations();
             } else {
@@ -162,15 +166,26 @@ function RegistrationsContent() {
     return (
         <div className="p-8 max-w-7xl mx-auto">
             <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    {campId && (
-                        <Link href={`/admin/camps/${campId}`} className="text-blue-600 hover:text-blue-700 text-xs font-bold uppercase tracking-wider mb-2 inline-flex items-center gap-1 group">
-                            <span className="material-symbols-outlined text-[14px] group-hover:-translate-x-0.5 transition-transform">arrow_back</span>
-                            Back to Dashboard
-                        </Link>
-                    )}
+                <div className="mb-6">
+                    <nav className="flex mb-4" aria-label="Breadcrumb">
+                        <ol className="inline-flex items-center space-x-1">
+                            <li>
+                                <Link href="/admin" className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-slate-300 transition-colors">
+                                    Dashboard
+                                </Link>
+                            </li>
+                            {campId && (
+                                <li className="flex items-center">
+                                    <span className="material-symbols-outlined text-slate-600 text-xs mx-1">chevron_right</span>
+                                    <Link href={`/admin/camps/${campId}`} className="text-xs font-bold uppercase tracking-widest text-blue-400 hover:text-blue-300 transition-colors">
+                                        Camp Dashboard
+                                    </Link>
+                                </li>
+                            )}
+                        </ol>
+                    </nav>
                     <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Registration Management</h1>
-                    <p className="text-slate-500 font-medium">Manage all camp purchases and completion states.</p>
+                    <p className="text-slate-500 font-medium font-semibold">Manage all camp purchases and completion states.</p>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
@@ -284,17 +299,18 @@ function RegistrationsContent() {
                                             <button
                                                 onClick={() => handleChase([row.id])}
                                                 disabled={chaseLoading[row.id]}
-                                                className="p-2 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg text-amber-500 hover:text-amber-600 transition-colors tooltip relative group"
+                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 rounded-lg transition-all border border-amber-500/20 active:scale-95 group"
                                                 title="Send Reminder"
                                             >
                                                 {chaseLoading[row.id] ? (
-                                                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                                    <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24">
                                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
                                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                     </svg>
                                                 ) : (
-                                                    <span className="material-symbols-outlined text-[20px]">mail</span>
+                                                    <span className="material-symbols-outlined text-[18px]">campaign</span>
                                                 )}
+                                                <span className="text-[10px] font-black uppercase tracking-tight">Chase</span>
                                             </button>
                                         )}
                                         <button
