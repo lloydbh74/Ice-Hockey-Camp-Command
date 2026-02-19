@@ -8,12 +8,18 @@ export class ReminderService {
     static async processReminders(db: D1Database) {
         console.log("[ReminderService] Starting reminder scan...");
 
-        // 1. Get all active camps with reminders enabled
+        // 1. Get all active camps where reminders are either explicitly enabled OR no settings exist yet (default to enabled)
         const campSettingsRes = await db.prepare(`
-            SELECT cs.*, c.name as camp_name
-            FROM CampSettings cs
-            JOIN Camps c ON cs.camp_id = c.id
-            WHERE cs.reminders_enabled = 1
+            SELECT 
+                COALESCE(cs.reminders_enabled, 1) as reminders_enabled,
+                COALESCE(cs.reminder_cadence_days, 7) as reminder_cadence_days,
+                COALESCE(cs.max_reminders, 3) as max_reminders,
+                c.id as camp_id,
+                c.name as camp_name
+            FROM Camps c
+            LEFT JOIN CampSettings cs ON c.id = cs.camp_id
+            WHERE c.status != 'archived'
+            AND COALESCE(cs.reminders_enabled, 1) = 1
         `).all();
 
         if (!campSettingsRes.results) return;
@@ -62,9 +68,11 @@ export class ReminderService {
 
                     if (result.success) {
                         // 5. Record the reminder
-                        // (Using registration_token as the reminder token for simplicity)
+                        // Generate a unique token for the log entry to avoid UNIQUE constraint violation on Reminders table
+                        const reminderLogToken = `rem_${purchase.id}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+
                         await db.prepare("INSERT INTO Reminders (purchase_id, sent_at, token, expires_at) VALUES (?, CURRENT_TIMESTAMP, ?, ?)")
-                            .bind(purchase.id, purchase.registration_token, new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString())
+                            .bind(purchase.id, reminderLogToken, new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString())
                             .run();
 
                         // Update purchase state if it was uninvited

@@ -41,16 +41,45 @@ export default function ReminderSettingsPage() {
             });
             if (!res.ok) throw new Error("Failed to fetch camps");
 
-            const campsData = await res.json() as Camp[];
+            const data = await res.json() as { results: Camp[] };
+            const campsData = data.results || [];
 
             // Fetch settings for each camp
             const campsWithSettings = await Promise.all(
                 campsData.map(async (camp) => {
-                    const settingsRes = await fetch(`/api/admin/camps/${camp.id}/settings`, {
-                        headers: { 'X-Admin-Token': ADMIN_TOKEN }
-                    });
-                    const settings = await settingsRes.json() as CampSettings;
-                    return { ...camp, settings };
+                    try {
+                        const settingsRes = await fetch(`/api/admin/camps/${camp.id}/settings`, {
+                            headers: { 'X-Admin-Token': ADMIN_TOKEN }
+                        });
+                        const settingsData = await settingsRes.json() as CampSettings | { error: string };
+
+                        // Handle the case where settings are not found (provide defaults)
+                        if ('error' in settingsData) {
+                            return {
+                                ...camp,
+                                settings: {
+                                    camp_id: camp.id,
+                                    reminders_enabled: 1,
+                                    reminder_cadence_days: 7,
+                                    max_reminders: 3
+                                }
+                            };
+                        }
+
+                        return { ...camp, settings: settingsData as CampSettings };
+                    } catch (e) {
+                        console.error(`Failed to fetch settings for camp ${camp.id}`, e);
+                        // Return with default settings on error
+                        return {
+                            ...camp,
+                            settings: {
+                                camp_id: camp.id,
+                                reminders_enabled: 1,
+                                reminder_cadence_days: 7,
+                                max_reminders: 3
+                            }
+                        };
+                    }
                 })
             );
 

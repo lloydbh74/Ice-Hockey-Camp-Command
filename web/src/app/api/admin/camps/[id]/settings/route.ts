@@ -10,7 +10,15 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         const id = parseInt(idStr);
 
         const settings = await db.prepare("SELECT * FROM CampSettings WHERE camp_id = ?").bind(id).first();
-        return NextResponse.json(settings || { error: 'Not found' });
+        if (!settings) {
+            return NextResponse.json({
+                camp_id: id,
+                reminders_enabled: 1,
+                reminder_cadence_days: 7,
+                max_reminders: 3
+            });
+        }
+        return NextResponse.json(settings);
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
