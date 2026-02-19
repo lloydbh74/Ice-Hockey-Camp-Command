@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb, getAttendanceList, listPurchasesByCamp, getKitOrderSummary } from '@/lib/db';
+import { getDb, getAttendanceList, listPurchasesByCamp, getKitOrderSummary, getKitPersonalizationList } from '@/lib/db';
 
 export const runtime = 'edge';
 
@@ -46,15 +46,21 @@ export async function GET(
         }
         else if (type === 'kit-orders') {
             const summary = await getKitOrderSummary(db, campId);
+            const personalizations = await getKitPersonalizationList(db, campId);
 
-            // Header
-            csvContent = 'Item Type,Size,Quantity\n';
+            csvContent = '--- AGGREGATED SUMMARY ---\n';
+            csvContent += 'Item Type,Size,Quantity\n';
 
-            // Rows
             Object.entries(summary).forEach(([itemType, sizes]) => {
                 Object.entries(sizes).forEach(([size, quantity]) => {
                     csvContent += `"${itemType}",${size},${quantity}\n`;
                 });
+            });
+
+            csvContent += '\n--- PERSONALIZATIONS ---\n';
+            csvContent += 'Player Name,Jersey Size,Personalization\n';
+            (personalizations as any[]).forEach(p => {
+                csvContent += `"${p.playerName}","${p.jerseySize}","${p.personalization}"\n`;
             });
         }
         else {

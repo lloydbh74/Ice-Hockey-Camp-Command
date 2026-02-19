@@ -12,17 +12,25 @@ interface KitItem {
     orders: { size: string; quantity: number }[];
 }
 
+interface Personalization {
+    playerName: string;
+    jerseySize: string;
+    personalization: string;
+}
+
 export default function KitOrderSummaryPage() {
     const params = useParams();
     const id = params.id;
-    const [items, setItems] = useState<KitItem[]>([]);
+    const [summary, setSummary] = useState<KitItem[]>([]);
+    const [personalizations, setPersonalizations] = useState<Personalization[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         fetch(`/api/admin/camps/${id}/kit-orders`)
             .then((res) => res.json())
             .then((data: any) => {
-                setItems(data);
+                setSummary(data.summary || []);
+                setPersonalizations(data.personalizations || []);
                 setLoading(false);
             })
             .catch((err) => {
@@ -58,47 +66,79 @@ export default function KitOrderSummaryPage() {
                 </button>
             </header>
 
-            {items.length === 0 ? (
+            {summary.length === 0 ? (
                 <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 p-20 rounded-3xl text-center">
                     <span className="material-symbols-outlined text-5xl text-slate-300 mb-4">checkroom</span>
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white">No kit orders found</h3>
                     <p className="text-slate-500 mt-2">Kit information is collected during registration.</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {items.map((item, idx) => (
-                        <div key={idx} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm">
-                            <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-b border-slate-200 dark:border-slate-800">
-                                <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">{item.itemType}</h2>
+                <div className="space-y-12">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {summary.map((item, idx) => (
+                            <div key={idx} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm flex flex-col">
+                                <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-b border-slate-200 dark:border-slate-800">
+                                    <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">{item.itemType}</h2>
+                                </div>
+                                <div className="flex-1 overflow-auto">
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="border-b border-slate-100 dark:border-slate-800">
+                                                <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Size</th>
+                                                <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-right">Qty</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
+                                            {item.orders.map((order, i) => (
+                                                <tr key={i} className="hover:bg-slate-50/30 dark:hover:bg-slate-800/10 transition-colors">
+                                                    <td className="px-6 py-4 font-bold text-slate-700 dark:text-slate-300">{order.size}</td>
+                                                    <td className="px-6 py-4 text-right font-black text-slate-900 dark:text-white text-lg">{order.quantity}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div className="bg-slate-50/50 dark:bg-slate-800/30 p-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center font-bold">
+                                    <span className="text-[10px] text-slate-500 uppercase tracking-widest">Total Items</span>
+                                    <span className="text-slate-900 dark:text-white">
+                                        {item.orders.reduce((acc, curr) => acc + curr.quantity, 0)}
+                                    </span>
+                                </div>
                             </div>
-                            <div className="p-0">
+                        ))}
+                    </div>
+
+                    {personalizations.length > 0 && (
+                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm">
+                            <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-b border-slate-200 dark:border-slate-800">
+                                <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Jersey Personalizations</h2>
+                            </div>
+                            <div className="overflow-x-auto">
                                 <table className="w-full text-left border-collapse">
                                     <thead>
-                                        <tr className="border-b border-slate-100 dark:border-slate-800">
+                                        <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-800/20">
+                                            <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Player</th>
                                             <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Size</th>
-                                            <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 text-right">Quantity</th>
+                                            <th className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Personalization</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-                                        {item.orders.map((order, i) => (
+                                        {personalizations.map((p, i) => (
                                             <tr key={i} className="hover:bg-slate-50/30 dark:hover:bg-slate-800/10 transition-colors">
-                                                <td className="px-6 py-4 font-bold text-slate-700 dark:text-slate-300">{order.size}</td>
-                                                <td className="px-6 py-4 text-right font-black text-slate-900 dark:text-white text-lg">{order.quantity}</td>
+                                                <td className="px-6 py-4 font-bold text-slate-900 dark:text-white">{p.playerName}</td>
+                                                <td className="px-6 py-4 text-slate-600 dark:text-slate-400">{p.jerseySize}</td>
+                                                <td className="px-6 py-4">
+                                                    <span className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-3 py-1 rounded-full text-sm font-black tracking-widest uppercase">
+                                                        {p.personalization || '-'}
+                                                    </span>
+                                                </td>
                                             </tr>
                                         ))}
                                     </tbody>
-                                    <tfoot>
-                                        <tr className="bg-slate-50/50 dark:bg-slate-800/30 font-bold">
-                                            <td className="px-6 py-4 text-xs text-slate-500 uppercase tracking-widest">Total Items</td>
-                                            <td className="px-6 py-4 text-right text-slate-900 dark:text-white">
-                                                {item.orders.reduce((acc, curr) => acc + curr.quantity, 0)}
-                                            </td>
-                                        </tr>
-                                    </tfoot>
                                 </table>
                             </div>
                         </div>
-                    ))}
+                    )}
                 </div>
             )}
         </div>

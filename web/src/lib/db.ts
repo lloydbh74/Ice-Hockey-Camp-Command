@@ -584,6 +584,52 @@ export async function getKitOrderSummary(db: D1Database, campId: number) {
     return summary;
 }
 
+export async function getKitPersonalizationList(db: D1Database, campId: number) {
+    const { results } = await db.prepare(`
+        SELECT 
+            p.first_name || ' ' || p.last_name as player_name,
+            r.form_response_json
+        FROM Registrations r
+        JOIN Players p ON r.player_id = p.id
+        JOIN Purchases pu ON r.purchase_id = pu.id
+        WHERE pu.camp_id = ? AND pu.registration_state = 'completed'
+        ORDER BY p.first_name ASC, p.last_name ASC
+    `).bind(campId).all();
+
+    const personalizations: { playerName: string; jerseySize: string; personalization: string }[] = [];
+
+    results?.forEach((row: any) => {
+        try {
+            const responses = JSON.parse(row.form_response_json || '{}');
+            // Look for keys that contain 'size' and 'personalization'
+            let jerseySize = '';
+            let personalization = '';
+
+            Object.entries(responses).forEach(([key, value]) => {
+                const lowerKey = key.toLowerCase();
+                if (lowerKey === 'jersey_size' || (lowerKey.includes('jersey') && lowerKey.includes('size'))) {
+                    jerseySize = String(value);
+                }
+                if (lowerKey === 'personalization' || lowerKey.includes('personalisation')) {
+                    personalization = String(value);
+                }
+            });
+
+            if (jerseySize || personalization) {
+                personalizations.push({
+                    playerName: row.player_name,
+                    jerseySize,
+                    personalization
+                });
+            }
+        } catch (e) {
+            console.error("Failed to parse registration JSON for personalization", e);
+        }
+    });
+
+    return personalizations;
+}
+
 // --- Spec 006: Camp Day Planner ---
 
 export async function getCampDays(db: D1Database, campId: number) {

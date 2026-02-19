@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb, getKitOrderSummary } from '@/lib/db';
+import { getDb, getKitOrderSummary, getKitPersonalizationList } from '@/lib/db';
 
 export const runtime = 'edge';
 
@@ -17,6 +17,7 @@ export async function GET(
     try {
         const db = await getDb();
         const summary = await getKitOrderSummary(db, campId);
+        const personalizations = await getKitPersonalizationList(db, campId);
 
         // Convert to a more UI-friendly array format
         const formattedSummary = Object.entries(summary).map(([itemType, sizes]) => ({
@@ -27,7 +28,10 @@ export async function GET(
             })).sort((a, b) => b.quantity - a.quantity)
         }));
 
-        return NextResponse.json(formattedSummary);
+        return NextResponse.json({
+            summary: formattedSummary,
+            personalizations
+        });
 
     } catch (error: any) {
         console.error('[API] Kit Orders error:', error);
