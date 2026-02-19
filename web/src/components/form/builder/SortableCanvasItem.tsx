@@ -72,7 +72,7 @@ export function SortableCanvasItem({ id, field, isSelected, onSelect, onDelete }
                             </div>
                         )}
                         {field.type === 'paragraph' && (
-                            <div className="text-slate-600 dark:text-slate-400 whitespace-pre-wrap prose prose-sm dark:prose-invert max-w-none">
+                            <div className="text-slate-700 dark:text-slate-200 whitespace-pre-wrap prose prose-sm dark:prose-invert max-w-none">
                                 {field.label ? (
                                     <ReactMarkdown components={{
                                         a: ({ node, ...props }) => <a {...props} className="text-primary hover:underline" target="_blank" rel="noopener noreferrer" />
@@ -86,8 +86,8 @@ export function SortableCanvasItem({ id, field, isSelected, onSelect, onDelete }
                         )}
                         {field.type === 'bullet' && (
                             <div className="flex items-start gap-2">
-                                <span className="text-slate-800 dark:text-slate-200 mt-1.5">•</span>
-                                <div className="text-slate-700 dark:text-slate-300 prose prose-sm dark:prose-invert max-w-none">
+                                <span className="text-slate-600 dark:text-slate-400 mt-1.5">•</span>
+                                <div className="text-slate-800 dark:text-slate-200 prose prose-sm dark:prose-invert max-w-none">
                                     <ReactMarkdown components={{
                                         a: ({ node, ...props }) => <a {...props} className="text-primary hover:underline" target="_blank" rel="noopener noreferrer" />
                                     }}>
@@ -102,12 +102,12 @@ export function SortableCanvasItem({ id, field, isSelected, onSelect, onDelete }
                             </div>
                         )}
                         {field.type === 'separator' && (
-                            <hr className="border-slate-300 dark:border-slate-700 my-4" />
+                            <hr className="border-slate-400 dark:border-white opacity-100 my-4" />
                         )}
                     </div>
                 ) : (
                     <>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 pointer-events-none">
+                        <label className="block text-sm font-semibold text-slate-900 dark:text-white mb-1 pointer-events-none">
                             {field.label} {field.required && <span className="text-red-500">*</span>}
                         </label>
 
@@ -124,7 +124,7 @@ export function SortableCanvasItem({ id, field, isSelected, onSelect, onDelete }
                                     {(field.options && field.options.length > 0 ? field.options : ['Option 1', 'Option 2']).map((opt: string, idx: number) => (
                                         <div key={idx} className="flex items-center gap-2">
                                             <input type="checkbox" disabled className="rounded border-slate-300 dark:border-slate-700 dark:bg-slate-800" />
-                                            <span className="text-sm text-slate-600 dark:text-slate-400">{opt}</span>
+                                            <span className="text-sm text-slate-800 dark:text-slate-200">{opt}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -134,7 +134,7 @@ export function SortableCanvasItem({ id, field, isSelected, onSelect, onDelete }
                                     {(field.options && field.options.length > 0 ? field.options : ['Option 1', 'Option 2']).map((opt: string, idx: number) => (
                                         <div key={idx} className="flex items-center gap-2">
                                             <input type="radio" disabled className="border-slate-300 dark:border-slate-700 dark:bg-slate-800" />
-                                            <span className="text-sm text-slate-600 dark:text-slate-400">{opt}</span>
+                                            <span className="text-sm text-slate-800 dark:text-slate-200">{opt}</span>
                                         </div>
                                     ))}
                                 </div>

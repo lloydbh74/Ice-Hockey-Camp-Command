@@ -122,15 +122,20 @@ export default function PublicFormRenderer({ formId, schema, purchaseId, registr
                     <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
                         {activeFields.map((field) => (
                             <div key={field.id} className="space-y-2">
-                                <label htmlFor={field.id} className="block text-[15px] font-semibold text-slate-900 dark:text-white">
-                                    {field.label}
-                                    {field.required && <span className="text-red-500 ml-1" aria-hidden="true">*</span>}
-                                </label>
+                                {/* Only show label and description for actual input fields */}
+                                {!['heading', 'paragraph', 'bullet', 'separator', 'divider', 'image'].includes(field.type) && (
+                                    <>
+                                        <label htmlFor={field.id} className="block text-[15px] font-semibold text-slate-900 dark:text-white">
+                                            {field.label}
+                                            {field.required && <span className="text-red-500 ml-1" aria-hidden="true">*</span>}
+                                        </label>
 
-                                {field.description && (
-                                    <p id={`desc-${field.id}`} className="text-sm text-slate-600 dark:text-slate-400 mb-3">
-                                        {field.description}
-                                    </p>
+                                        {field.description && (
+                                            <p id={`desc-${field.id}`} className="text-sm text-slate-700 dark:text-slate-300 mb-3">
+                                                {field.description}
+                                            </p>
+                                        )}
+                                    </>
                                 )}
 
                                 {field.type === 'heading' && (
@@ -138,7 +143,7 @@ export default function PublicFormRenderer({ formId, schema, purchaseId, registr
                                 )}
 
                                 {field.type === 'paragraph' && (
-                                    <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">{field.label}</p>
+                                    <p className="text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">{field.label}</p>
                                 )}
 
                                 {field.type === 'text' && (
@@ -171,9 +176,9 @@ export default function PublicFormRenderer({ formId, schema, purchaseId, registr
                                                     type="checkbox"
                                                     value={opt}
                                                     {...methods.register(field.id, { required: field.required })}
-                                                    className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
+                                                    className="w-4 h-4 rounded border-slate-400 text-primary focus:ring-primary"
                                                 />
-                                                <span className="text-sm text-slate-700 dark:text-slate-300">{opt}</span>
+                                                <span className="text-sm text-slate-800 dark:text-slate-200">{opt}</span>
                                             </label>
                                         ))}
                                     </div>
@@ -202,9 +207,9 @@ export default function PublicFormRenderer({ formId, schema, purchaseId, registr
                                                     type="radio"
                                                     value={opt}
                                                     {...methods.register(field.id, { required: field.required })}
-                                                    className="w-4 h-4 border-slate-300 text-primary focus:ring-primary"
+                                                    className="w-4 h-4 border-slate-400 text-primary focus:ring-primary"
                                                 />
-                                                <span className="text-sm text-slate-700 dark:text-slate-300">{opt}</span>
+                                                <span className="text-sm text-slate-800 dark:text-slate-200">{opt}</span>
                                             </label>
                                         ))}
                                     </div>
@@ -232,7 +237,7 @@ export default function PublicFormRenderer({ formId, schema, purchaseId, registr
                                                         <span className="material-symbols-outlined text-slate-300">image</span>
                                                     )}
                                                 </div>
-                                                <div className="text-xs font-bold text-center text-slate-700 dark:text-slate-300 py-1">
+                                                <div className="text-xs font-bold text-center text-slate-800 dark:text-slate-200 py-1">
                                                     {opt.label}
                                                 </div>
                                             </label>
@@ -242,13 +247,13 @@ export default function PublicFormRenderer({ formId, schema, purchaseId, registr
 
                                 {field.type === 'bullet' && (
                                     <div className="flex items-start gap-2">
-                                        <span className="text-slate-400 mt-1.5">•</span>
-                                        <p className="text-slate-600 dark:text-slate-400 leading-relaxed">{field.label}</p>
+                                        <span className="text-slate-600 dark:text-slate-400 mt-1.5">•</span>
+                                        <p className="text-slate-700 dark:text-slate-200 leading-relaxed">{field.label}</p>
                                     </div>
                                 )}
 
                                 {field.type === 'separator' && (
-                                    <hr className="border-slate-300 dark:border-slate-700 my-6" />
+                                    <hr className="border-slate-400 dark:border-white opacity-100 my-6" />
                                 )}
 
                                 {field.type === 'image' && field.imageUrl && (
