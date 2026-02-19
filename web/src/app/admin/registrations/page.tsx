@@ -27,21 +27,21 @@ const getCurrencySymbol = (currency?: string) => {
     return '£'; // Default to GBP as per user request
 };
 
-const hasMedicalAlert = (registration: Registration) => {
-    if (!registration.registration_data) return false;
+const getMedicalAlerts = (registration: Registration): string[] => {
+    if (!registration.registration_data) return [];
     try {
         const data = JSON.parse(registration.registration_data);
-        return (
-            data.med_broken_bones === 'Yes' ||
-            data.med_concussion === 'Yes' ||
-            data.med_surgery === 'Yes' ||
-            data.med_asthma === 'Yes' ||
-            data.med_diabetes === 'Yes' ||
-            data.med_allergies === 'Yes' ||
-            (data.medical_details && data.medical_details.trim().length > 0)
-        );
+        const alerts: string[] = [];
+        if (data.med_broken_bones === 'Yes') alerts.push('Broken Bones');
+        if (data.med_concussion === 'Yes') alerts.push('Concussion');
+        if (data.med_surgery === 'Yes') alerts.push('Surgery');
+        if (data.med_asthma === 'Yes') alerts.push('Asthma');
+        if (data.med_diabetes === 'Yes') alerts.push('Diabetes');
+        if (data.med_allergies === 'Yes') alerts.push('Allergies');
+        if (data.medical_details && data.medical_details.trim().length > 0) alerts.push('Medical Details');
+        return alerts;
     } catch (e) {
-        return false;
+        return [];
     }
 };
 
@@ -60,12 +60,19 @@ function RegistrationsContent() {
 
     const fetchRegistrations = () => {
         setLoading(true);
-        const url = `/api/admin/registrations?${campId ? `campId=${campId}&` : ''}${statusFilter !== 'all' ? `status=${statusFilter}&` : ''}${searchQuery ? `q=${encodeURIComponent(searchQuery)}` : ''}`;
+        const url = `/api/admin/registrations?${campId ? `campId=${campId}&` : ''}${statusFilter !== 'all' && statusFilter !== 'medical' ? `status=${statusFilter}&` : ''}${searchQuery ? `q=${encodeURIComponent(searchQuery)}` : ''}`;
 
         fetch(url)
             .then((res) => res.json())
             .then((data: any) => {
-                setRegistrations(data.results || []);
+                let results = data.results || [];
+
+                // Client-side medical filter if selected
+                if (statusFilter === 'medical') {
+                    results = results.filter((r: Registration) => getMedicalAlerts(r).length > 0);
+                }
+
+                setRegistrations(results);
                 setLoading(false);
             })
             .catch((err) => {
@@ -153,6 +160,7 @@ function RegistrationsContent() {
                             className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-blue-500/20"
                         >
                             <option value="all">All Statuses</option>
+                            <option value="medical">⚠️ Medical Flags</option>
                             <option value="completed">Completed</option>
                             <option value="missing">Missing / Incomplete</option>
                             <option value="invited">Invited</option>
@@ -190,13 +198,23 @@ function RegistrationsContent() {
                                 </td>
                                 <td className="px-6 py-4">
                                     {row.player_first_name ? (
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-bold text-slate-900 dark:text-white">{row.player_first_name} {row.player_last_name}</span>
-                                            {hasMedicalAlert(row) && (
-                                                <span className="bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter flex items-center gap-1 cursor-help" title="Medical Alert - Check details">
-                                                    ⚠️ Medical
-                                                </span>
-                                            )}
+                                        <div className="flex flex-col gap-1">
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-bold text-slate-900 dark:text-white">{row.player_first_name} {row.player_last_name}</span>
+                                            </div>
+                                            {(() => {
+                                                const alerts = getMedicalAlerts(row);
+                                                if (alerts.length === 0) return null;
+                                                return (
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {alerts.map((alert, idx) => (
+                                                            <span key={idx} className="bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter border border-red-100 dark:border-red-900/30">
+                                                                {alert}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                );
+                                            })()}
                                         </div>
                                     ) : (
                                         <span className="text-xs text-slate-400 italic">Not yet provided</span>

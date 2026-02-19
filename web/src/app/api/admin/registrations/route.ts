@@ -8,16 +8,17 @@ export async function GET(request: NextRequest) {
     const campId = searchParams.get('campId');
     const status = searchParams.get('status');
     const query = searchParams.get('q') || undefined;
+    const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined;
 
     try {
         const db = await getDb();
         let results: any[] = [];
 
         if (campId) {
-            const data = await listPurchasesByCamp(db, parseInt(campId), query);
+            const data = await listPurchasesByCamp(db, parseInt(campId), query, limit);
             results = data.results || [];
         } else {
-            const data = await listAllPurchases(db, query);
+            const data = await listAllPurchases(db, query, limit);
             results = data.results || [];
         }
 

@@ -324,7 +324,7 @@ export async function updateCampProductPrice(db: D1Database, campId: number, cpI
         .run();
 }
 
-export async function listAllPurchases(db: D1Database, query?: string) {
+export async function listAllPurchases(db: D1Database, query?: string, limit?: number) {
     let sql = `
         SELECT p.*, p.price_at_purchase as amount, g.full_name as guardian_name, g.email as guardian_email, pr.name as product_name, c.name as camp_name,
                pl.first_name as player_first_name, pl.last_name as player_last_name
@@ -344,10 +344,14 @@ export async function listAllPurchases(db: D1Database, query?: string) {
     }
 
     sql += ` ORDER BY p.purchase_timestamp DESC`;
+    if (limit) {
+        sql += ` LIMIT ?`;
+        params.push(limit);
+    }
     return await db.prepare(sql).bind(...params).all();
 }
 
-export async function listPurchasesByCamp(db: D1Database, campId: number, query?: string) {
+export async function listPurchasesByCamp(db: D1Database, campId: number, query?: string, limit?: number) {
     let sql = `
         SELECT p.*, p.price_at_purchase as amount, g.full_name as guardian_name, g.email as guardian_email, pr.name as product_name,
                pl.first_name as player_first_name, pl.last_name as player_last_name
@@ -367,6 +371,10 @@ export async function listPurchasesByCamp(db: D1Database, campId: number, query?
     }
 
     sql += ` ORDER BY p.purchase_timestamp DESC`;
+    if (limit) {
+        sql += ` LIMIT ?`;
+        params.push(limit);
+    }
     return await db.prepare(sql).bind(...params).all();
 }
 
@@ -519,7 +527,7 @@ export async function getAttendanceList(db: D1Database, campId: number) {
             r.id as registration_id,
             r.form_response_json,
             r.registration_timestamp,
-            p.full_name as player_name,
+            p.first_name || ' ' || p.last_name as player_name,
             p.date_of_birth,
             g.full_name as guardian_name,
             pr.name as product_name,
@@ -530,7 +538,7 @@ export async function getAttendanceList(db: D1Database, campId: number) {
         JOIN Guardians g ON pu.guardian_id = g.id
         JOIN Products pr ON pu.product_id = pr.id
         WHERE pu.camp_id = ?
-        ORDER BY p.full_name ASC
+        ORDER BY p.first_name ASC, p.last_name ASC
     `).bind(campId).all();
 }
 
