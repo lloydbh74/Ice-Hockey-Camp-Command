@@ -19,6 +19,7 @@ interface Registration {
     player_first_name?: string;
     player_last_name?: string;
     registration_data?: string;
+    registration_token?: string;
 }
 
 const getCurrencySymbol = (currency?: string) => {
@@ -57,6 +58,8 @@ function RegistrationsContent() {
     const [searchQuery, setSearchQuery] = useState(initialQuery);
     const [editingRegistration, setEditingRegistration] = useState<Registration | null>(null);
     const [saveLoading, setSaveLoading] = useState(false);
+    const [chaseLoading, setChaseLoading] = useState<Record<number, boolean>>({});
+    const [bulkChaseLoading, setBulkChaseLoading] = useState(false);
 
     const fetchRegistrations = () => {
         setLoading(true);
@@ -127,10 +130,45 @@ function RegistrationsContent() {
         }
     };
 
+    const handleChase = async (ids: number[]) => {
+        const isBulk = ids.length > 1;
+        if (isBulk) setBulkChaseLoading(true);
+        else setChaseLoading(prev => ({ ...prev, [ids[0]]: true }));
+
+        try {
+            const res = await fetch('/api/admin/registrations/chase', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ purchaseIds: ids })
+            });
+
+            if (res.ok) {
+                const data = await res.json() as any;
+                if (isBulk) alert(`Successfully sent ${data.summary.success} reminders. ${data.summary.failures} failed.`);
+                // Refresh to show status changes
+                fetchRegistrations();
+            } else {
+                alert("Failed to send reminders");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("An error occurred while chasing registrations");
+        } finally {
+            if (isBulk) setBulkChaseLoading(false);
+            else setChaseLoading(prev => ({ ...prev, [ids[0]]: false }));
+        }
+    };
+
     return (
         <div className="p-8 max-w-7xl mx-auto">
             <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
+                    {campId && (
+                        <Link href={`/admin/camps/${campId}`} className="text-blue-600 hover:text-blue-700 text-xs font-bold uppercase tracking-wider mb-2 inline-flex items-center gap-1 group">
+                            <span className="material-symbols-outlined text-[14px] group-hover:-translate-x-0.5 transition-transform">arrow_back</span>
+                            Back to Dashboard
+                        </Link>
+                    )}
                     <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Registration Management</h1>
                     <p className="text-slate-500 font-medium">Manage all camp purchases and completion states.</p>
                 </div>
@@ -167,6 +205,17 @@ function RegistrationsContent() {
                             <option value="uninvited">Uninvited</option>
                         </select>
                     </div>
+
+                    {registrations.some(r => r.registration_state !== 'completed') && (
+                        <button
+                            onClick={() => handleChase(registrations.filter(r => r.registration_state !== 'completed').map(r => r.id))}
+                            disabled={bulkChaseLoading}
+                            className="bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-sm font-bold px-4 py-2 rounded-xl flex items-center gap-2 transition-all shadow-sm active:scale-95"
+                        >
+                            <span className="material-symbols-outlined text-[18px]">campaign</span>
+                            {bulkChaseLoading ? 'Chasing All...' : 'Chase All Missing'}
+                        </button>
+                    )}
                 </div>
             </header>
 
@@ -230,14 +279,33 @@ function RegistrationsContent() {
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 text-right">
-                                    <button
-                                        onClick={() => setEditingRegistration(row)}
-                                        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-blue-500 transition-colors"
-                                    >
-                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                        </svg>
-                                    </button>
+                                    <div className="flex items-center justify-end gap-2">
+                                        {row.registration_state !== 'completed' && (
+                                            <button
+                                                onClick={() => handleChase([row.id])}
+                                                disabled={chaseLoading[row.id]}
+                                                className="p-2 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg text-amber-500 hover:text-amber-600 transition-colors tooltip relative group"
+                                                title="Send Reminder"
+                                            >
+                                                {chaseLoading[row.id] ? (
+                                                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    </svg>
+                                                ) : (
+                                                    <span className="material-symbols-outlined text-[20px]">mail</span>
+                                                )}
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={() => setEditingRegistration(row)}
+                                            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-blue-500 transition-colors"
+                                        >
+                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}

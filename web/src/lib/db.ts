@@ -378,6 +378,17 @@ export async function listPurchasesByCamp(db: D1Database, campId: number, query?
     return await db.prepare(sql).bind(...params).all();
 }
 
+export async function getPurchaseById(db: D1Database, purchaseId: number) {
+    const sql = `
+        SELECT p.*, g.full_name as guardian_name, g.email as guardian_email, pr.name as product_name
+        FROM Purchases p
+        JOIN Guardians g ON p.guardian_id = g.id
+        JOIN Products pr ON p.product_id = pr.id
+        WHERE p.id = ?
+    `;
+    return await db.prepare(sql).bind(purchaseId).first<any>();
+}
+
 export async function getPurchaseByToken(db: D1Database, token: string) {
     return await db.prepare(`
         SELECT p.*, g.full_name as guardian_name, g.email as guardian_email, pr.name as product_name
