@@ -166,26 +166,15 @@ function RegistrationsContent() {
     return (
         <div className="p-8 max-w-7xl mx-auto">
             <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="mb-6">
-                    <nav className="flex mb-4" aria-label="Breadcrumb">
-                        <ol className="inline-flex items-center space-x-1">
-                            <li>
-                                <Link href="/admin" className="text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-slate-300 transition-colors">
-                                    Dashboard
-                                </Link>
-                            </li>
-                            {campId && (
-                                <li className="flex items-center">
-                                    <span className="material-symbols-outlined text-slate-600 text-xs mx-1">chevron_right</span>
-                                    <Link href={`/admin/camps/${campId}`} className="text-xs font-bold uppercase tracking-widest text-blue-400 hover:text-blue-300 transition-colors">
-                                        Camp Dashboard
-                                    </Link>
-                                </li>
-                            )}
-                        </ol>
-                    </nav>
+                <div>
+                    {campId && (
+                        <Link href={`/admin/camps/${campId}`} className="text-blue-600 hover:underline text-sm font-bold flex items-center gap-1 mb-2">
+                            <span className="material-symbols-outlined text-sm">arrow_back</span>
+                            <span>Back to Dashboard</span>
+                        </Link>
+                    )}
                     <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Registration Management</h1>
-                    <p className="text-slate-500 font-medium font-semibold">Manage all camp purchases and completion states.</p>
+                    <p className="text-slate-500 font-medium">Manage all camp purchases and completion states.</p>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
