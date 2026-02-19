@@ -131,7 +131,7 @@ export default function RegistrationPage({ params }: { params: Promise<{ token: 
                 <div className="mt-12 text-center">
                     <p className="text-xs text-slate-400 font-medium">
                         &copy; 2026 Swedish Camp Command. All rights reserved. <br />
-                        Need help? <a href="mailto:support@swedishcamp.com" className="text-primary hover:underline">Contact Support</a>
+                        Need help? <a href="mailto:hockeyschool@chelmsfordiha.co.uk" className="text-primary hover:underline">Contact Support</a>
                     </p>
                 </div>
             </div>

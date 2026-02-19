@@ -324,26 +324,50 @@ export async function updateCampProductPrice(db: D1Database, campId: number, cpI
         .run();
 }
 
-export async function listAllPurchases(db: D1Database) {
-    return await db.prepare(`
-        SELECT p.*, p.price_at_purchase as amount, g.full_name as guardian_name, g.email as guardian_email, pr.name as product_name, c.name as camp_name
+export async function listAllPurchases(db: D1Database, query?: string) {
+    let sql = `
+        SELECT p.*, p.price_at_purchase as amount, g.full_name as guardian_name, g.email as guardian_email, pr.name as product_name, c.name as camp_name,
+               pl.first_name as player_first_name, pl.last_name as player_last_name
         FROM Purchases p
         JOIN Guardians g ON p.guardian_id = g.id
         JOIN Products pr ON p.product_id = pr.id
         JOIN Camps c ON p.camp_id = c.id
-        ORDER BY p.purchase_timestamp DESC
-    `).all();
+        LEFT JOIN Registrations r ON p.id = r.purchase_id
+        LEFT JOIN Players pl ON r.player_id = pl.id
+    `;
+    const params: any[] = [];
+
+    if (query) {
+        sql += ` WHERE (g.full_name LIKE ? OR g.email LIKE ? OR pl.first_name LIKE ? OR pl.last_name LIKE ?)`;
+        const q = `%${query}%`;
+        params.push(q, q, q, q);
+    }
+
+    sql += ` ORDER BY p.purchase_timestamp DESC`;
+    return await db.prepare(sql).bind(...params).all();
 }
 
-export async function listPurchasesByCamp(db: D1Database, campId: number) {
-    return await db.prepare(`
-        SELECT p.*, p.price_at_purchase as amount, g.full_name as guardian_name, g.email as guardian_email, pr.name as product_name
+export async function listPurchasesByCamp(db: D1Database, campId: number, query?: string) {
+    let sql = `
+        SELECT p.*, p.price_at_purchase as amount, g.full_name as guardian_name, g.email as guardian_email, pr.name as product_name,
+               pl.first_name as player_first_name, pl.last_name as player_last_name
         FROM Purchases p
         JOIN Guardians g ON p.guardian_id = g.id
         JOIN Products pr ON p.product_id = pr.id
+        LEFT JOIN Registrations r ON p.id = r.purchase_id
+        LEFT JOIN Players pl ON r.player_id = pl.id
         WHERE p.camp_id = ?
-        ORDER BY p.purchase_timestamp DESC
-    `).bind(campId).all();
+    `;
+    const params: any[] = [campId];
+
+    if (query) {
+        sql += ` AND (g.full_name LIKE ? OR g.email LIKE ? OR pl.first_name LIKE ? OR pl.last_name LIKE ?)`;
+        const q = `%${query}%`;
+        params.push(q, q, q, q);
+    }
+
+    sql += ` ORDER BY p.purchase_timestamp DESC`;
+    return await db.prepare(sql).bind(...params).all();
 }
 
 export async function getPurchaseByToken(db: D1Database, token: string) {
@@ -669,4 +693,61 @@ export async function assignSessionStreams(db: D1Database, sessionId: number, st
     const stmt = db.prepare("INSERT INTO SessionStreams (session_id, stream_id) VALUES (?, ?)");
     const batch = streamIds.map(sid => stmt.bind(sessionId, sid));
     return await db.batch(batch);
+}
+
+export async function updateRegistrationDetails(
+    db: D1Database,
+    purchaseId: number,
+    data: {
+        registration_state?: string;
+        player?: {
+            first_name: string;
+            last_name: string;
+            date_of_birth: string;
+            sex: string;
+        };
+        form_response_json?: string;
+    }
+) {
+    const stmts: D1PreparedStatement[] = [];
+
+    // 1. Update Purchase State & Data
+    const purchaseSets: string[] = [];
+    const purchaseValues: any[] = [];
+    if (data.registration_state) {
+        purchaseSets.push("registration_state = ?");
+        purchaseValues.push(data.registration_state);
+    }
+    if (data.form_response_json) {
+        purchaseSets.push("registration_data = ?");
+        purchaseValues.push(data.form_response_json);
+    }
+
+    if (purchaseSets.length > 0) {
+        purchaseValues.push(purchaseId);
+        stmts.push(db.prepare(`UPDATE Purchases SET ${purchaseSets.join(", ")} WHERE id = ?`).bind(...purchaseValues));
+    }
+
+    // 2. Update Player & Registration if they exist
+    if (data.player || data.form_response_json) {
+        const reg = await db.prepare("SELECT id, player_id FROM Registrations WHERE purchase_id = ?").bind(purchaseId).first<{ id: number; player_id: number }>();
+
+        if (reg) {
+            // Update Registrations (form response)
+            if (data.form_response_json) {
+                stmts.push(db.prepare("UPDATE Registrations SET form_response_json = ? WHERE id = ?").bind(data.form_response_json, reg.id));
+            }
+
+            // Update Player
+            if (data.player) {
+                stmts.push(db.prepare(`
+                    UPDATE Players SET first_name = ?, last_name = ?, date_of_birth = ?, sex = ? WHERE id = ?
+                `).bind(data.player.first_name, data.player.last_name, data.player.date_of_birth, data.player.sex, reg.player_id));
+            }
+        }
+    }
+
+    if (stmts.length > 0) {
+        return await db.batch(stmts);
+    }
 }

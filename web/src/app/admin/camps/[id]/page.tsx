@@ -83,6 +83,32 @@ export default function CampDashboardPage() {
                 ))}
             </div>
 
+            {/* Quick Search */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl mb-10 shadow-sm flex flex-col md:flex-row md:items-center gap-6">
+                <div className="flex-1">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">Quick Registrant Search</h3>
+                    <p className="text-sm text-slate-500 font-medium">Find anyone registered for this camp by name or email.</p>
+                </div>
+                <form
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        const query = (e.currentTarget.elements.namedItem('q') as HTMLInputElement).value;
+                        window.location.href = `/admin/registrations?campId=${id}&q=${encodeURIComponent(query)}`;
+                    }}
+                    className="w-full md:w-96 relative group"
+                >
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <span className="material-symbols-outlined text-slate-400 group-focus-within:text-blue-500 transition-colors">search</span>
+                    </div>
+                    <input
+                        name="q"
+                        type="text"
+                        placeholder="Search player or guardian..."
+                        className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl text-sm font-bold focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-400 transition-all outline-none"
+                    />
+                </form>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Quick Actions Card */}
                 <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 p-8 rounded-3xl lg:col-span-1">

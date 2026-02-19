@@ -11,6 +11,7 @@ interface SystemSettings {
     admin_emails?: string;
     support_email?: string;
     brevo_api_key?: string;
+    app_url?: string;
     [key: string]: string | undefined;
 }
 
@@ -141,6 +142,30 @@ export default function SystemSettingsPage() {
                     </div>
                 </section>
 
+                {/* Application Branding */}
+                <section className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+                    <div className="p-6 border-b border-slate-100 dark:border-slate-800">
+                        <h3 className="text-[#0d161c] dark:text-white text-xl font-bold">Application Branding</h3>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Configure the public facing URLs and branding for emails and links.</p>
+                    </div>
+                    <div className="p-8">
+                        <label htmlFor="app-url" className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2">
+                            Brand / Application URL
+                        </label>
+                        <input
+                            id="app-url"
+                            type="url"
+                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none transition-all placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500 font-mono text-sm"
+                            placeholder="https://ice-hockey-camp-command.pages.dev"
+                            value={editedSettings.app_url || ''}
+                            onChange={e => setEditedSettings({ ...editedSettings, app_url: e.target.value })}
+                        />
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                            The base URL used for registration links and login buttons (e.g. https://your-domain.dev).
+                        </p>
+                    </div>
+                </section>
+
                 {/* Email Configuration */}
                 <section className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
                     <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
@@ -158,7 +183,7 @@ export default function SystemSettingsPage() {
                                     type="email"
                                     value={editedSettings.support_email || ''}
                                     onChange={e => setEditedSettings({ ...editedSettings, support_email: e.target.value })}
-                                    placeholder="info@swedishcamp.com"
+                                    placeholder="hockeyschool@chelmsfordiha.co.uk"
                                     className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all dark:text-white"
                                 />
                                 <p className="text-xs text-slate-500 dark:text-slate-400">Used as the &quot;From&quot; address on all emails</p>

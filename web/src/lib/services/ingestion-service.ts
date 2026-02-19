@@ -84,7 +84,7 @@ export class IngestionService {
                             guardian_id, camp_id, product_id, quantity, registration_state, 
                             purchase_timestamp, raw_email_id, price_at_purchase, currency,
                             registration_token
-                        ) VALUES (?, ?, ?, ?, 'uninvited', ?, ?, ?, ?, ?)
+                        ) VALUES (?, ?, ?, ?, 'invited', ?, ?, ?, ?, ?)
                     `).bind(
                         guardian.id,
                         mapping.campId,

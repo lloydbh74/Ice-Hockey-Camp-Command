@@ -21,7 +21,7 @@ export class EmailService {
                 return { success: true };
             }
 
-            const from = settings.support_email || 'noreply@swedishcamp.com';
+            const from = settings.support_email || 'hockeyschool@chelmsfordiha.co.uk';
 
             console.log(`[EmailService] Sending email via Brevo to ${options.to}`);
 
@@ -62,7 +62,8 @@ export class EmailService {
         productName: string,
         token: string
     }): Promise<{ success: boolean; error?: string }> {
-        const registrationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/registration/${data.token}`;
+        const appUrl = await this.resolveAppUrl(db);
+        const registrationUrl = `${appUrl}/registration/${data.token}`;
 
         return await this.sendEmail(db, {
             to: data.to,
@@ -88,7 +89,8 @@ export class EmailService {
         productName: string,
         token: string
     }): Promise<{ success: boolean; error?: string }> {
-        const registrationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/registration/${data.token}`;
+        const appUrl = await this.resolveAppUrl(db);
+        const registrationUrl = `${appUrl}/registration/${data.token}`;
 
         return await this.sendEmail(db, {
             to: data.to,
@@ -112,7 +114,8 @@ export class EmailService {
         to: string,
         token: string
     }): Promise<{ success: boolean; error?: string }> {
-        const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/admin/auth/verify?token=${data.token}`;
+        const appUrl = await this.resolveAppUrl(db);
+        const loginUrl = `${appUrl}/api/admin/auth/verify?token=${data.token}`;
 
         return await this.sendEmail(db, {
             to: data.to,
@@ -128,5 +131,12 @@ export class EmailService {
                 </div>
             `
         });
+    }
+
+    private static async resolveAppUrl(db: D1Database): Promise<string> {
+        const result = await db.prepare("SELECT value FROM SystemSettings WHERE key = 'app_url'").first<string>('value');
+        if (result) return result.replace(/\/$/, ''); // Remove trailing slash if present
+
+        return (process.env.NEXT_PUBLIC_APP_URL || 'https://ice-hockey-camp-command.pages.dev').replace(/\/$/, '');
     }
 }
