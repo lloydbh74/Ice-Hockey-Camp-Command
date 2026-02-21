@@ -20,30 +20,13 @@ interface Registration {
     player_last_name?: string;
     registration_data?: string;
     registration_token?: string;
+    highlighted_answers?: Record<string, string>;
 }
 
 const getCurrencySymbol = (currency?: string) => {
     if (currency === 'GBP' || currency === 'SEK') return '£';
     if (currency === 'EUR') return '€';
     return '£'; // Default to GBP as per user request
-};
-
-const getMedicalAlerts = (registration: Registration): string[] => {
-    if (!registration.registration_data) return [];
-    try {
-        const data = JSON.parse(registration.registration_data);
-        const alerts: string[] = [];
-        if (data.med_broken_bones === 'Yes') alerts.push('Broken Bones');
-        if (data.med_concussion === 'Yes') alerts.push('Concussion');
-        if (data.med_surgery === 'Yes') alerts.push('Surgery');
-        if (data.med_asthma === 'Yes') alerts.push('Asthma');
-        if (data.med_diabetes === 'Yes') alerts.push('Diabetes');
-        if (data.med_allergies === 'Yes') alerts.push('Allergies');
-        if (data.medical_details && data.medical_details.trim().length > 0) alerts.push('Medical Details');
-        return alerts;
-    } catch (e) {
-        return [];
-    }
 };
 
 function RegistrationsContent() {
@@ -70,9 +53,9 @@ function RegistrationsContent() {
             .then((data: any) => {
                 let results = data.results || [];
 
-                // Client-side medical filter if selected
-                if (statusFilter === 'medical') {
-                    results = results.filter((r: Registration) => getMedicalAlerts(r).length > 0);
+                // Client-side highlights filter if selected
+                if (statusFilter === 'important') {
+                    results = results.filter((r: Registration) => Object.keys(r.highlighted_answers || {}).length > 0);
                 }
 
                 setRegistrations(results);
@@ -202,7 +185,7 @@ function RegistrationsContent() {
                             className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-blue-500/20"
                         >
                             <option value="all">All Statuses</option>
-                            <option value="medical">⚠️ Medical Flags</option>
+                            <option value="important">⚠️ Important Flags</option>
                             <option value="completed">Completed</option>
                             <option value="missing">Missing / Incomplete</option>
                             <option value="invited">Invited</option>
@@ -256,13 +239,13 @@ function RegistrationsContent() {
                                                 <span className="font-bold text-slate-900 dark:text-white">{row.player_first_name} {row.player_last_name}</span>
                                             </div>
                                             {(() => {
-                                                const alerts = getMedicalAlerts(row);
-                                                if (alerts.length === 0) return null;
+                                                const answers = row.highlighted_answers || {};
+                                                if (Object.keys(answers).length === 0) return null;
                                                 return (
                                                     <div className="flex flex-wrap gap-1">
-                                                        {alerts.map((alert, idx) => (
+                                                        {Object.entries(answers).map(([key, value], idx) => (
                                                             <span key={idx} className="bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter border border-red-100 dark:border-red-900/30">
-                                                                {alert}
+                                                                {key}: {value}
                                                             </span>
                                                         ))}
                                                     </div>

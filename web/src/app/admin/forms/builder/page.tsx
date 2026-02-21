@@ -21,6 +21,7 @@ interface FormField {
     headingLevel?: 'h1' | 'h2' | 'h3' | 'h4';
     imageUrl?: string;
     imageAlt?: string;
+    isHighlighted?: boolean;
 }
 
 import FormLibraryModal from "@/components/form/builder/FormLibraryModal";
@@ -240,6 +241,15 @@ export default function FormBuilderPage() {
 
     const handleFieldUpdate = (updates: Partial<FormField>) => {
         if (!selectedFieldId) return;
+
+        if (updates.isHighlighted === true) {
+            const currentHighlightedCount = schema.filter(f => f.isHighlighted && f.id !== selectedFieldId).length;
+            if (currentHighlightedCount >= 5) {
+                alert("You can only highlight a maximum of 5 questions for attendee lists.");
+                return;
+            }
+        }
+
         updateSchema(prev => prev.map(f => f.id === selectedFieldId ? { ...f, ...updates } : f));
     };
 

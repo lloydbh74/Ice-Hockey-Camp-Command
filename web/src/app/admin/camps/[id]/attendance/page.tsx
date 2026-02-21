@@ -71,8 +71,7 @@ export default function AttendanceListPage() {
                     <thead>
                         <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
                             <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-500">Player</th>
-                            <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-500">Guardian</th>
-                            <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-500">Critical Info</th>
+                            <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-500">Highlighted Info</th>
                             <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-500">Status</th>
                             <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-slate-500"></th>
                         </tr>
@@ -84,9 +83,6 @@ export default function AttendanceListPage() {
                                     <td className="px-6 py-4">
                                         <div className="font-bold text-slate-900 dark:text-white">{row.playerName}</div>
                                         <div className="text-xs text-slate-500">{row.productName}</div>
-                                    </td>
-                                    <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">
-                                        {row.guardianName}
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="flex flex-wrap gap-2">
@@ -119,7 +115,7 @@ export default function AttendanceListPage() {
                                 </tr>
                                 {expandedId === row.id && (
                                     <tr>
-                                        <td colSpan={5} className="px-8 py-6 bg-slate-50/50 dark:bg-slate-900/50 animate-in fade-in slide-in-from-top-1 duration-200">
+                                        <td colSpan={4} className="px-8 py-6 bg-slate-50/50 dark:bg-slate-900/50 animate-in fade-in slide-in-from-top-1 duration-200">
                                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                                 {Object.entries(row.fullResponse).map(([key, value], idx) => (
                                                     <div key={idx}>
@@ -139,7 +135,7 @@ export default function AttendanceListPage() {
                         ))}
                         {attendance.length === 0 && (
                             <tr>
-                                <td colSpan={5} className="px-6 py-20 text-center text-slate-400 font-medium">
+                                <td colSpan={4} className="px-6 py-20 text-center text-slate-400 font-medium">
                                     No registrations found for this camp.
                                 </td>
                             </tr>

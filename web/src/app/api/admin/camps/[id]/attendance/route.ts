@@ -20,15 +20,25 @@ export async function GET(
 
         const attendance = (results || []).map((row: any) => {
             const responses = JSON.parse(row.form_response_json || '{}');
+            const schema = JSON.parse(row.schema_json || '[]');
 
-            // Promote critical fields
+            // Find highlighted field labels and IDs
+            const highlightedFields = schema.filter((field: any) => field.isHighlighted);
+
             const criticalInfo: Record<string, string> = {};
-            const criticalKeywords = ['medical', 'allergy', 'emergency', 'health', 'condition'];
 
-            Object.entries(responses).forEach(([key, value]) => {
-                const lowerKey = key.toLowerCase();
-                if (criticalKeywords.some(kw => lowerKey.includes(kw)) && value) {
-                    criticalInfo[key] = value as string;
+            // Find matches in user's submission
+            highlightedFields.forEach((field: any) => {
+                // Find answer whose key matches label exactly, or whose ID matches
+                let val = responses[field.label] || responses[field.id];
+                if (val) {
+                    criticalInfo[field.label] = val as string;
+                } else {
+                    // Try loose matching fallback
+                    const fallbackKey = Object.keys(responses).find(k => k.toLowerCase() === field.label.toLowerCase());
+                    if (fallbackKey && responses[fallbackKey]) {
+                        criticalInfo[field.label] = responses[fallbackKey] as string;
+                    }
                 }
             });
 

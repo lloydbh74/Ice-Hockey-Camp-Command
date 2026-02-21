@@ -29,6 +29,32 @@ export async function GET(request: NextRequest) {
             results = results.filter(r => r.registration_state === status);
         }
 
+        // Map highlighted answers from the schema
+        results = results.map(row => {
+            const responses = JSON.parse(row.registration_data || '{}');
+            const schema = JSON.parse(row.schema_json || '[]');
+            const highlightedFields = schema.filter((field: any) => field.isHighlighted);
+
+            const highlighted_answers: Record<string, string> = {};
+
+            highlightedFields.forEach((field: any) => {
+                let val = responses[field.label] || responses[field.id];
+                if (val) {
+                    highlighted_answers[field.label] = val as string;
+                } else {
+                    const fallbackKey = Object.keys(responses).find(k => k.toLowerCase() === field.label.toLowerCase());
+                    if (fallbackKey && responses[fallbackKey]) {
+                        highlighted_answers[field.label] = responses[fallbackKey] as string;
+                    }
+                }
+            });
+
+            return {
+                ...row,
+                highlighted_answers
+            };
+        });
+
         return NextResponse.json({ results });
 
     } catch (error: any) {

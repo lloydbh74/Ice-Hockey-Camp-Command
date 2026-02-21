@@ -12,6 +12,7 @@ interface FormField {
     headingLevel?: 'h1' | 'h2' | 'h3' | 'h4';
     imageUrl?: string;
     imageAlt?: string;
+    isHighlighted?: boolean;
 }
 
 interface PropertiesPanelProps {
@@ -267,17 +268,32 @@ export default function PropertiesPanel({ field, onChange, onDelete }: Propertie
                     </div>
                 )}
 
-                {/* Required Toggle */}
+                {/* Required & Highlight Toggles */}
                 {!['heading', 'paragraph', 'bullet', 'divider', 'separator', 'image'].includes(field.type) && (
-                    <div className="flex items-center gap-3">
-                        <input
-                            type="checkbox"
-                            id="required_toggle"
-                            checked={field.required}
-                            onChange={(e) => onChange({ required: e.target.checked })}
-                            className="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer"
-                        />
-                        <label htmlFor="required_toggle" className="text-sm font-medium text-slate-900 dark:text-slate-200 cursor-pointer">Required Field</label>
+                    <div className="flex flex-col gap-3">
+                        <div className="flex items-center gap-3">
+                            <input
+                                type="checkbox"
+                                id="required_toggle"
+                                checked={field.required}
+                                onChange={(e) => onChange({ required: e.target.checked })}
+                                className="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer"
+                            />
+                            <label htmlFor="required_toggle" className="text-sm font-medium text-slate-900 dark:text-slate-200 cursor-pointer">Required Field</label>
+                        </div>
+                        <div className="flex items-start gap-3">
+                            <input
+                                type="checkbox"
+                                id="highlight_toggle"
+                                checked={!!field.isHighlighted}
+                                onChange={(e) => onChange({ isHighlighted: e.target.checked })}
+                                className="w-5 h-5 rounded border-slate-300 text-red-500 focus:ring-red-500 cursor-pointer mt-0.5"
+                            />
+                            <div className="flex flex-col">
+                                <label htmlFor="highlight_toggle" className="text-sm font-medium text-slate-900 dark:text-slate-200 cursor-pointer line-clamp-1">Show in Attendee Lists</label>
+                                <span className="text-[10px] text-slate-500 max-w-xs">Highlights this answer in red on the admin attendance and registration pages (Max 5 per form).</span>
+                            </div>
+                        </div>
                     </div>
                 )}
 
