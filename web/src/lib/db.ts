@@ -327,11 +327,11 @@ export async function updateCampProductPrice(db: D1Database, campId: number, cpI
 export async function listAllPurchases(db: D1Database, query?: string, limit?: number) {
     let sql = `
         SELECT p.*, p.price_at_purchase as amount, g.full_name as guardian_name, g.email as guardian_email, pr.name as product_name, c.name as camp_name,
-               pl.first_name as player_first_name, pl.last_name as player_last_name, ft.schema_json
+               pl.first_name as player_first_name, pl.last_name as player_last_name, f.schema_json
         FROM Purchases p
         JOIN Guardians g ON p.guardian_id = g.id
         JOIN Products pr ON p.product_id = pr.id
-        LEFT JOIN FormTemplates ft ON pr.form_template_id = ft.id
+        LEFT JOIN Forms f ON pr.id = f.product_id AND f.is_active = 1
         JOIN Camps c ON p.camp_id = c.id
         LEFT JOIN Registrations r ON p.id = r.purchase_id
         LEFT JOIN Players pl ON r.player_id = pl.id
@@ -355,11 +355,11 @@ export async function listAllPurchases(db: D1Database, query?: string, limit?: n
 export async function listPurchasesByCamp(db: D1Database, campId: number, query?: string, limit?: number) {
     let sql = `
         SELECT p.*, p.price_at_purchase as amount, g.full_name as guardian_name, g.email as guardian_email, pr.name as product_name,
-               pl.first_name as player_first_name, pl.last_name as player_last_name, ft.schema_json
+               pl.first_name as player_first_name, pl.last_name as player_last_name, f.schema_json
         FROM Purchases p
         JOIN Guardians g ON p.guardian_id = g.id
         JOIN Products pr ON p.product_id = pr.id
-        LEFT JOIN FormTemplates ft ON pr.form_template_id = ft.id
+        LEFT JOIN Forms f ON pr.id = f.product_id AND f.is_active = 1
         LEFT JOIN Registrations r ON p.id = r.purchase_id
         LEFT JOIN Players pl ON r.player_id = pl.id
         WHERE p.camp_id = ?
@@ -545,13 +545,13 @@ export async function getAttendanceList(db: D1Database, campId: number) {
             g.full_name as guardian_name,
             pr.name as product_name,
             pu.registration_state,
-            ft.schema_json
+            f.schema_json
         FROM Registrations r
         JOIN Players p ON r.player_id = p.id
         JOIN Purchases pu ON r.purchase_id = pu.id
         JOIN Guardians g ON pu.guardian_id = g.id
         JOIN Products pr ON pu.product_id = pr.id
-        LEFT JOIN FormTemplates ft ON pr.form_template_id = ft.id
+        LEFT JOIN Forms f ON pr.id = f.product_id AND f.is_active = 1
         WHERE pu.camp_id = ?
         ORDER BY p.first_name ASC, p.last_name ASC
     `).bind(campId).all();
