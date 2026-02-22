@@ -35,7 +35,10 @@ export async function GET(
                     criticalInfo[field.label] = val as string;
                 } else {
                     // Try loose matching fallback
-                    const fallbackKey = Object.keys(responses).find(k => k.toLowerCase() === field.label.toLowerCase());
+                    const normalizeKey = (k: string) => k.toLowerCase().replace(/[-_]/g, ' ').replace(/\s+/g, ' ').trim();
+                    const normalizedLabel = normalizeKey(field.label);
+
+                    const fallbackKey = Object.keys(responses).find(k => normalizeKey(k) === normalizedLabel);
                     if (fallbackKey && responses[fallbackKey]) {
                         criticalInfo[field.label] = responses[fallbackKey] as string;
                     }

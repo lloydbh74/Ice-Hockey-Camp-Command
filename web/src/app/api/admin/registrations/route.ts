@@ -42,7 +42,10 @@ export async function GET(request: NextRequest) {
                 if (val) {
                     highlighted_answers[field.label] = val as string;
                 } else {
-                    const fallbackKey = Object.keys(responses).find(k => k.toLowerCase() === field.label.toLowerCase());
+                    const normalizeKey = (k: string) => k.toLowerCase().replace(/[-_]/g, ' ').replace(/\s+/g, ' ').trim();
+                    const normalizedLabel = normalizeKey(field.label);
+
+                    const fallbackKey = Object.keys(responses).find(k => normalizeKey(k) === normalizedLabel);
                     if (fallbackKey && responses[fallbackKey]) {
                         highlighted_answers[field.label] = responses[fallbackKey] as string;
                     }
