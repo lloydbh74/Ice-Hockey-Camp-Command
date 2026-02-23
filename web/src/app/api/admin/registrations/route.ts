@@ -42,12 +42,46 @@ export async function GET(request: NextRequest) {
                 if (val) {
                     highlighted_answers[field.label] = val as string;
                 } else {
-                    const normalizeKey = (k: string) => k.toLowerCase().replace(/[-_]/g, ' ').replace(/\s+/g, ' ').trim();
+                    const normalizeKey = (k: string) => k.toLowerCase().replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
                     const normalizedLabel = normalizeKey(field.label);
 
-                    const fallbackKey = Object.keys(responses).find(k => normalizeKey(k) === normalizedLabel);
+                    let fallbackKey = Object.keys(responses).find(k => normalizeKey(k) === normalizedLabel);
+
+                    if (!fallbackKey) {
+                        const legacyMapping: Record<string, string> = {
+                            'suffer from asthma': 'med_asthma',
+                            'suffer from allergies bites stings food': 'med_allergies',
+                            'suffer from diabetes': 'med_diabetes',
+                            'require an epipen': 'med_allergies',
+                            'suffered a concussion': 'med_concussion',
+                            'undergone any surgery in the past 2 years': 'med_surgery',
+                            'suffered any broken bones in the last 2 years': 'med_broken_bones',
+                            'currently have a medical condition illness or injury': 'medical_details'
+                        };
+
+                        const mappedLegacyKey = legacyMapping[normalizedLabel];
+                        if (mappedLegacyKey && responses[mappedLegacyKey]) {
+                            fallbackKey = mappedLegacyKey;
+                        } else {
+                            const excludeWords = ['suffer', 'from', 'have', 'currently', 'take', 'require', 'any', 'the', 'last', 'years', 'please', 'details'];
+                            const significantWords = normalizedLabel
+                                .split(' ')
+                                .filter(w => w.length > 3 && !excludeWords.includes(w));
+
+                            if (significantWords.length > 0) {
+                                fallbackKey = Object.keys(responses).find(k => {
+                                    const normK = normalizeKey(k);
+                                    return significantWords.some(w => normK.includes(w)) && (k.startsWith('med_') || k.startsWith('emergency'));
+                                });
+                            }
+                        }
+                    }
+
                     if (fallbackKey && responses[fallbackKey]) {
-                        highlighted_answers[field.label] = responses[fallbackKey] as string;
+                        const valStr = String(responses[fallbackKey]).trim();
+                        if (valStr && valStr.toLowerCase() !== 'false') {
+                            highlighted_answers[field.label] = valStr;
+                        }
                     }
                 }
             });
