@@ -68,6 +68,12 @@ export default function AdminLayoutClient({
                         <span className="material-symbols-outlined transition-transform group-hover:scale-110" aria-hidden="true">settings</span>
                         <span className="text-sm font-medium">System Config</span>
                     </Link>
+
+                    <div className="pt-6 pb-2 px-4 uppercase text-[10px] font-bold text-slate-500 tracking-widest">Help & Support</div>
+                    <Link href="/admin/manual" className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-white/5 hover:text-white transition-all group">
+                        <span className="material-symbols-outlined transition-transform group-hover:scale-110" aria-hidden="true">menu_book</span>
+                        <span className="text-sm font-medium">User Manual</span>
+                    </Link>
                 </nav>
 
                 <div className="p-4 border-t border-white/5">
