@@ -206,7 +206,11 @@ export default function ProductRepositoryPage() {
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-2">
                                         <span className="material-symbols-outlined text-slate-400 text-lg" aria-hidden="true">description</span>
-                                        <span className="text-xs font-medium text-slate-600">{product.form_template_id ? `Template #${product.form_template_id}` : 'None Linked'}</span>
+                                        <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                                            {product.form_template_id
+                                                ? (formTemplates.find(t => t.id === product.form_template_id)?.name || `Template #${product.form_template_id}`)
+                                                : 'None Linked'}
+                                        </span>
                                     </div>
                                 </td>
                                 <td className="px-6 py-4">
