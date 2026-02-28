@@ -38,7 +38,7 @@ export async function GET(
                     const normalizeKey = (k: string) => k.toLowerCase().replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
                     const normalizedLabel = normalizeKey(field.label);
 
-                    const fallbackKey = Object.keys(responses).find(k => normalizeKey(k) === normalizedLabel);
+                    let fallbackKey = Object.keys(responses).find(k => normalizeKey(k) === normalizedLabel);
 
                     if (!fallbackKey) {
                         // Semantic Legacy Bridge: map drifted modern labels back to older 'med_' keys
