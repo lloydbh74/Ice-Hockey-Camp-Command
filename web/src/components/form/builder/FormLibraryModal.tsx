@@ -18,6 +18,7 @@ interface FormLibraryModalProps {
 export default function FormLibraryModal({ isOpen, onClose, onSelect }: FormLibraryModalProps) {
     const [forms, setForms] = useState<FormSummary[]>([]);
     const [loading, setLoading] = useState(true);
+    const [duplicatingId, setDuplicatingId] = useState<number | null>(null);
     const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active');
 
     useEffect(() => {
@@ -81,6 +82,37 @@ export default function FormLibraryModal({ isOpen, onClose, onSelect }: FormLibr
             }
         } catch (error) {
             console.error("Restore failed", error);
+        }
+    };
+
+    const handleDuplicate = async (e: React.MouseEvent, id: number) => {
+        e.stopPropagation();
+        setDuplicatingId(id);
+        try {
+            const res = await fetch(`/api/admin/forms/${id}/duplicate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Admin-Token': 'swedish-camp-admin-2026'
+                }
+            });
+
+            if (res.ok) {
+                const data: any = await res.json();
+                if (data.success && data.newId) {
+                    onSelect(data.newId);
+                } else {
+                    alert('Failed to duplicate form. Invalid response.');
+                }
+            } else {
+                const errData: any = await res.json();
+                alert(`Failed to duplicate form. Error: ${errData.error || res.statusText}`);
+            }
+        } catch (error) {
+            console.error("Duplicate failed", error);
+            alert("An error occurred while duplicating the form.");
+        } finally {
+            setDuplicatingId(null);
         }
     };
 
@@ -167,6 +199,14 @@ export default function FormLibraryModal({ isOpen, onClose, onSelect }: FormLibr
                                         )}
                                         {activeTab === 'active' ? (
                                             <>
+                                                <button
+                                                    onClick={(e) => handleDuplicate(e, form.id)}
+                                                    disabled={duplicatingId === form.id}
+                                                    className="p-2 text-slate-400 dark:text-slate-500 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                                                    title="Duplicate Form"
+                                                >
+                                                    <span className={`material-symbols-outlined ${duplicatingId === form.id ? 'animate-pulse' : ''}`}>content_copy</span>
+                                                </button>
                                                 <button
                                                     onClick={(e) => handleArchive(e, form.id)}
                                                     className="p-2 text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
