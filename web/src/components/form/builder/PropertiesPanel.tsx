@@ -19,9 +19,10 @@ interface PropertiesPanelProps {
     field: FormField | null;
     onChange: (updates: Partial<FormField>) => void;
     onDelete?: () => void;
+    onDuplicate?: () => void;
 }
 
-export default function PropertiesPanel({ field, onChange, onDelete }: PropertiesPanelProps) {
+export default function PropertiesPanel({ field, onChange, onDelete, onDuplicate }: PropertiesPanelProps) {
     // Link Insertion Logic - Hooks must be at top level
     const [linkModalOpen, setLinkModalOpen] = useState(false);
     const [selectedTextRange, setSelectedTextRange] = useState<{ start: number; end: number } | null>(null);
@@ -410,12 +411,24 @@ export default function PropertiesPanel({ field, onChange, onDelete }: Propertie
             </div>
 
             {/* Footer Actions */}
-            <div className="p-6 border-t border-slate-200 dark:border-slate-800 mt-auto bg-white dark:bg-slate-900">
+            <div className="p-6 border-t border-slate-200 dark:border-slate-800 mt-auto bg-white dark:bg-slate-900 grid grid-cols-2 gap-3">
+                {onDuplicate && (
+                    <button
+                        onClick={onDuplicate}
+                        className="w-full py-3 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
+                        title="Duplicate Component"
+                    >
+                        <span className="material-symbols-outlined text-lg">content_copy</span>
+                        Duplicate
+                    </button>
+                )}
                 <button
                     onClick={onDelete}
                     className="w-full py-3 bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 font-medium rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors flex items-center justify-center gap-2"
+                    title="Delete Component"
                 >
-                    Delete Component
+                    <span className="material-symbols-outlined text-lg">delete</span>
+                    Delete
                 </button>
             </div>
         </div>

@@ -259,6 +259,36 @@ export default function FormBuilderPage() {
         setSelectedFieldId(null);
     };
 
+    const handleFieldDuplicate = () => {
+        if (!selectedFieldId) return;
+
+        updateSchema(prev => {
+            const index = prev.findIndex(f => f.id === selectedFieldId);
+            if (index === -1) return prev;
+
+            const original = prev[index];
+            const cloneId = crypto.randomUUID();
+
+            // Deep copy to ensure nested options/arrays don't share memory references
+            const clone: FormField = JSON.parse(JSON.stringify(original));
+            clone.id = cloneId;
+
+            // Adjust label slightly to indicate it's a clone (optional, but good UX)
+            if (clone.label && !['divider', 'separator'].includes(clone.type)) {
+                clone.label = `${clone.label} (Copy)`;
+            }
+
+            const next = [...prev];
+            next.splice(index + 1, 0, clone);
+
+            // We set it inside a setTimeout to ensure the React render cycle sets the schema first, 
+            // though standard state batching might be enough.
+            setTimeout(() => setSelectedFieldId(cloneId), 0);
+
+            return next;
+        });
+    };
+
     const selectedField = schema.find(f => f.id === selectedFieldId) || null;
 
     const loadVersion = (historyItem: any) => {
@@ -459,6 +489,7 @@ export default function FormBuilderPage() {
                                 field={selectedField}
                                 onChange={handleFieldUpdate}
                                 onDelete={handleFieldDelete}
+                                onDuplicate={handleFieldDuplicate}
                             />
                         </div>
                     </div>
