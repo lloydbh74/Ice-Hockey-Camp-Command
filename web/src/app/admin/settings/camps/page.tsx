@@ -3,7 +3,7 @@
 export const runtime = 'edge';
 
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 
 interface Camp {
@@ -18,10 +18,29 @@ export default function CampManagementPage() {
     const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [newCamp, setNewCamp] = useState({ name: "", year: new Date().getFullYear() + 1 });
+    const createButtonRef = useRef<HTMLButtonElement>(null);
 
     useEffect(() => {
         fetchCamps();
     }, []);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && showCreateModal) {
+                closeModal();
+            }
+        };
+        if (showCreateModal) {
+            document.addEventListener('keydown', handleKeyDown);
+        }
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [showCreateModal]);
+
+    const closeModal = () => {
+        setShowCreateModal(false);
+        // Small timeout to allow modal to unmount before focusing
+        setTimeout(() => createButtonRef.current?.focus(), 0);
+    };
 
     const fetchCamps = async () => {
         try {
@@ -55,7 +74,7 @@ export default function CampManagementPage() {
                 body: JSON.stringify(newCamp),
             });
             if (res.ok) {
-                setShowCreateModal(false);
+                closeModal();
                 fetchCamps();
             }
         } catch (e) {
@@ -71,9 +90,12 @@ export default function CampManagementPage() {
                     <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">Configure and manage hockey camp sessions.</p>
                 </div>
                 <button
+                    ref={createButtonRef}
                     onClick={() => setShowCreateModal(true)}
                     className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-primary-dark transition-colors flex items-center gap-2"
                     aria-haspopup="dialog"
+                    aria-expanded={showCreateModal}
+                    aria-controls="create-camp-modal"
                 >
                     <span className="material-symbols-outlined text-sm" aria-hidden="true">add</span>
                     Create New Camp
@@ -99,8 +121,8 @@ export default function CampManagementPage() {
                                 <div className="size-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mb-4" aria-hidden="true">
                                     <span className="material-symbols-outlined">camping</span>
                                 </div>
-                                <h3 className="font-bold text-slate-800 text-lg leading-tight mb-1">{camp.name}</h3>
-                                <p className="text-slate-500 text-sm font-medium">{camp.year} Season</p>
+                                <h2 className="font-bold text-slate-800 text-lg leading-tight mb-1">{camp.name}</h2>
+                                <p className="text-slate-600 dark:text-slate-400 text-sm font-medium">{camp.year} Season</p>
 
                                 <div className="mt-auto pt-6 flex items-center gap-2">
                                     <Link
@@ -123,11 +145,11 @@ export default function CampManagementPage() {
                     ))}
 
                     {camps.length === 0 && !loading && (
-                        <div className="col-span-full py-20 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-center">
-                            <div className="size-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500 mb-4" aria-hidden="true">
+                        <div className="col-span-full py-20 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center text-center">
+                            <div className="size-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 mb-4" aria-hidden="true">
                                 <span className="material-symbols-outlined text-4xl">camping</span>
                             </div>
-                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">No Camps Found</h3>
+                            <h2 className="text-lg font-bold text-slate-900 dark:text-white">No Camps Found</h2>
                             <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 max-w-xs mx-auto">Get started by creating your first camp session for the upcoming season.</p>
                             <button
                                 onClick={() => setShowCreateModal(true)}
@@ -142,6 +164,7 @@ export default function CampManagementPage() {
 
             {showCreateModal && (
                 <div
+                    id="create-camp-modal"
                     className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
                     role="dialog"
                     aria-modal="true"
@@ -150,7 +173,7 @@ export default function CampManagementPage() {
                     <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
                         <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
                             <h2 id="modal-title" className="text-lg font-bold text-slate-900 dark:text-white">New Camp Session</h2>
-                            <button onClick={() => setShowCreateModal(false)} className="text-slate-400 hover:text-slate-600" aria-label="Close modal">
+                            <button onClick={closeModal} className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" aria-label="Close modal">
                                 <span className="material-symbols-outlined" aria-hidden="true">close</span>
                             </button>
                         </div>
@@ -160,7 +183,8 @@ export default function CampManagementPage() {
                                 <input
                                     id="camp-name"
                                     type="text"
-                                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500"
+                                    autoFocus
+                                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder:text-slate-500 dark:text-slate-100 dark:placeholder:text-slate-400"
                                     placeholder="e.g. CIHA Swedish Hockey Camp 2027"
                                     value={newCamp.name}
                                     onChange={e => setNewCamp({ ...newCamp, name: e.target.value })}
@@ -177,10 +201,10 @@ export default function CampManagementPage() {
                                 />
                             </div>
                         </div>
-                        <div className="p-6 bg-slate-50 border-t border-slate-100 flex gap-3">
+                        <div className="p-6 bg-slate-50 border-t border-slate-100 flex gap-3 dark:bg-slate-900/50 dark:border-slate-800">
                             <button
-                                onClick={() => setShowCreateModal(false)}
-                                className="flex-1 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                                onClick={closeModal}
+                                className="flex-1 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
                             >
                                 Cancel
                             </button>

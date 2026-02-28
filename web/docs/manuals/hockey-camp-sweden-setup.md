@@ -52,7 +52,7 @@ The "Camp Container" is the parent entity that groups these specific products to
    * **Camp Name**: Enter `Hockey Camp Sweden`
    * **Year**: Ensure the current or upcoming season year is selected (e.g., `2024`).
 4. Click the **Create Camp** button.
-5. You will now see the new camp listed. It will be marked with a grey `DEACTIVATED` badge by default.
+5. You will now see the new camp listed. It will be marked with a green `ACTIVE` badge by default.
 
 ---
 
@@ -75,13 +75,12 @@ Now that the camp exists, we must assign our newly created streams (products) to
 
 ---
 
-## Phase 4: Activation & Verification
+## Phase 4: Verification
 
-The final step is to make the camp live so that the registration system can process sign-ups for these specific streams.
+New camps are automatically activated upon creation. The final step is to verify the camp is live so the registration system can process sign-ups.
 
 ### Step-by-Step Instructions
 
 1. On the Camp Settings page (`/admin/settings/camps/[id]`), look at the header next to the camp name ("Hockey Camp Sweden").
-2. Click the grey **Deactivated** badge.
-3. The badge will turn green and display **Active**.
-4. The setup is complete. You can now direct participants to the public registration link to select their preferred group.
+2. Verify that there is a green **Active** badge displayed. (Clicking this badge will toggle the camp offline if needed).
+3. The setup is complete. You can now direct participants to the public registration link to select their preferred group.

@@ -80,7 +80,7 @@ export default function HockeyCampSwedenSetupPage() {
                         </ul>
                     </li>
                     <li>Click the <strong>Create Camp</strong> button.</li>
-                    <li>You will now see the new camp listed. It will be marked with a grey <code>DEACTIVATED</code> badge by default.</li>
+                    <li>You will now see the new camp listed. It will be marked with a green <code>ACTIVE</code> badge by default.</li>
                 </ol>
             </section>
 
@@ -114,15 +114,14 @@ export default function HockeyCampSwedenSetupPage() {
             </section>
 
             <section className="mb-12">
-                <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-6 text-left">Phase 4: Activation & Verification</h2>
+                <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-6 text-left">Phase 4: Verification</h2>
                 <p className="text-slate-700 dark:text-slate-300 mb-4">
-                    The final step is to make the camp live so that the registration system can process sign-ups for these specific streams.
+                    New camps are automatically activated upon creation. The final step is to verify the camp is live so the registration system can process sign-ups.
                 </p>
 
                 <ol className="list-decimal ml-6 mt-2 text-slate-600 dark:text-slate-400 space-y-2">
                     <li>On the Camp Settings page (<code>/admin/settings/camps/[id]</code>), look at the header next to the camp name (&quot;Hockey Camp Sweden&quot;).</li>
-                    <li>Click the grey <strong>Deactivated</strong> badge.</li>
-                    <li>The badge will turn green and display <strong>Active</strong>.</li>
+                    <li>Verify that there is a green <strong>Active</strong> badge displayed. (Clicking this badge will toggle the camp offline if needed).</li>
                     <li>The setup is complete. You can now direct participants to the public registration link to select their preferred group.</li>
                 </ol>
             </section>
