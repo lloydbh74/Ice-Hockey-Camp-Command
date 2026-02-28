@@ -27,6 +27,18 @@ export async function POST(req: Request) {
 
         const { name, description, base_price, form_template_id, sku } = await req.json() as any;
 
+        // --- Foreign Key Constraint Workaround ---
+        // form_template_id actually receives an ID from the Forms table (which acts as templates).
+        // Since the Products table has a strict FK to FormTemplates(id), we inject a placeholder
+        // into FormTemplates to satisfy SQLite D1 restrictions if the template doesn't exist yet.
+        if (form_template_id) {
+            const formTemplateExists = await db.prepare("SELECT id FROM FormTemplates WHERE id = ?").bind(form_template_id).first();
+            if (!formTemplateExists) {
+                await db.prepare("INSERT INTO FormTemplates (id, name, schema_json) VALUES (?, ?, ?)")
+                    .bind(form_template_id, `Auto-Proxy for Form ${form_template_id}`, "{}").run();
+            }
+        }
+
         const result = await db.prepare(
             "INSERT INTO Products (name, description, base_price, status, form_template_id, sku) VALUES (?, ?, ?, 'active', ?, ?)"
         ).bind(name, description || null, base_price, form_template_id || null, sku || null).run();

@@ -35,6 +35,15 @@ export async function PATCH(
         const { id } = await context.params;
         const { name, description, base_price, form_template_id, sku } = await req.json() as any;
 
+        // --- Foreign Key Constraint Workaround ---
+        if (form_template_id) {
+            const formTemplateExists = await db.prepare("SELECT id FROM FormTemplates WHERE id = ?").bind(form_template_id).first();
+            if (!formTemplateExists) {
+                await db.prepare("INSERT INTO FormTemplates (id, name, schema_json) VALUES (?, ?, ?)")
+                    .bind(form_template_id, `Auto-Proxy for Form ${form_template_id}`, "{}").run();
+            }
+        }
+
         await db.prepare(
             "UPDATE Products SET name = ?, description = ?, base_price = ?, form_template_id = ?, sku = ? WHERE id = ?"
         ).bind(name, description || null, base_price, form_template_id || null, sku || null, id).run();
