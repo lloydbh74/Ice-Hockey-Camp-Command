@@ -33,7 +33,7 @@ export default function ManualFormsPage() {
                     <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800">
                         <h3 className="font-bold text-sm mb-2 text-left">Validation</h3>
                         <p className="text-xs text-slate-500">
-                            Each field can be marked as **Required**. You can also set custom validation rules like "Must be a valid email" or "Years of experience must be between 1 and 20".
+                            Each field can be marked as **Required**. You can also set custom validation rules like &quot;Must be a valid email&quot; or &quot;Years of experience must be between 1 and 20&quot;.
                         </p>
                     </div>
                 </div>
@@ -54,9 +54,9 @@ export default function ManualFormsPage() {
             <section className="mt-8">
                 <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-4 text-left">Mapping Data</h2>
                 <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
-                    When you add a "Session Selection" field to your form, the system automatically maps the user's choice to the sessions you defined in **Camp Management**. This is the "magic" that keeps your registration data perfectly organized.
+                    When you add a &quot;Session Selection&quot; field to your form, the system automatically maps the user&apos;s choice to the sessions you defined in **Camp Management**. This is the &quot;magic&quot; that keeps your registration data perfectly organized.
                 </p>
             </section>
-        </article>
+        </article >
     );
 }

@@ -31,11 +31,13 @@ const getCurrencySymbol = (currency?: string) => {
 
 function RegistrationsContent() {
     const searchParams = useSearchParams();
-    const campId = searchParams.get('campId');
+    const urlCampId = searchParams.get('campId');
     const initialStatus = searchParams.get('status') || 'all';
     const initialQuery = searchParams.get('q') || '';
 
     const [registrations, setRegistrations] = useState<Registration[]>([]);
+    const [camps, setCamps] = useState<any[]>([]);
+    const [selectedCampFilter, setSelectedCampFilter] = useState(urlCampId || 'all');
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState(initialStatus);
     const [searchQuery, setSearchQuery] = useState(initialQuery);
@@ -44,9 +46,57 @@ function RegistrationsContent() {
     const [chaseLoading, setChaseLoading] = useState<Record<number, boolean>>({});
     const [bulkChaseLoading, setBulkChaseLoading] = useState(false);
 
+    // Add Registration State
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [newRegProducts, setNewRegProducts] = useState<any[]>([]);
+    const [newRegData, setNewRegData] = useState({ guardianName: '', guardianEmail: '', campId: '', productId: '' });
+    const [isSubmittingNewReg, setIsSubmittingNewReg] = useState(false);
+
+    useEffect(() => {
+        fetch('/api/admin/camps').then(res => res.json()).then((data: any) => setCamps(data.results || []));
+    }, []);
+
+    const handleCampChange = async (campId: string) => {
+        setNewRegData({ ...newRegData, campId, productId: '' });
+        if (campId) {
+            const res = await fetch(`/api/admin/camps/${campId}/products`);
+            if (res.ok) {
+                const data = await res.json() as any;
+                setNewRegProducts(data.results || []);
+            }
+        } else {
+            setNewRegProducts([]);
+        }
+    };
+
+    const handleSubmitNewReg = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmittingNewReg(true);
+        try {
+            const res = await fetch('/api/admin/registrations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newRegData)
+            });
+            if (res.ok) {
+                setIsAddModalOpen(false);
+                setNewRegData({ guardianName: '', guardianEmail: '', campId: '', productId: '' });
+                fetchRegistrations();
+            } else {
+                const err = await res.json() as any;
+                alert(`Error: ${err.error}`);
+            }
+        } catch (error) {
+            alert('Failed to add registration');
+        } finally {
+            setIsSubmittingNewReg(false);
+        }
+    };
+
     const fetchRegistrations = () => {
         setLoading(true);
-        const url = `/api/admin/registrations?${campId ? `campId=${campId}&` : ''}${statusFilter !== 'all' && statusFilter !== 'medical' ? `status=${statusFilter}&` : ''}${searchQuery ? `q=${encodeURIComponent(searchQuery)}` : ''}`;
+        const urlCampIdParam = selectedCampFilter !== 'all' ? `campId=${selectedCampFilter}&` : '';
+        const url = `/api/admin/registrations?${urlCampIdParam}${statusFilter !== 'all' && statusFilter !== 'medical' ? `status=${statusFilter}&` : ''}${searchQuery ? `q=${encodeURIComponent(searchQuery)}` : ''}`;
 
         fetch(url)
             .then((res) => res.json())
@@ -72,7 +122,7 @@ function RegistrationsContent() {
             fetchRegistrations();
         }, 300); // Simple debounce
         return () => clearTimeout(timer);
-    }, [campId, statusFilter, searchQuery]);
+    }, [selectedCampFilter, statusFilter, searchQuery]);
 
     const handleUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -150,8 +200,8 @@ function RegistrationsContent() {
         <div className="p-8 max-w-7xl mx-auto">
             <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    {campId && (
-                        <Link href={`/admin/camps/${campId}`} className="text-blue-600 hover:underline text-sm font-bold flex items-center gap-1 mb-2">
+                    {urlCampId && (
+                        <Link href={`/admin/camps/${urlCampId}`} className="text-blue-600 hover:underline text-sm font-bold flex items-center gap-1 mb-2">
                             <span className="material-symbols-outlined text-sm">arrow_back</span>
                             <span>Back to Dashboard</span>
                         </Link>
@@ -177,7 +227,21 @@ function RegistrationsContent() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                        <label htmlFor="status-filter" className="text-xs font-bold text-slate-500 uppercase tracking-widest">Filter:</label>
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Camp:</label>
+                        <select
+                            value={selectedCampFilter}
+                            onChange={(e) => setSelectedCampFilter(e.target.value)}
+                            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-blue-500/20"
+                        >
+                            <option value="all">All Camps</option>
+                            {camps.map(camp => (
+                                <option key={camp.id} value={camp.id}>{camp.name}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <label htmlFor="status-filter" className="text-xs font-bold text-slate-500 uppercase tracking-widest">Status:</label>
                         <select
                             id="status-filter"
                             value={statusFilter}
@@ -193,16 +257,25 @@ function RegistrationsContent() {
                         </select>
                     </div>
 
-                    {registrations.some(r => r.registration_state !== 'completed') && (
+                    <div className="flex flex-wrap items-center gap-3">
+                        {registrations.some(r => r.registration_state !== 'completed') && (
+                            <button
+                                onClick={() => handleChase(registrations.filter(r => r.registration_state !== 'completed').map(r => r.id))}
+                                disabled={bulkChaseLoading}
+                                className="bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-sm font-bold px-4 py-2 rounded-xl flex items-center gap-2 transition-all shadow-sm active:scale-95"
+                            >
+                                <span className="material-symbols-outlined text-[18px]">campaign</span>
+                                {bulkChaseLoading ? 'Chasing All...' : 'Chase All Missing'}
+                            </button>
+                        )}
                         <button
-                            onClick={() => handleChase(registrations.filter(r => r.registration_state !== 'completed').map(r => r.id))}
-                            disabled={bulkChaseLoading}
-                            className="bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-sm font-bold px-4 py-2 rounded-xl flex items-center gap-2 transition-all shadow-sm active:scale-95"
+                            onClick={() => setIsAddModalOpen(true)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2 rounded-xl flex items-center gap-2 transition-all shadow-sm shadow-blue-500/20 active:scale-95"
                         >
-                            <span className="material-symbols-outlined text-[18px]">campaign</span>
-                            {bulkChaseLoading ? 'Chasing All...' : 'Chase All Missing'}
+                            <span className="material-symbols-outlined text-[18px]">add</span>
+                            Add Registration
                         </button>
-                    )}
+                    </div>
                 </div>
             </header>
 
@@ -429,6 +502,94 @@ function RegistrationsContent() {
                                             Saving...
                                         </>
                                     ) : 'Save Changes'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Add Registration Modal */}
+            {isAddModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <header className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-xl font-bold text-slate-900 dark:text-white">Add Registration</h2>
+                                <p className="text-sm text-slate-500">Manually invite a participant</p>
+                            </div>
+                            <button onClick={() => setIsAddModalOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-400 hover:text-slate-600 transition-colors">
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </header>
+
+                        <form onSubmit={handleSubmitNewReg} className="p-8 space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Guardian Name</label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={newRegData.guardianName}
+                                    onChange={e => setNewRegData({ ...newRegData, guardianName: e.target.value })}
+                                    className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-400"
+                                    placeholder="Jane Doe"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Guardian Email</label>
+                                <input
+                                    type="email"
+                                    required
+                                    value={newRegData.guardianEmail}
+                                    onChange={e => setNewRegData({ ...newRegData, guardianEmail: e.target.value })}
+                                    className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-400"
+                                    placeholder="jane.doe@example.com"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Camp</label>
+                                <select
+                                    required
+                                    value={newRegData.campId}
+                                    onChange={e => handleCampChange(e.target.value)}
+                                    className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10"
+                                >
+                                    <option value="" disabled>Select Camp</option>
+                                    {camps.map(camp => <option key={camp.id} value={camp.id}>{camp.name}</option>)}
+                                </select>
+                            </div>
+                            {newRegData.campId && (
+                                <div className="animate-in fade-in slide-in-from-top-2">
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Registration Type / Product</label>
+                                    <select
+                                        required
+                                        value={newRegData.productId}
+                                        onChange={e => setNewRegData({ ...newRegData, productId: e.target.value })}
+                                        className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10"
+                                    >
+                                        <option value="" disabled>Select Product</option>
+                                        {newRegProducts.map((cp: any) => (
+                                            <option key={cp.product_id} value={cp.product_id}>
+                                                {cp.product_name} - {getCurrencySymbol()} {cp.price}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+                            <div className="pt-6 flex justify-end gap-3 border-t border-slate-100 dark:border-slate-800 mt-4">
+                                <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors">Cancel</button>
+                                <button type="submit" disabled={isSubmittingNewReg} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-2xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2">
+                                    {isSubmittingNewReg ? (
+                                        <>
+                                            <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            Adding...
+                                        </>
+                                    ) : 'Add & Send Invite'}
                                 </button>
                             </div>
                         </form>

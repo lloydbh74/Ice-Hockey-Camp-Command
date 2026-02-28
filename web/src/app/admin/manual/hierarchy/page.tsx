@@ -10,7 +10,7 @@ export default function ManualHierarchyPage() {
                 </div>
                 <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-4">Understanding the Hierarchy</h1>
                 <p className="text-xl text-slate-600 dark:text-slate-400 leading-relaxed">
-                    To manage your camps effectively, it's essential to understand how data is structured in Swedish Camp Command.
+                    To manage your camps effectively, it&apos;s essential to understand how data is structured in Swedish Camp Command.
                 </p>
             </header>
 
@@ -25,7 +25,7 @@ export default function ManualHierarchyPage() {
                         <div>
                             <h3 className="text-lg font-bold mb-1 leading-none text-left">1. The Camp (Organization)</h3>
                             <p className="text-slate-600 dark:text-slate-400 text-sm">
-                                This is the high-level umbrella for a year or a major event (e.g., "CIHA Swedish Hockey Camp 2027"). It holds all your settings, registrations, and forms for that specific season.
+                                This is the high-level umbrella for a year or a major event (e.g., &quot;CIHA Swedish Hockey Camp 2027&quot;). It holds all your settings, registrations, and forms for that specific season.
                             </p>
                         </div>
                     </div>
@@ -37,7 +37,7 @@ export default function ManualHierarchyPage() {
                         <div>
                             <h3 className="text-lg font-bold mb-1 leading-none text-left">2. The Session (Event Dates)</h3>
                             <p className="text-slate-600 dark:text-slate-400 text-sm">
-                                Each Camp has one or more Sessions. These represent specific dates or groups (e.g., "Week 1: U15 Elite", "Week 2: Goalies Only"). Registrations are always tied to a Session.
+                                Each Camp has one or more Sessions. These represent specific dates or groups (e.g., &quot;Week 1: U15 Elite&quot;, &quot;Week 2: Goalies Only&quot;). Registrations are always tied to a Session.
                             </p>
                         </div>
                     </div>

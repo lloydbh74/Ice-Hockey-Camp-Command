@@ -30,7 +30,7 @@ export async function GET(
             // Find matches in user's submission
             highlightedFields.forEach((field: any) => {
                 // Find answer whose key matches label exactly, or whose ID matches
-                let val = responses[field.label] || responses[field.id];
+                const val = responses[field.label] || responses[field.id];
                 if (val) {
                     criticalInfo[field.label] = val as string;
                 } else {
@@ -38,7 +38,7 @@ export async function GET(
                     const normalizeKey = (k: string) => k.toLowerCase().replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
                     const normalizedLabel = normalizeKey(field.label);
 
-                    let fallbackKey = Object.keys(responses).find(k => normalizeKey(k) === normalizedLabel);
+                    const fallbackKey = Object.keys(responses).find(k => normalizeKey(k) === normalizedLabel);
 
                     if (!fallbackKey) {
                         // Semantic Legacy Bridge: map drifted modern labels back to older 'med_' keys
