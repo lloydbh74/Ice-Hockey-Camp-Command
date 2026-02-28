@@ -76,14 +76,25 @@ export default function ProductRepositoryPage() {
                     "Content-Type": "application/json",
                     'X-Admin-Token': 'swedish-camp-admin-2026'
                 },
-                body: JSON.stringify(newProduct),
+                body: JSON.stringify({
+                    name: newProduct.name,
+                    sku: newProduct.sku,
+                    description: newProduct.description,
+                    base_price: newProduct.basePrice,
+                    form_template_id: newProduct.form_template_id
+                }),
             });
             if (res.ok) {
                 setShowCreateModal(false);
+                setNewProduct({ name: "", sku: "", description: "", basePrice: 0, form_template_id: undefined });
                 fetchProducts();
+            } else {
+                const errorData = await res.json() as any;
+                alert(`Failed to create product: ${errorData.error || 'Unknown error'}`);
             }
-        } catch (e) {
+        } catch (e: any) {
             console.error("Failed to create product", e);
+            alert(`Failed to create product: ${e.message}`);
         }
     };
 
