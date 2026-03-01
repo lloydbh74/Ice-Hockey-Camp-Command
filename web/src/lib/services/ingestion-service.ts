@@ -24,8 +24,8 @@ export type IngestionPayload = z.infer<typeof IngestionSchema>;
 
 export class IngestionService {
     static extractSku(description: string): string | null {
-        // Matches [SKU: SOME-SKU] or just the SKU if it's the whole string
-        const match = description.match(/\[SKU:\s*([^\]]+)\]/i);
+        // Matches [SKU: SOME-SKU] or [SOME-SKU] or just the SKU if it's the whole string
+        const match = description.match(/\[(?:SKU:\s*)?([^\]]+)\]/i);
         return match ? match[1].trim() : description.trim();
     }
 
