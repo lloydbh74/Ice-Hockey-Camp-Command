@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
     }
 }
 
-function getCount(json: string) {
+function getCount(json: string): number {
     try {
         const p = JSON.parse(json);
         return Array.isArray(p) ? p.length : (typeof p === 'string' ? getCount(p) : 0);
