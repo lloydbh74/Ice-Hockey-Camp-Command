@@ -22,6 +22,7 @@ interface Registration {
     registration_token?: string;
     schema_json?: string;
     highlighted_answers?: Record<string, string>;
+    camp_id?: number;
 }
 
 const getCurrencySymbol = (currency?: string) => {
@@ -42,6 +43,7 @@ function RegistrationsContent() {
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState(initialStatus);
     const [searchQuery, setSearchQuery] = useState(initialQuery);
+    const [campStatusTab, setCampStatusTab] = useState<'active' | 'archived'>('active');
     const [editingRegistration, setEditingRegistration] = useState<Registration | null>(null);
     const [saveLoading, setSaveLoading] = useState(false);
     const [chaseLoading, setChaseLoading] = useState<Record<number, boolean>>({});
@@ -260,7 +262,7 @@ function RegistrationsContent() {
                             className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-blue-500/20"
                         >
                             <option value="all">All Camps</option>
-                            {camps.map(camp => (
+                            {camps.filter(c => c.status === campStatusTab).map(camp => (
                                 <option key={camp.id} value={camp.id}>{camp.name}</option>
                             ))}
                         </select>
@@ -305,6 +307,22 @@ function RegistrationsContent() {
                 </div>
             </header>
 
+            {/* Active / Archived Tabs */}
+            <div className="flex items-center gap-6 mb-6 px-1 border-b border-slate-200 dark:border-slate-800 pb-px">
+                <button
+                    onClick={() => { setCampStatusTab('active'); setSelectedCampFilter('all'); }}
+                    className={`pb-3 text-sm font-bold border-b-2 transition-colors ${campStatusTab === 'active' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                >
+                    Active Camps
+                </button>
+                <button
+                    onClick={() => { setCampStatusTab('archived'); setSelectedCampFilter('all'); }}
+                    className={`pb-3 text-sm font-bold border-b-2 transition-colors ${campStatusTab === 'archived' ? 'border-slate-600 text-slate-600 dark:border-slate-400 dark:text-slate-400' : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                >
+                    Archived Camps
+                </button>
+            </div>
+
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm">
                 <table className="w-full text-left border-collapse">
                     <thead>
@@ -325,7 +343,7 @@ function RegistrationsContent() {
                                     </td>
                                 </tr>
                             ))
-                        ) : registrations.map((row) => (
+                        ) : registrations.filter(r => camps.find(c => c.id === r.camp_id)?.status === campStatusTab).map((row) => (
                             <tr key={row.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
                                 <td className="px-6 py-4">
                                     <div className="font-bold text-slate-900 dark:text-white">{row.guardian_name}</div>

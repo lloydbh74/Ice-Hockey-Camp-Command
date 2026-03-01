@@ -831,3 +831,20 @@ export async function updateRegistrationDetails(
         return await db.batch(stmts);
     }
 }
+
+export async function purgeCampSensitiveData(db: D1Database, campId: number) {
+    const camp = await db.prepare("SELECT status FROM Camps WHERE id = ?").bind(campId).first<{ status: string }>();
+    if (!camp || camp.status !== 'archived') {
+        throw new Error("Camp is not archived. Cannot purge data.");
+    }
+
+    const { success } = await db.prepare(`
+        UPDATE Registrations 
+        SET form_response_json = NULL 
+        WHERE purchase_id IN (
+            SELECT id FROM Purchases WHERE camp_id = ?
+        )
+    `).bind(campId).run();
+
+    return success;
+}

@@ -109,6 +109,27 @@ export default function CampDetailPage({ params }: { params: Promise<{ id: strin
         }
     };
 
+    const handlePurgeData = async () => {
+        if (!confirm("⚠️ WARNING: GDPR DATA PURGE ⚠️\n\nThis will PERMANENTLY delete all sensitive medical and dietary registration data for this camp.\n\nFinancial purchase records will be kept.\n\nProceed to confirmation?")) return;
+
+        const confirmText = prompt("Type PURGE to confirm permanent deletion of sensitive data:");
+        if (confirmText !== "PURGE") {
+            alert("Purge cancelled.");
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/admin/camps/${campId}/purge`, { method: 'POST' });
+            if (!res.ok) {
+                const errorData = await res.json() as any;
+                throw new Error(errorData.error || "Failed to purge data");
+            }
+            alert("Sensitive data successfully purged.");
+        } catch (e: any) {
+            alert(e.message);
+        }
+    };
+
     if (loading) return <div className="p-8 animate-pulse text-slate-400 font-bold uppercase tracking-widest text-xs">Synchronizing with Swedish Command...</div>;
     if (!camp) return <div className="p-8 text-red-500 font-bold">Camp not found.</div>;
 
@@ -218,6 +239,20 @@ export default function CampDetailPage({ params }: { params: Promise<{ id: strin
                                     <p className="text-[10px] text-slate-400 text-center opacity-60">
                                         {camp.purchase_count} purchases found. Deletion disabled.
                                     </p>
+                                    {camp.status === 'archived' && (
+                                        <div className="pt-4 mt-4 border-t border-slate-700/50">
+                                            <button
+                                                onClick={handlePurgeData}
+                                                className="w-full py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-900/20 border border-red-500"
+                                            >
+                                                <span className="material-symbols-outlined text-sm">delete_forever</span>
+                                                Purge Data (GDPR)
+                                            </button>
+                                            <p className="text-[10px] text-red-300 text-center mt-2 opacity-80 leading-tight">
+                                                Permanently deletes medical & dietary data. Keeps financial records.
+                                            </p>
+                                        </div>
+                                    )}
                                 </>
                             ) : (
                                 <>
