@@ -559,7 +559,7 @@ export async function getAttendanceList(db: D1Database, campId: number) {
         JOIN Purchases pu ON r.purchase_id = pu.id
         JOIN Guardians g ON pu.guardian_id = g.id
         JOIN Products pr ON pu.product_id = pr.id
-        LEFT JOIN Forms f ON pr.id = f.product_id AND f.is_active = 1
+        LEFT JOIN Forms f ON r.form_id = f.id
         WHERE pu.camp_id = ?
         ORDER BY p.first_name ASC, p.last_name ASC
     `).bind(campId).all();
