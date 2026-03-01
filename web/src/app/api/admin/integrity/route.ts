@@ -6,71 +6,105 @@ export const runtime = 'edge';
 export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const fix = searchParams.get('fix') === 'true';
+    const relink = searchParams.get('relink') === 'true';
 
     try {
         const db = await getDb();
         const results: any = {
-            summary: {
-                forms: [],
-                templates: [],
-                products: []
-            },
+            summary: { forms: [], templates: [], products: [] },
             corrupted: [],
-            fixed: []
+            fixed: [],
+            relinked: []
         };
 
-        // 1. Scan Forms
+        // 1. Diagnostics
         const forms = await db.prepare('SELECT id, name, product_id, is_published, schema_json FROM Forms').all();
+        const templates = await db.prepare('SELECT id, name, schema_json FROM FormTemplates').all();
+        const products = await db.prepare('SELECT id, name, form_template_id FROM Products').all();
+
         (forms.results || []).forEach((f: any) => {
             const status = checkSchema(f.schema_json);
-            let fieldCount = 0;
-            try { fieldCount = Array.isArray(JSON.parse(f.schema_json)) ? JSON.parse(f.schema_json).length : 0; } catch (e) { }
-
-            results.summary.forms.push({
-                id: f.id,
-                name: f.name,
-                product_id: f.product_id,
-                published: f.is_published === 1,
-                fields: fieldCount
-            });
-
-            if (!status.isValid) {
-                results.corrupted.push({ type: 'form', id: f.id, name: f.name, reason: status.reason });
-                if (fix && status.repairedSchema) results.fixed.push({ type: 'form', id: f.id, schema: status.repairedSchema });
-            }
+            results.summary.forms.push({ id: f.id, name: f.name, product_id: f.product_id, fields: getCount(f.schema_json) });
+            if (!status.isValid) results.corrupted.push({ type: 'form', id: f.id, name: f.name, reason: status.reason });
         });
 
-        // 2. Scan FormTemplates
-        const templates = await db.prepare('SELECT id, name, schema_json FROM FormTemplates').all();
         (templates.results || []).forEach((t: any) => {
-            let fieldCount = 0;
-            try { fieldCount = Array.isArray(JSON.parse(t.schema_json)) ? JSON.parse(t.schema_json).length : 0; } catch (e) { }
-            results.summary.templates.push({ id: t.id, name: t.name, fields: fieldCount });
+            results.summary.templates.push({ id: t.id, name: t.name, fields: getCount(t.schema_json) });
             const status = checkSchema(t.schema_json);
-            if (!status.isValid) {
-                results.corrupted.push({ type: 'template', id: t.id, name: t.name, reason: status.reason });
-                if (fix && status.repairedSchema) results.fixed.push({ type: 'template', id: t.id, schema: status.repairedSchema });
-            }
+            if (!status.isValid) results.corrupted.push({ type: 'template', id: t.id, name: t.name, reason: status.reason });
         });
 
-        // 3. Scan Products
-        const products = await db.prepare('SELECT id, name, form_template_id FROM Products').all();
         (products.results || []).forEach((p: any) => {
             results.summary.products.push({ id: p.id, name: p.name, form_id: p.form_template_id });
         });
 
-        if (fix && results.fixed.length > 0) {
-            for (const item of results.fixed) {
-                const table = item.type === 'form' ? 'Forms' : 'FormTemplates';
-                await db.prepare(`UPDATE ${table} SET schema_json = ? WHERE id = ?`).bind(item.schema, item.id).run();
+        // 2. Fix Corrupted (Double strings, etc.)
+        if (fix) {
+            for (const c of results.corrupted) {
+                const item = [...(forms.results || []), ...(templates.results || [])].find(x => x.id === c.id);
+                const status = checkSchema(item.schema_json);
+                if (status.repairedSchema) {
+                    const table = c.type === 'form' ? 'Forms' : 'FormTemplates';
+                    await db.prepare(`UPDATE ${table} SET schema_json = ? WHERE id = ?`).bind(status.repairedSchema, c.id).run();
+                    results.fixed.push({ type: c.type, id: c.id });
+                }
+            }
+        }
+
+        // 3. Mass Relink (The actual fix for "Step 1 of 0")
+        if (relink) {
+            // A. Find the "Good" Advanced Schema
+            const advancedForm = (forms.results as any[] || []).find(f => f.name.includes('Advanced') && getCount(f.schema_json) > 50);
+            const standardForm = (forms.results as any[] || []).find(f => f.id === 1); // Development Camp (64 fields)
+
+            for (const p of (products.results as any[] || [])) {
+                // Determine the best form for this product
+                let targetSchema = null;
+                let targetName = "";
+
+                if (p.name.includes('Advanced')) {
+                    targetSchema = advancedForm?.schema_json;
+                    targetName = "Advanced Registration Form";
+                } else if (p.name.includes('Pro') || p.name.includes('Elite')) {
+                    // Covers cases not caught by "Advanced" if any
+                    targetSchema = advancedForm?.schema_json;
+                    targetName = "Elite Registration Form";
+                } else {
+                    targetSchema = standardForm?.schema_json;
+                    targetName = "Standard Registration Form";
+                }
+
+                if (targetSchema) {
+                    // Check if an active form already exists for this product ID
+                    const existingActive = (forms.results as any[] || []).find(f => f.product_id === p.id && f.is_published === 1);
+
+                    if (!existingActive || getCount(existingActive.schema_json) === 0) {
+                        // Deactivate old ones
+                        await db.prepare('UPDATE Forms SET is_published = 0 WHERE product_id = ?').bind(p.id).run();
+
+                        // Insert correct one
+                        await db.prepare(`
+                            INSERT INTO Forms (product_id, name, schema_json, version, is_published, is_active)
+                            VALUES (?, ?, ?, '1.0.1', 1, 1)
+                        `).bind(p.id, targetName, targetSchema).run();
+
+                        results.relinked.push({ product: p.name, action: 'created_form' });
+                    }
+                }
             }
         }
 
         return NextResponse.json(results);
     } catch (error) {
-        console.error("Integrity check error:", error);
         return NextResponse.json({ error: error instanceof Error ? error.message : 'Internal Server Error' }, { status: 500 });
     }
+}
+
+function getCount(json: string) {
+    try {
+        const p = JSON.parse(json);
+        return Array.isArray(p) ? p.length : (typeof p === 'string' ? getCount(p) : 0);
+    } catch (e) { return 0; }
 }
 
 function checkSchema(jsonStr: string) {
