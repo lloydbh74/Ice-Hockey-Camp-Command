@@ -52,46 +52,34 @@ export async function GET(request: NextRequest) {
             }
         }
 
-        // 3. Mass Relink (The actual fix for "Step 1 of 0")
+        // 3. Mass Relink & Consolidation (Fix for duplicate forms)
         if (relink) {
-            // A. Find the "Good" Advanced Schema
-            const advancedForm = (forms.results as any[] || []).find(f => f.name.includes('Advanced') && getCount(f.schema_json) > 50);
-            const standardForm = (forms.results as any[] || []).find(f => f.id === 1); // Development Camp (64 fields)
+            const MASTER_DEV_ID = 1;
+            const MASTER_ADV_ID = 1772318747599;
 
+            // A. Deactivate all forms EXCEPT the two masters
+            await db.prepare(`
+                UPDATE Forms 
+                SET is_published = 0, is_active = 0 
+                WHERE id NOT IN (?, ?)
+            `).bind(MASTER_DEV_ID, MASTER_ADV_ID).run();
+
+            // B. Ensure masters are active and published
+            await db.prepare('UPDATE Forms SET is_published = 1, is_active = 1 WHERE id IN (?, ?)').bind(MASTER_DEV_ID, MASTER_ADV_ID).run();
+
+            // C. Relink Products to the correct Master Form
             for (const p of (products.results as any[] || [])) {
-                // Determine the best form for this product
-                let targetSchema = null;
-                let targetName = "";
+                let targetId = MASTER_DEV_ID;
 
-                if (p.name.includes('Advanced')) {
-                    targetSchema = advancedForm?.schema_json;
-                    targetName = "Advanced Registration Form";
-                } else if (p.name.includes('Pro') || p.name.includes('Elite')) {
-                    // Covers cases not caught by "Advanced" if any
-                    targetSchema = advancedForm?.schema_json;
-                    targetName = "Elite Registration Form";
-                } else {
-                    targetSchema = standardForm?.schema_json;
-                    targetName = "Standard Registration Form";
+                if (p.name.includes('Advanced') || p.name.includes('Pro') || p.name.includes('Elite')) {
+                    targetId = MASTER_ADV_ID;
                 }
 
-                if (targetSchema) {
-                    // Check if an active form already exists for this product ID
-                    const existingActive = (forms.results as any[] || []).find(f => f.product_id === p.id && f.is_published === 1);
+                // Update the product to point to the master form
+                // We use form_template_id as the pointer to the active Form ID
+                await db.prepare('UPDATE Products SET form_template_id = ? WHERE id = ?').bind(targetId, p.id).run();
 
-                    if (!existingActive || getCount(existingActive.schema_json) === 0) {
-                        // Deactivate old ones
-                        await db.prepare('UPDATE Forms SET is_published = 0 WHERE product_id = ?').bind(p.id).run();
-
-                        // Insert correct one
-                        await db.prepare(`
-                            INSERT INTO Forms (product_id, name, schema_json, version, is_published, is_active)
-                            VALUES (?, ?, ?, '1.0.1', 1, 1)
-                        `).bind(p.id, targetName, targetSchema).run();
-
-                        results.relinked.push({ product: p.name, action: 'created_form' });
-                    }
-                }
+                results.relinked.push({ product: p.name, action: 'linked_to_master', masterId: targetId });
             }
         }
 
