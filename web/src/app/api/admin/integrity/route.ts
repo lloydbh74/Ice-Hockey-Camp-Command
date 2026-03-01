@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
             for (const c of results.corrupted) {
                 const item = [...(forms.results || []), ...(templates.results || [])].find(x => x.id === c.id);
                 if (!item) continue;
-                const status = checkSchema(item.schema_json);
+                const status = checkSchema(item.schema_json as string);
                 if (status.repairedSchema) {
                     const table = c.type === 'form' ? 'Forms' : 'FormTemplates';
                     await db.prepare(`UPDATE ${table} SET schema_json = ? WHERE id = ?`).bind(status.repairedSchema, c.id).run();
