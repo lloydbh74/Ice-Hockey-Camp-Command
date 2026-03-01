@@ -28,7 +28,22 @@ export async function GET(
 
             // Rows
             data.forEach((row: any) => {
-                const responseStr = row.form_response_json.replace(/"/g, '""');
+                const responses = JSON.parse(row.form_response_json || '{}');
+                const schema = JSON.parse(row.schema_json || '[]');
+
+                // Map UUID/random IDs to human-readable labels
+                const mappedResponses: Record<string, any> = {};
+                Object.entries(responses).forEach(([key, value]) => {
+                    if (!key) return;
+                    const fieldDef = schema.find((f: any) => f.id === key);
+                    if (fieldDef && fieldDef.label) {
+                        mappedResponses[fieldDef.label] = value;
+                    } else {
+                        mappedResponses[key] = value;
+                    }
+                });
+
+                const responseStr = JSON.stringify(mappedResponses).replace(/"/g, '""');
                 csvContent += `${row.registration_id},"${row.player_name}",${row.date_of_birth},"${row.guardian_name}","${row.product_name}",${row.registration_state},${row.registration_timestamp},"${responseStr}"\n`;
             });
         }

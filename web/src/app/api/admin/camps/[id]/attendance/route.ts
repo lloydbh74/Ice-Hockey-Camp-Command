@@ -82,6 +82,18 @@ export async function GET(
                 }
             });
 
+            // Map UUID/random IDs to human-readable labels for display
+            const displayResponses: Record<string, any> = {};
+            Object.entries(responses).forEach(([key, value]) => {
+                if (!key) return;
+                const fieldDef = schema.find((f: any) => f.id === key);
+                if (fieldDef && fieldDef.label) {
+                    displayResponses[fieldDef.label] = value;
+                } else {
+                    displayResponses[key] = value;
+                }
+            });
+
             return {
                 id: row.registration_id,
                 playerName: row.player_name,
@@ -91,7 +103,7 @@ export async function GET(
                 status: row.registration_state,
                 timestamp: row.registration_timestamp,
                 criticalInfo,
-                fullResponse: responses
+                fullResponse: displayResponses
             };
         });
 
