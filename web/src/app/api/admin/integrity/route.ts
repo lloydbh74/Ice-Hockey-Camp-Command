@@ -23,8 +23,17 @@ export async function GET(request: NextRequest) {
         const forms = await db.prepare('SELECT id, name, schema_json FROM Forms').all();
         results.scanned += (forms.results || []).length;
         (forms.results || []).forEach((f: any) => {
-            results.summary.forms.push({ id: f.id, name: f.name });
             const status = checkSchema(f.schema_json);
+            let fieldCount = 0;
+            try { fieldCount = Array.isArray(JSON.parse(f.schema_json)) ? JSON.parse(f.schema_json).length : 0; } catch (e) { }
+
+            results.summary.forms.push({
+                id: f.id,
+                name: f.name,
+                fields: fieldCount,
+                preview: f.schema_json ? f.schema_json.substring(0, 50) + '...' : 'empty'
+            });
+
             if (!status.isValid) {
                 results.corrupted.push({ type: 'form', id: f.id, name: f.name, reason: status.reason });
                 if (fix && status.repairedSchema) {
@@ -67,7 +76,16 @@ export async function GET(request: NextRequest) {
         // 3. Scan FormTemplates
         const templates = await db.prepare('SELECT id, name, schema_json FROM FormTemplates').all();
         (templates.results || []).forEach((t: any) => {
-            results.summary.templates.push({ id: t.id, name: t.name });
+            let fieldCount = 0;
+            try { fieldCount = Array.isArray(JSON.parse(t.schema_json)) ? JSON.parse(t.schema_json).length : 0; } catch (e) { }
+
+            results.summary.templates.push({
+                id: t.id,
+                name: t.name,
+                fields: fieldCount,
+                preview: t.schema_json ? t.schema_json.substring(0, 50) + '...' : 'empty'
+            });
+
             const status = checkSchema(t.schema_json);
             if (!status.isValid) {
                 results.corrupted.push({ type: 'template', id: t.id, name: t.name, reason: status.reason });
