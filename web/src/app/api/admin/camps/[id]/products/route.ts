@@ -9,7 +9,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
         const db = await getDb();
         const id = parseInt(idStr);
         const { results } = await getCampProducts(db, id);
-        return NextResponse.json(results);
+        return NextResponse.json({ results: results || [] });
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
