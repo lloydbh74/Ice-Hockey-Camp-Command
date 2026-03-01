@@ -122,12 +122,6 @@ export default function PublicFormRenderer({ formId, schema, purchaseId, registr
                 </div>
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Registration Complete!</h2>
                 <p className="text-slate-600 dark:text-slate-400 mb-8">Thank you for registering. You will receive a confirmation email shortly.</p>
-                <button
-                    onClick={() => window.location.reload()}
-                    className="text-sm font-medium text-primary hover:underline underline-offset-4"
-                >
-                    Submit another response
-                </button>
             </div>
         );
     }
