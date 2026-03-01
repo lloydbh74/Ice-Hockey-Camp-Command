@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb, listAllPurchases, listPurchasesByCamp, updateRegistrationDetails } from '@/lib/db';
+import { getDb, listAllPurchases, listPurchasesByCamp, updateRegistrationDetails, deleteRegistration } from '@/lib/db';
 import { EmailService } from '@/lib/services/email-service';
 
 export const runtime = 'edge';
@@ -120,6 +120,27 @@ export async function PUT(request: NextRequest) {
         return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
     }
 }
+
+export async function DELETE(request: NextRequest) {
+    try {
+        const db = await getDb();
+        const { searchParams } = new URL(request.url);
+        const purchaseId = searchParams.get('purchaseId');
+
+        if (!purchaseId) {
+            return NextResponse.json({ error: 'Missing purchaseId' }, { status: 400 });
+        }
+
+        await deleteRegistration(db, parseInt(purchaseId));
+
+        return NextResponse.json({ success: true });
+
+    } catch (error: any) {
+        console.error('[API] Registrations delete error:', error);
+        return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+    }
+}
+
 
 export async function POST(request: NextRequest) {
     try {

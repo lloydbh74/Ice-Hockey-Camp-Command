@@ -163,6 +163,31 @@ function RegistrationsContent() {
         }
     };
 
+    const handleDeleteRegistration = async () => {
+        if (!editingRegistration) return;
+        if (!confirm(`Are you sure you want to PERMANENTLY delete this registration for ${editingRegistration.guardian_name}?\n\nThis action cannot be undone and will remove all associated player details.`)) return;
+
+        setSaveLoading(true);
+        try {
+            const res = await fetch(`/api/admin/registrations?purchaseId=${editingRegistration.id}`, {
+                method: 'DELETE'
+            });
+
+            if (res.ok) {
+                setEditingRegistration(null);
+                fetchRegistrations();
+            } else {
+                const errorData = await res.json() as { error?: string };
+                alert(`Error: ${errorData.error || 'Unknown error'}`);
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Failed to delete registration");
+        } finally {
+            setSaveLoading(false);
+        }
+    };
+
     const handleChase = async (ids: number[]) => {
         const isBulk = ids.length > 1;
         if (isBulk) setBulkChaseLoading(true);
@@ -481,6 +506,14 @@ function RegistrationsContent() {
                             </div>
 
                             <div className="pt-6 flex items-center justify-end gap-3 border-t border-slate-100 dark:border-slate-800 mt-4">
+                                <button
+                                    type="button"
+                                    onClick={handleDeleteRegistration}
+                                    disabled={saveLoading}
+                                    className="px-6 py-3 text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-2xl transition-all mr-auto"
+                                >
+                                    Delete Registration
+                                </button>
                                 <button
                                     type="button"
                                     onClick={() => setEditingRegistration(null)}
