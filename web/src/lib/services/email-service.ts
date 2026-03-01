@@ -110,6 +110,42 @@ export class EmailService {
         });
     }
 
+    static async sendRegistrationConfirmation(db: D1Database, data: {
+        to: string,
+        guardianName: string,
+        productName: string,
+        formData: any
+    }): Promise<{ success: boolean; error?: string }> {
+
+        let formDataHtml = '<table style="width: 100%; border-collapse: collapse; margin-top: 15px;">';
+        for (const [key, value] of Object.entries(data.formData)) {
+            const formattedKey = key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+            formDataHtml += `
+                <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #475569; width: 40%;">${formattedKey}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #0f172a;">${value}</td>
+                </tr>
+            `;
+        }
+        formDataHtml += '</table>';
+
+        return await this.sendEmail(db, {
+            to: data.to,
+            subject: `Registration Confirmed: ${data.productName}`,
+            text: `Hi ${data.guardianName},\n\nThank you for completing the registration for ${data.productName}. We have received your information.`,
+            html: `
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
+                    <h2 style="color: #0f172a;">Registration Confirmed!</h2>
+                    <p>Hi <strong>${data.guardianName}</strong>,</p>
+                    <p>Thank you for completing the player registration for <strong>${data.productName}</strong>. We have successfully received your information.</p>
+                    <h3 style="color: #1e293b; margin-top: 30px;">Submitted Details:</h3>
+                    ${formDataHtml}
+                    <p style="margin-top: 30px; color: #64748b; font-size: 14px;">If any of these details are incorrect, please contact us.</p>
+                </div>
+            `
+        });
+    }
+
     static async sendAdminMagicLink(db: D1Database, data: {
         to: string,
         token: string

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
+import { EmailService } from '@/lib/services/email-service';
 
 export const runtime = 'edge';
 
@@ -13,8 +14,15 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Missing required submission data' }, { status: 400 });
         }
 
-        // 1. Fetch Purchase context (with token verification)
-        const purchase = await db.prepare("SELECT * FROM Purchases WHERE id = ? AND registration_token = ?").bind(purchaseId, registrationToken).first<any>();
+        // 1. Fetch Purchase context (with token verification) and Guardian/Product details
+        const purchase = await db.prepare(`
+            SELECT p.*, g.email as guardian_email, g.full_name as guardian_name, pr.name as product_name 
+            FROM Purchases p
+            JOIN Guardians g ON p.guardian_id = g.id
+            JOIN Products pr ON p.product_id = pr.id
+            WHERE p.id = ? AND p.registration_token = ?
+        `).bind(purchaseId, registrationToken).first<any>();
+
         if (!purchase) return NextResponse.json({ error: 'Purchase not found or token invalid' }, { status: 404 });
 
         // 2. Extract core player fields from formData
@@ -51,6 +59,21 @@ export async function POST(request: NextRequest) {
         await db.prepare("UPDATE Purchases SET registration_state = 'completed', registration_data = ? WHERE id = ?")
             .bind(JSON.stringify(formData), purchaseId)
             .run();
+
+        // 6. Send Confirmation Email
+        if (purchase.guardian_email) {
+            try {
+                await EmailService.sendRegistrationConfirmation(db, {
+                    to: purchase.guardian_email,
+                    guardianName: purchase.guardian_name || 'Guardian',
+                    productName: purchase.product_name || 'Camp',
+                    formData: formData
+                });
+            } catch (e) {
+                console.error("Failed to send confirmation email", e);
+                // We do not fail the submission if email fails
+            }
+        }
 
         return NextResponse.json({ success: true });
 
