@@ -40,7 +40,7 @@ export async function PATCH(
             const formTemplateExists = await db.prepare("SELECT id FROM FormTemplates WHERE id = ?").bind(form_template_id).first();
             if (!formTemplateExists) {
                 await db.prepare("INSERT INTO FormTemplates (id, name, schema_json) VALUES (?, ?, ?)")
-                    .bind(form_template_id, `Auto-Proxy for Form ${form_template_id}`, "{}").run();
+                    .bind(form_template_id, `Auto-Proxy for Form ${form_template_id}`, "[]").run();
             }
         }
 

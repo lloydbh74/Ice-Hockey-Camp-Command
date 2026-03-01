@@ -1,8 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
+import { z } from 'zod';
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
+
+const fieldSchema = z.object({
+    id: z.string(),
+    type: z.string(),
+    label: z.string().optional(),
+    required: z.boolean().optional(),
+    options: z.array(z.string()).optional(),
+    step_group: z.number().optional(),
+});
+
+const formSaveSchema = z.object({
+    schema: z.array(fieldSchema),
+    version: z.string(),
+    name: z.string().optional(),
+    changelog: z.string().optional()
+});
 
 interface RouteContext {
     params: Promise<{ id: string }>;
@@ -44,29 +61,28 @@ export async function POST(request: NextRequest, props: RouteContext) {
         return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
     }
 
-    const body: any = await request.json();
-    const { schema, version, changelog, type, name } = body;
-
-    if (!schema || !version) {
-        return NextResponse.json({ error: 'Missing schema or version' }, { status: 400 });
-    }
-
     try {
-        console.log(`[API] logic starting for ID: ${formId}`);
+        const body = await request.json();
+        const validation = formSaveSchema.safeParse(body);
+
+        if (!validation.success) {
+            console.error("[API] Validation failed:", validation.error.format());
+            return NextResponse.json({
+                error: 'Invalid form data. Schema must be an array of objects.',
+                details: validation.error.format()
+            }, { status: 400 });
+        }
+
+        const { schema, version, changelog, name } = validation.data;
         const db = await getDb();
-        console.log('[API] DB connected');
 
         // 1. Fetch current version (if exists)
         const currentForm = await db.prepare('SELECT * FROM Forms WHERE id = ?').bind(formId).first();
-        console.log('[API] Current form fetched:', currentForm ? 'Found' : 'Not Found');
 
         if (!currentForm) {
-            console.log('[API] Form not found, creating new record (Upsert)...');
-
             // 1a. Ensure the Product exists (Self-healing for FK constraint)
             const product = await db.prepare('SELECT id FROM Products WHERE id = ?').bind(formId).first();
             if (!product) {
-                console.log(`[API] Product ID ${formId} missing. Creating placeholder product...`);
                 await db.prepare('INSERT INTO Products (id, name, description) VALUES (?, ?, ?)')
                     .bind(formId, `Product ${formId}`, 'Auto-generated for Form Builder')
                     .run();
@@ -87,7 +103,6 @@ export async function POST(request: NextRequest, props: RouteContext) {
             return NextResponse.json({ success: true, version, action: 'created' });
         }
 
-        console.log('[API] Preparing batch update for existing form...');
         // 2. Transaction: Archive old -> Update new
         await db.batch([
             // Archive current state to history
@@ -103,13 +118,11 @@ export async function POST(request: NextRequest, props: RouteContext) {
                 WHERE id = ?
             `).bind(version, JSON.stringify(schema), changelog, name || currentForm.name, formId)
         ]);
-        console.log('[API] Batch update successful');
 
         return NextResponse.json({ success: true, version });
     } catch (error) {
-        console.error("Error saving form [FULL STACK]:", error);
-        // @ts-expect-error - Error type is unknown in strict mode
-        const msg = error?.message || 'Unknown error';
+        console.error("Error saving form:", error);
+        const msg = (error as Error)?.message || 'Unknown error';
         return NextResponse.json({ error: `Internal Server Error: ${msg}` }, { status: 500 });
     }
 }

@@ -28,11 +28,21 @@ export default async function RegisterPage(props: RegisterPageProps) {
                     <h1 className="text-3xl font-bold text-slate-900 mb-2">{form.name}</h1>
                     <p className="text-slate-500">Please fill out the form below to complete your registration.</p>
                 </div>
-
-                <PublicFormRenderer
-                    formId={formId}
-                    schema={JSON.parse(form.schema_json)}
-                />
+                {(() => {
+                    let schema = [];
+                    try {
+                        const parsed = JSON.parse(form.schema_json);
+                        schema = Array.isArray(parsed) ? parsed : [];
+                    } catch (e) {
+                        console.error("[REGISTER] Corrupt schema for form:", form.id, e);
+                    }
+                    return (
+                        <PublicFormRenderer
+                            formId={formId}
+                            schema={schema}
+                        />
+                    );
+                })()}
             </div>
         </div>
     );

@@ -15,6 +15,7 @@ interface FormField {
     description?: string;
     imageUrl?: string;
     imageAlt?: string;
+    step_group?: number;
 }
 
 interface PublicFormRendererProps {
@@ -35,20 +36,27 @@ export default function PublicFormRenderer({ formId, schema, purchaseId, registr
 
     // 1. Group fields into steps based on 'section_divider'
     const steps = useMemo(() => {
-        const grouped: FormField[][] = [[]];
-        let stepIndex = 0;
+        if (!Array.isArray(schema)) {
+            console.error("[PublicFormRenderer] Schema is not an array:", schema);
+            return [];
+        }
 
+        const stepsMap = new Map<number, FormField[]>();
         schema.forEach(field => {
-            if (field.type === 'divider') {
-                stepIndex++;
-                grouped[stepIndex] = [];
-            } else {
-                grouped[stepIndex].push(field);
+            const group = field.step_group || 0; // Default to step 0 if not specified
+            if (!stepsMap.has(group)) {
+                stepsMap.set(group, []);
             }
+            stepsMap.get(group)?.push(field);
         });
 
-        // Remove empty steps
-        return grouped.filter(step => step.length > 0);
+        // Convert map to an array of arrays, sorted by step group key
+        const sortedSteps = Array.from(stepsMap.entries())
+            .sort(([groupA], [groupB]) => groupA - groupB)
+            .map(([, fields]) => fields);
+
+        // Remove empty steps (though with step_group, this might be less common)
+        return sortedSteps.filter(step => step.length > 0);
     }, [schema]);
 
     const activeFields = steps[currentStep] || [];
