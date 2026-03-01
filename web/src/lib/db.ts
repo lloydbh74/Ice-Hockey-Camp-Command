@@ -205,17 +205,25 @@ export async function publishFormVersion(
 }
 
 export async function getActiveForm(db: D1Database, productId: number) {
-    // 1. Try to find a specifically published form for this product
-    const form = await db.prepare("SELECT * FROM Forms WHERE product_id = ? AND is_published = 1 ORDER BY id DESC").bind(productId).first<any>();
-    if (form) return form;
+    // 1. Check if the product has a specific form_template_id that points to an active Form
+    const product = await db.prepare("SELECT form_template_id FROM Products WHERE id = ?").bind(productId).first<any>();
 
-    // 2. Fallback: Check if the product has a default form template assigned
-    return await db.prepare(`
-        SELECT ft.id, ft.name, ft.schema_json, 'template' as source
-        FROM Products p
-        JOIN FormTemplates ft ON p.form_template_id = ft.id
-        WHERE p.id = ?
-    `).bind(productId).first<any>();
+    if (product?.form_template_id) {
+        // A. Is it pointing to a shared master Form?
+        const sharedForm = await db.prepare("SELECT * FROM Forms WHERE id = ? AND is_published = 1").bind(product.form_template_id).first<any>();
+        if (sharedForm) return sharedForm;
+
+        // B. Fallback: Is it pointing to a raw FormTemplate?
+        const template = await db.prepare(`
+            SELECT id, name, schema_json, 'template' as source 
+            FROM FormTemplates 
+            WHERE id = ?
+        `).bind(product.form_template_id).first<any>();
+        if (template) return template;
+    }
+
+    // 2. Legacy Fallback: Try to find a form specifically created for this product
+    return await db.prepare("SELECT * FROM Forms WHERE product_id = ? AND is_published = 1 ORDER BY id DESC").bind(productId).first<any>();
 }
 
 export async function getFormHistory(db: D1Database, productId: number) {

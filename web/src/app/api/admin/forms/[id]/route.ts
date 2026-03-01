@@ -12,6 +12,16 @@ const fieldSchema = z.object({
     required: z.boolean().optional(),
     options: z.array(z.string()).optional(),
     step_group: z.number().optional(),
+    imageOptions: z.array(z.object({
+        label: z.string(),
+        imageUrl: z.string().optional()
+    })).optional(),
+    headingLevel: z.string().optional(),
+    imageUrl: z.string().optional(),
+    imageAlt: z.string().optional(),
+    isHighlighted: z.boolean().optional(),
+    placeholder: z.string().optional(),
+    src: z.string().optional(),
 }).passthrough();
 
 const formSaveSchema = z.object({
