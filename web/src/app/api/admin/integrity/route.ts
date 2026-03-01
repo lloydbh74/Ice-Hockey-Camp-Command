@@ -42,6 +42,7 @@ export async function GET(request: NextRequest) {
         if (fix) {
             for (const c of results.corrupted) {
                 const item = [...(forms.results || []), ...(templates.results || [])].find(x => x.id === c.id);
+                if (!item) continue;
                 const status = checkSchema(item.schema_json);
                 if (status.repairedSchema) {
                     const table = c.type === 'form' ? 'Forms' : 'FormTemplates';
