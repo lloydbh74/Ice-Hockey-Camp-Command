@@ -567,9 +567,10 @@ export async function getAttendanceList(db: D1Database, campId: number) {
 
 export async function getKitOrderSummary(db: D1Database, campId: number) {
     const { results } = await db.prepare(`
-        SELECT form_response_json
+        SELECT r.form_response_json, f.schema_json
         FROM Registrations r
         JOIN Purchases pu ON r.purchase_id = pu.id
+        LEFT JOIN Forms f ON r.form_id = f.id
         WHERE pu.camp_id = ? AND pu.registration_state = 'completed'
     `).bind(campId).all();
 
@@ -578,10 +579,30 @@ export async function getKitOrderSummary(db: D1Database, campId: number) {
     results?.forEach((row: any) => {
         try {
             const responses = JSON.parse(row.form_response_json || '{}');
-            Object.entries(responses).forEach(([key, value]) => {
+            const schema = JSON.parse(row.schema_json || '[]');
+
+            // Map UUID/random IDs to human-readable labels for the parser
+            const mappedResponses: Record<string, any> = { ...responses };
+            schema.forEach((field: any) => {
+                if (responses[field.id] !== undefined && field.label) {
+                    mappedResponses[field.label] = responses[field.id];
+                }
+            });
+
+            Object.entries(mappedResponses).forEach(([key, value]) => {
+                if (!key) return;
                 const lowerKey = key.toLowerCase();
-                if ((lowerKey.includes('size') || lowerKey.includes('jersey') || lowerKey.includes('socks')) && value) {
-                    const itemType = key.split(/_/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                // Ignore raw UUID keys to prevent duplicates, rely on mapped labels
+                if ((lowerKey.includes('size') || lowerKey.includes('jersey') || lowerKey.includes('socks')) && value && !key.match(/^[0-9a-f]{8}-[0-9a-f]{4}/i)) {
+
+                    // Normalize the name so that long sentence structures like "Please select jersey size required" becomes "Jersey Size"
+                    let itemType = key;
+                    if (lowerKey.includes('jersey') && lowerKey.includes('size')) itemType = 'Jersey Size';
+                    else if (lowerKey.includes('jersey') && lowerKey.includes('type')) itemType = 'Jersey Type';
+                    else if (lowerKey.includes('socks') && lowerKey.includes('size')) itemType = 'Socks Size';
+                    else if (lowerKey.includes('t-shirt') || lowerKey.includes('tshirt')) itemType = 'T-Shirt Size';
+                    else itemType = key.split(/_/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+
                     const size = String(value);
 
                     if (!summary[itemType]) summary[itemType] = {};
@@ -600,10 +621,12 @@ export async function getKitPersonalizationList(db: D1Database, campId: number) 
     const { results } = await db.prepare(`
         SELECT 
             p.first_name || ' ' || p.last_name as player_name,
-            r.form_response_json
+            r.form_response_json,
+            f.schema_json
         FROM Registrations r
         JOIN Players p ON r.player_id = p.id
         JOIN Purchases pu ON r.purchase_id = pu.id
+        LEFT JOIN Forms f ON r.form_id = f.id
         WHERE pu.camp_id = ? AND pu.registration_state = 'completed'
         ORDER BY p.first_name ASC, p.last_name ASC
     `).bind(campId).all();
@@ -613,11 +636,22 @@ export async function getKitPersonalizationList(db: D1Database, campId: number) 
     results?.forEach((row: any) => {
         try {
             const responses = JSON.parse(row.form_response_json || '{}');
+            const schema = JSON.parse(row.schema_json || '[]');
+
+            // Map UUID/random IDs to human-readable labels
+            const mappedResponses: Record<string, any> = { ...responses };
+            schema.forEach((field: any) => {
+                if (responses[field.id] !== undefined && field.label) {
+                    mappedResponses[field.label] = responses[field.id];
+                }
+            });
+
             // Look for keys that contain 'size' and 'personalization'
             let jerseySize = '';
             let personalization = '';
 
-            Object.entries(responses).forEach(([key, value]) => {
+            Object.entries(mappedResponses).forEach(([key, value]) => {
+                if (!key) return;
                 const lowerKey = key.toLowerCase();
                 if (lowerKey === 'jersey_size' || (lowerKey.includes('jersey') && lowerKey.includes('size'))) {
                     jerseySize = String(value);
