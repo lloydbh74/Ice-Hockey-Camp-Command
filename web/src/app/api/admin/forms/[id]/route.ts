@@ -12,7 +12,7 @@ const fieldSchema = z.object({
     required: z.boolean().optional(),
     options: z.array(z.string()).optional(),
     step_group: z.number().optional(),
-});
+}).passthrough();
 
 const formSaveSchema = z.object({
     schema: z.array(fieldSchema),
