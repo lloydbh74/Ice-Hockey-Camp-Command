@@ -89,7 +89,8 @@ export async function GET(request: NextRequest) {
 
             return {
                 ...row,
-                highlighted_answers
+                highlighted_answers,
+                schema_json: row.schema_json
             };
         });
 

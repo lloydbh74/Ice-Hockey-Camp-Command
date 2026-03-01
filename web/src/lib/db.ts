@@ -339,7 +339,7 @@ export async function listAllPurchases(db: D1Database, query?: string, limit?: n
         FROM Purchases p
         JOIN Guardians g ON p.guardian_id = g.id
         JOIN Products pr ON p.product_id = pr.id
-        LEFT JOIN Forms f ON pr.id = f.product_id AND f.is_active = 1
+        LEFT JOIN Forms f ON pr.form_template_id = f.id AND f.is_active = 1
         JOIN Camps c ON p.camp_id = c.id
         LEFT JOIN Registrations r ON p.id = r.purchase_id
         LEFT JOIN Players pl ON r.player_id = pl.id
@@ -367,7 +367,7 @@ export async function listPurchasesByCamp(db: D1Database, campId: number, query?
         FROM Purchases p
         JOIN Guardians g ON p.guardian_id = g.id
         JOIN Products pr ON p.product_id = pr.id
-        LEFT JOIN Forms f ON pr.id = f.product_id AND f.is_active = 1
+        LEFT JOIN Forms f ON pr.form_template_id = f.id AND f.is_active = 1
         LEFT JOIN Registrations r ON p.id = r.purchase_id
         LEFT JOIN Players pl ON r.player_id = pl.id
         WHERE p.camp_id = ?

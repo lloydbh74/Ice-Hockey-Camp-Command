@@ -20,6 +20,7 @@ interface Registration {
     player_last_name?: string;
     registration_data?: string;
     registration_token?: string;
+    schema_json?: string;
     highlighted_answers?: Record<string, string>;
 }
 
@@ -466,11 +467,18 @@ function RegistrationsContent() {
                                             {(() => {
                                                 try {
                                                     const data = JSON.parse(editingRegistration.registration_data);
+                                                    const formSchema = editingRegistration.schema_json ? JSON.parse(editingRegistration.schema_json) : [];
+
+                                                    const getFieldLabel = (key: string) => {
+                                                        const field = formSchema.find((f: any) => f.id === key);
+                                                        return field ? field.label : key.replace(/_/g, ' ');
+                                                    };
+
                                                     return Object.entries(data).map(([key, value]) => {
                                                         if (typeof value !== 'string') return null;
                                                         return (
                                                             <div key={key}>
-                                                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 transition-colors group-focus-within:text-blue-500">{key.replace(/_/g, ' ')}</label>
+                                                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 transition-colors group-focus-within:text-blue-500">{getFieldLabel(key)}</label>
                                                                 {key === 'medical_details' || key.length > 30 ? (
                                                                     <textarea
                                                                         value={value}
