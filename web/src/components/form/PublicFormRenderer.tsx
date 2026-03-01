@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
+import ReactMarkdown from 'react-markdown';
 import WizardNavigation from './WizardNavigation';
 
 interface FormField {
@@ -162,9 +163,9 @@ export default function PublicFormRenderer({ formId, schema, purchaseId, registr
                                         </label>
 
                                         {field.description && (
-                                            <p id={`desc-${field.id}`} className="text-sm text-slate-700 dark:text-slate-300 mb-3">
-                                                {field.description}
-                                            </p>
+                                            <div id={`desc-${field.id}`} className="text-sm text-slate-700 dark:text-slate-300 mb-3 prose prose-sm dark:prose-invert prose-a:text-primary hover:prose-a:text-primary-dark">
+                                                <ReactMarkdown>{field.description}</ReactMarkdown>
+                                            </div>
                                         )}
                                     </>
                                 )}
@@ -174,7 +175,9 @@ export default function PublicFormRenderer({ formId, schema, purchaseId, registr
                                 )}
 
                                 {field.type === 'paragraph' && (
-                                    <p className="text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">{field.label}</p>
+                                    <div className="text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap prose prose-slate dark:prose-invert max-w-none prose-a:text-primary hover:prose-a:text-primary-dark">
+                                        <ReactMarkdown>{field.label}</ReactMarkdown>
+                                    </div>
                                 )}
 
                                 {field.type === 'text' && (
