@@ -227,7 +227,31 @@ Before deploying:
 
 ---
 
-## 10. Best Practices
+## 10. Automated Validation (Antigravity Protocol)
+
+Standardized automation ensures regressions, optimizations, and security are checked on every deployment.
+
+### Verification Categories & Scripts
+
+| Category | Primary Script | What it Checks |
+|----------|----------------|----------------|
+| **Security** | `security_scan.py` | Secrets, vulnerabilities, OWASP compliance |
+| **Security** | `dependency_analyzer.py` | Supply chain integrity |
+| **Code Quality** | `lint_runner.py` | ESLint, Formatting, naming conventions |
+| **Regression** | `test_runner.py` | Unit and integration test suites |
+| **Regression** | `playwright_runner.py` | End-to-end user flows (requires URL) |
+| **Optimization** | `lighthouse_audit.py` | Core Web Vitals, performance score |
+| **Optimization** | `react_performance_checker.py` | Waterfall detection, render optimizations |
+| **Optimization** | `bundle_analyzer.py` | Artifact size and tree-shaking |
+
+### Execution Strategy
+
+1. **Incremental (`checklist.py`)**: Run during active development for fast feedback on core quality.
+2. **Full Suite (`verify_all.py`)**: **MANDATORY** pre-flight step for any production release.
+
+---
+
+## 11. Best Practices
 
 1. **Small, frequent deploys** over big releases
 2. **Feature flags** for risky changes

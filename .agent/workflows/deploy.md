@@ -26,35 +26,18 @@ This command handles production deployment with pre-flight checks, deployment ex
 
 ---
 
-## Pre-Deployment Checklist
+## 🚀 Automated Pre-Deploy Protocol
 
-Before any deployment:
+Before any deployment, the following automation MUST be executed. These steps ensure zero regressions and high security.
 
-```markdown
-## 🚀 Pre-Deploy Checklist
+// turbo
+### 1. Core Validation
+Run the incremental checklist to verify code quality and security.
+`python .agent/scripts/checklist.py .`
 
-### Code Quality
-- [ ] No TypeScript errors (`npx tsc --noEmit`)
-- [ ] ESLint passing (`npx eslint .`)
-- [ ] All tests passing (`npm test`)
-
-### Security
-- [ ] No hardcoded secrets
-- [ ] Environment variables documented
-- [ ] Dependencies audited (`npm audit`)
-
-### Performance
-- [ ] Bundle size acceptable
-- [ ] No console.log statements
-- [ ] Images optimized
-
-### Documentation
-- [ ] README updated
-- [ ] CHANGELOG updated
-- [ ] API docs current
-
-### Ready to deploy? (y/n)
-```
+### 2. Full Verification (Recommended for Production)
+For production releases, run the full suite which includes E2E and Performance.
+`python .agent/scripts/verify_all.py . --url <PREVIEW_URL>`
 
 ---
 
