@@ -6,7 +6,7 @@ import WizardNavigation from './WizardNavigation';
 
 interface FormField {
     id: string;
-    type: 'text' | 'select' | 'checkbox' | 'radio' | 'image_choice' | 'date' | 'image' | 'heading' | 'paragraph' | 'bullet' | 'divider' | 'separator';
+    type: 'text' | 'textarea' | 'select' | 'checkbox' | 'radio' | 'image_choice' | 'date' | 'image' | 'heading' | 'paragraph' | 'bullet' | 'divider' | 'separator';
     label: string;
     required: boolean;
     options?: string[];
@@ -34,29 +34,52 @@ export default function PublicFormRenderer({ formId, schema, purchaseId, registr
         mode: 'onBlur'
     });
 
-    // 1. Group fields into steps based on 'section_divider'
+    // 1. Group fields into steps based on 'divider' or explicit 'step_group'
     const steps = useMemo(() => {
         if (!Array.isArray(schema)) {
             console.error("[PublicFormRenderer] Schema is not an array:", schema);
             return [];
         }
 
-        const stepsMap = new Map<number, FormField[]>();
+        // Check if any field has an explicit step_group (legacy/advanced support)
+        const hasExplicitGroups = schema.some(f => f.step_group !== undefined && f.step_group !== 0);
+
+        if (hasExplicitGroups) {
+            const stepsMap = new Map<number, FormField[]>();
+            schema.forEach(field => {
+                const group = field.step_group || 0;
+                if (!stepsMap.has(group)) {
+                    stepsMap.set(group, []);
+                }
+                stepsMap.get(group)?.push(field);
+            });
+
+            return Array.from(stepsMap.entries())
+                .sort(([groupA], [groupB]) => groupA - groupB)
+                .map(([, fields]) => fields)
+                .filter(step => step.length > 0);
+        }
+
+        // Split by 'divider' type fields - each divider starts a NEW step
+        const result: FormField[][] = [];
+        let currentStepFields: FormField[] = [];
+
         schema.forEach(field => {
-            const group = field.step_group || 0; // Default to step 0 if not specified
-            if (!stepsMap.has(group)) {
-                stepsMap.set(group, []);
+            if (field.type === 'divider') {
+                if (currentStepFields.length > 0) {
+                    result.push(currentStepFields);
+                }
+                currentStepFields = [field]; // Divider becomes the header of the next step
+            } else {
+                currentStepFields.push(field);
             }
-            stepsMap.get(group)?.push(field);
         });
 
-        // Convert map to an array of arrays, sorted by step group key
-        const sortedSteps = Array.from(stepsMap.entries())
-            .sort(([groupA], [groupB]) => groupA - groupB)
-            .map(([, fields]) => fields);
+        if (currentStepFields.length > 0) {
+            result.push(currentStepFields);
+        }
 
-        // Remove empty steps (though with step_group, this might be less common)
-        return sortedSteps.filter(step => step.length > 0);
+        return result.length > 0 ? result : [[]];
     }, [schema]);
 
     const activeFields = steps[currentStep] || [];
@@ -165,6 +188,17 @@ export default function PublicFormRenderer({ formId, schema, purchaseId, registr
                                     />
                                 )}
 
+                                {field.type === 'textarea' && (
+                                    <textarea
+                                        id={`field-${field.id}`}
+                                        rows={4}
+                                        {...methods.register(field.id, { required: field.required })}
+                                        aria-required={field.required}
+                                        aria-invalid={!!methods.formState.errors[field.id]}
+                                        className="w-full p-3 bg-white border border-slate-300 dark:border-slate-800 dark:bg-slate-800 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all min-h-[120px] resize-y"
+                                    />
+                                )}
+
                                 {field.type === 'date' && (
                                     <input
                                         id={`field-${field.id}`}
@@ -239,8 +273,8 @@ export default function PublicFormRenderer({ formId, schema, purchaseId, registr
                                                     className="hidden"
                                                 />
                                                 <div className="aspect-square rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 overflow-hidden flex items-center justify-center">
-                                                    {opt.imageUrl ? (
-                                                        <img src={opt.imageUrl} alt={opt.label} className="w-full h-full object-cover" />
+                                                    {(opt.imageUrl || (opt as any).src) ? (
+                                                        <img src={opt.imageUrl || (opt as any).src} alt={opt.label} className="w-full h-full object-cover" />
                                                     ) : (
                                                         <span className="material-symbols-outlined text-slate-300">image</span>
                                                     )}
@@ -260,13 +294,23 @@ export default function PublicFormRenderer({ formId, schema, purchaseId, registr
                                     </div>
                                 )}
 
+                                {field.type === 'divider' && (
+                                    <div className="py-6 flex items-center gap-4">
+                                        <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-900/50 px-2 py-1 rounded border border-slate-100 dark:border-slate-800">
+                                            {field.label && field.label !== 'New Question' ? field.label : 'Section Break'}
+                                        </span>
+                                        <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
+                                    </div>
+                                )}
+
                                 {field.type === 'separator' && (
                                     <hr className="border-slate-400 dark:border-white opacity-100 my-6" />
                                 )}
 
-                                {field.type === 'image' && field.imageUrl && (
+                                {field.type === 'image' && (field.imageUrl || (field as any).src) && (
                                     <div className="my-4 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
-                                        <img src={field.imageUrl} alt={field.imageAlt || ''} className="w-full h-auto max-h-[600px] object-contain mx-auto" />
+                                        <img src={field.imageUrl || (field as any).src} alt={field.imageAlt || ''} className="w-full h-auto max-h-[600px] object-contain mx-auto" />
                                     </div>
                                 )}
 
