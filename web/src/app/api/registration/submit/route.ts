@@ -63,11 +63,37 @@ export async function POST(request: NextRequest) {
         // 6. Send Confirmation Email
         if (purchase.guardian_email) {
             try {
+                // Fetch form schema to map UUIDs to labels
+                const formRecord = await db.prepare("SELECT schema_json FROM Forms WHERE id = ?").bind(formId).first<any>();
+                let emailData = { ...formData };
+
+                if (formRecord && formRecord.schema_json) {
+                    try {
+                        const schema = JSON.parse(formRecord.schema_json);
+                        const schemaMap = new Map();
+                        for (const field of schema) {
+                            schemaMap.set(field.id, field.label);
+                        }
+
+                        const mappedData: any = {};
+                        for (const [key, value] of Object.entries(formData)) {
+                            // Map UUID to label, or format the key as title case if not in schema
+                            const formattedKey = schemaMap.has(key)
+                                ? schemaMap.get(key)
+                                : key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                            mappedData[formattedKey] = value;
+                        }
+                        emailData = mappedData;
+                    } catch (e) {
+                        console.error("Failed to parse schema for email formatting", e);
+                    }
+                }
+
                 await EmailService.sendRegistrationConfirmation(db, {
                     to: purchase.guardian_email,
                     guardianName: purchase.guardian_name || 'Guardian',
                     productName: purchase.product_name || 'Camp',
-                    formData: formData
+                    formData: emailData
                 });
             } catch (e) {
                 console.error("Failed to send confirmation email", e);

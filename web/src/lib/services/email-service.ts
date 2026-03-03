@@ -119,11 +119,11 @@ export class EmailService {
 
         let formDataHtml = '<table style="width: 100%; border-collapse: collapse; margin-top: 15px;">';
         for (const [key, value] of Object.entries(data.formData)) {
-            const formattedKey = key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+            const displayValue = Array.isArray(value) ? value.join(', ') : value;
             formDataHtml += `
                 <tr>
-                    <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #475569; width: 40%;">${formattedKey}</td>
-                    <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #0f172a;">${value}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #475569; width: 40%;">${key}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: #0f172a;">${displayValue}</td>
                 </tr>
             `;
         }
