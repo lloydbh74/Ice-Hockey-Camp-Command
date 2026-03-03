@@ -125,6 +125,7 @@ export function DayManager({ campId, onUpdate }: DayManagerProps) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <input
                             type="date"
+                            aria-label="New day date"
                             value={newDate}
                             onChange={(e) => setNewDate(e.target.value)}
                             className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
@@ -132,6 +133,7 @@ export function DayManager({ campId, onUpdate }: DayManagerProps) {
                         />
                         <input
                             type="text"
+                            aria-label="New day label"
                             placeholder="Label (e.g. Day 1)"
                             value={newLabel}
                             onChange={(e) => setNewLabel(e.target.value)}

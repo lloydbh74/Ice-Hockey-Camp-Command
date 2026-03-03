@@ -63,7 +63,7 @@ export default function RegistrationPage({ params }: { params: Promise<{ token: 
             <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-6">
                 <div className="max-w-md w-full bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-xl border border-red-100 dark:border-red-900/20 text-center">
                     <span className="material-symbols-outlined text-red-500 text-5xl mb-4">error</span>
-                    <h1 className="text-xl font-black text-slate-900 dark:text-white mb-2 uppercase tracking-tight">Oops! Something went wrong</h1>
+                    <h2 className="text-xl font-black text-slate-900 dark:text-white mb-2 uppercase tracking-tight">Oops! Something went wrong</h2>
                     <p className="text-slate-500 mb-6">{error || "Invalid registration link"}</p>
                     <Link href="/" className="inline-block px-6 py-3 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-bold rounded-xl hover:opacity-90 transition-opacity">
                         Go Home
@@ -80,7 +80,7 @@ export default function RegistrationPage({ params }: { params: Promise<{ token: 
                     <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
                         <span className="material-symbols-outlined text-3xl font-bold">check</span>
                     </div>
-                    <h1 className="text-xl font-black text-slate-900 dark:text-white mb-2 uppercase tracking-tight">Registration Complete</h1>
+                    <h2 className="text-xl font-black text-slate-900 dark:text-white mb-2 uppercase tracking-tight">Registration Complete</h2>
                     <p className="text-slate-500 mb-6 font-medium">This registration has already been submitted for <strong>{context.purchase.product_name}</strong>. Thank you!</p>
                 </div>
             </div>

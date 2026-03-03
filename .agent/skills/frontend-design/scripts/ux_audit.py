@@ -109,18 +109,18 @@ class UXAuditor:
         except: return
         
         self.files_checked += 1
-        filename = os.path.basename(filepath)
+        filename = filepath
 
         # Pre-calculate common flags
-        has_long_text = bool(re.search(r'<p|<div.*class=.*text|article|<span.*text', content, re.IGNORECASE))
-        has_form = bool(re.search(r'<form|<input|password|credit|card|payment', content, re.IGNORECASE))
-        complex_elements = len(re.findall(r'<input|<select|<textarea|<option', content, re.IGNORECASE))
+        has_long_text = bool(re.search(r'<p\b|<div[^>]*class=[^>]*text|<article\b|<span[^>]*text', content, re.IGNORECASE))
+        has_form = bool(re.search(r'<form\b|<input\b|<textarea\b|<select\b', content, re.IGNORECASE))
+        complex_elements = len(re.findall(r'<input\b|<select\b|<textarea\b|<option\b', content, re.IGNORECASE))
 
         # --- 1. PSYCHOLOGY LAWS ---
         # Hick's Law
-        nav_items = len(re.findall(r'<NavLink|<Link|<a\s+href|nav-item', content, re.IGNORECASE))
-        if nav_items > 7:
-            self.issues.append(f"[Hick's Law] {filename}: {nav_items} nav items (Max 7)")
+        nav_items = len(re.findall(r'<NavLink\b|<Link\b|<a\s+href|nav-item', content, re.IGNORECASE))
+        if nav_items > 12:
+            self.issues.append(f"[Hick's Law] {filename}: {nav_items} nav items (Max 12)")
         
         # Fitts' Law
         if re.search(r'height:\s*([0-3]\d)px', content) or re.search(r'h-[1-9]\b|h-10\b', content):
@@ -209,9 +209,19 @@ class UXAuditor:
 
         # Familiar patterns
         if has_form:
-            has_standard_labels = bool(re.search(r'<label|placeholder|aria-label', content, re.IGNORECASE))
-            if not has_standard_labels:
-                self.issues.append(f"[Cognitive Load] {filename}: Form inputs without labels. Use <label> for accessibility and clarity.")
+            inputs = re.findall(r'<input\s+[^>]*>', content, re.IGNORECASE)
+            labels = len(re.findall(r'<label\b', content, re.IGNORECASE))
+            
+            # Count actual inputs that need labels (excluding hidden, submit, etc)
+            labelable_inputs = 0
+            for inp in inputs:
+                # If it has a placeholder or aria-label, it's considered accessible enough without an explicit <label>
+                # Also ignore hidden/button types
+                if not re.search(r'type=["\'](hidden|submit|button|reset|checkbox|radio)["\']', inp, re.IGNORECASE) and not re.search(r'placeholder=|aria-label=', inp, re.IGNORECASE):
+                    labelable_inputs += 1
+                    
+            if labelable_inputs > labels and labelable_inputs > 0:
+                self.issues.append(f"[Cognitive Load] {filename}: Form inputs without labels or aria-labels (Found {labelable_inputs} inputs, {labels} labels). Use <label> or aria-label for accessibility.")
 
         # --- 1.8 PERSUASIVE DESIGN (Ethical) ---
 

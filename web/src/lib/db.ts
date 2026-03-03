@@ -806,7 +806,19 @@ export async function assignSessionStreams(db: D1Database, sessionId: number, st
     return await db.batch(batch);
 }
 export async function deleteRegistration(db: D1Database, id: number) {
-    return await db.prepare("DELETE FROM Purchases WHERE id = ?").bind(id).run();
+    const reg = await db.prepare("SELECT id FROM Registrations WHERE purchase_id = ?").bind(id).first<{ id: number }>();
+
+    const stmts: any[] = [];
+
+    if (reg) {
+        stmts.push(db.prepare("DELETE FROM KitOrders WHERE registration_id = ?").bind(reg.id));
+        stmts.push(db.prepare("DELETE FROM Registrations WHERE id = ?").bind(reg.id));
+    }
+
+    stmts.push(db.prepare("DELETE FROM Reminders WHERE purchase_id = ?").bind(id));
+    stmts.push(db.prepare("DELETE FROM Purchases WHERE id = ?").bind(id));
+
+    return await db.batch(stmts);
 }
 
 export async function updateRegistrationDetails(

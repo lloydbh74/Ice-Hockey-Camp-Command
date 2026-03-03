@@ -313,6 +313,7 @@ export default function FormBuilderPage() {
                         <input
                             type="text"
                             value={formName}
+                            aria-label="Form Name"
                             onChange={(e) => setFormName(e.target.value)}
                             className="text-lg font-semibold text-slate-800 dark:text-slate-100 bg-transparent border border-transparent hover:border-slate-200 dark:hover:border-slate-700 focus:border-primary focus:ring-2 focus:ring-blue-100 dark:focus:ring-primary/20 rounded px-2 py-1 transition-all outline-none"
                         />
