@@ -7,7 +7,7 @@ import WizardNavigation from './WizardNavigation';
 
 interface FormField {
     id: string;
-    type: 'text' | 'select' | 'checkbox' | 'radio' | 'image_choice' | 'date' | 'image' | 'heading' | 'paragraph' | 'bullet' | 'divider' | 'separator';
+    type: 'text' | 'textarea' | 'select' | 'checkbox' | 'radio' | 'image_choice' | 'date' | 'image' | 'heading' | 'paragraph' | 'bullet' | 'divider' | 'separator';
     label: string;
     required: boolean;
     options?: string[];
