@@ -34,14 +34,16 @@ export async function GET(request: NextRequest) {
         results = results.map(row => {
             const responses = JSON.parse(row.registration_data || '{}');
             const schema = JSON.parse(row.schema_json || '[]');
-            const highlightedFields = schema.filter((field: any) => field.isHighlighted);
+            const highlightedFields = schema.filter((field: any) => field.isHighlighted || (field.highlightRules && field.highlightRules.length > 0));
 
             const highlighted_answers: Record<string, string> = {};
 
             highlightedFields.forEach((field: any) => {
                 const val = responses[field.label] || responses[field.id];
+                let finalValStr = '';
+
                 if (val) {
-                    highlighted_answers[field.label] = val as string;
+                    finalValStr = String(val).trim();
                 } else {
                     const normalizeKey = (k: string) => k.toLowerCase().replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
                     const normalizedLabel = normalizeKey(field.label);
@@ -79,10 +81,26 @@ export async function GET(request: NextRequest) {
                     }
 
                     if (fallbackKey && responses[fallbackKey]) {
-                        const valStr = String(responses[fallbackKey]).trim();
-                        if (valStr && valStr.toLowerCase() !== 'false') {
-                            highlighted_answers[field.label] = valStr;
+                        finalValStr = String(responses[fallbackKey]).trim();
+                    }
+                }
+
+                if (finalValStr && finalValStr.toLowerCase() !== 'false') {
+                    // Check if it matches a highlight rule first
+                    let matchedRule = false;
+                    if (field.highlightRules && Array.isArray(field.highlightRules)) {
+                        const rule = field.highlightRules.find((r: any) =>
+                            r.value && finalValStr.toLowerCase() === r.value.toLowerCase()
+                        );
+                        if (rule && rule.message) {
+                            highlighted_answers[field.label] = rule.message;
+                            matchedRule = true;
                         }
+                    }
+
+                    // If no rule matched, but field is broadly highlighted, show raw value
+                    if (!matchedRule && field.isHighlighted) {
+                        highlighted_answers[field.label] = finalValStr;
                     }
                 }
             });

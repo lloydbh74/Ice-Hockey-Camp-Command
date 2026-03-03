@@ -5,3 +5,4 @@ Review the latest code changes for regression, cleanliness, optimisation and sec
 
 
 Camp schedule, colour code sessions, add colour picker in edit settings. Only allow colours that match the style guide.
+

@@ -7,7 +7,7 @@ import WizardNavigation from './WizardNavigation';
 
 interface FormField {
     id: string;
-    type: 'text' | 'textarea' | 'select' | 'checkbox' | 'radio' | 'image_choice' | 'date' | 'image' | 'heading' | 'paragraph' | 'bullet' | 'divider' | 'separator';
+    type: 'text' | 'select' | 'checkbox' | 'radio' | 'image_choice' | 'date' | 'image' | 'heading' | 'paragraph' | 'bullet' | 'divider' | 'separator';
     label: string;
     required: boolean;
     options?: string[];
@@ -16,6 +16,8 @@ interface FormField {
     description?: string;
     imageUrl?: string;
     imageAlt?: string;
+    isHighlighted?: boolean;
+    highlightRules?: { value: string; message: string }[];
     step_group?: number;
 }
 

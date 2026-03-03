@@ -22,8 +22,8 @@ export async function GET(
             const responses = JSON.parse(row.form_response_json || '{}');
             const schema = JSON.parse(row.schema_json || '[]');
 
-            // Find highlighted field labels and IDs
-            const highlightedFields = schema.filter((field: any) => field.isHighlighted);
+            // Find highlighted field labels and IDs (either boolean toggle OR has rules)
+            const highlightedFields = schema.filter((field: any) => field.isHighlighted || (field.highlightRules && field.highlightRules.length > 0));
 
             const criticalInfo: Record<string, string> = {};
 
@@ -31,8 +31,10 @@ export async function GET(
             highlightedFields.forEach((field: any) => {
                 // Find answer whose key matches label exactly, or whose ID matches
                 const val = responses[field.label] || responses[field.id];
+                let finalValStr = '';
+
                 if (val) {
-                    criticalInfo[field.label] = val as string;
+                    finalValStr = String(val).trim();
                 } else {
                     // Try loose matching fallback
                     const normalizeKey = (k: string) => k.toLowerCase().replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -41,7 +43,7 @@ export async function GET(
                     let fallbackKey = Object.keys(responses).find(k => normalizeKey(k) === normalizedLabel);
 
                     if (!fallbackKey) {
-                        // Semantic Legacy Bridge: map drifted modern labels back to older 'med_' keys
+                        // Semantic Legacy Bridge
                         const legacyMapping: Record<string, string> = {
                             'suffer from asthma': 'med_asthma',
                             'suffer from allergies bites stings food': 'med_allergies',
@@ -57,7 +59,6 @@ export async function GET(
                         if (mappedLegacyKey && responses[mappedLegacyKey]) {
                             fallbackKey = mappedLegacyKey;
                         } else {
-                            // General substring fallback for anything else (restricted to legacy system keys)
                             const excludeWords = ['suffer', 'from', 'have', 'currently', 'take', 'require', 'any', 'the', 'last', 'years', 'please', 'details'];
                             const significantWords = normalizedLabel
                                 .split(' ')
@@ -73,11 +74,26 @@ export async function GET(
                     }
 
                     if (fallbackKey && responses[fallbackKey]) {
-                        // Only include non-empty values
-                        const valStr = String(responses[fallbackKey]).trim();
-                        if (valStr && valStr.toLowerCase() !== 'false') {
-                            criticalInfo[field.label] = valStr;
+                        finalValStr = String(responses[fallbackKey]).trim();
+                    }
+                }
+
+                if (finalValStr && finalValStr.toLowerCase() !== 'false') {
+                    // Check if it matches a highlight rule first
+                    let matchedRule = false;
+                    if (field.highlightRules && Array.isArray(field.highlightRules)) {
+                        const rule = field.highlightRules.find((r: any) =>
+                            r.value && finalValStr.toLowerCase() === r.value.toLowerCase()
+                        );
+                        if (rule && rule.message) {
+                            criticalInfo[field.label] = rule.message;
+                            matchedRule = true;
                         }
+                    }
+
+                    // If no rule matched, but field is broadly highlighted, show raw value
+                    if (!matchedRule && field.isHighlighted) {
+                        criticalInfo[field.label] = finalValStr;
                     }
                 }
             });

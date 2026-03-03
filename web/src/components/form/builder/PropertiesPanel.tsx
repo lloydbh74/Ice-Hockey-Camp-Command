@@ -13,6 +13,7 @@ interface FormField {
     imageUrl?: string;
     imageAlt?: string;
     isHighlighted?: boolean;
+    highlightRules?: { value: string; message: string }[];
 }
 
 interface PropertiesPanelProps {
@@ -72,6 +73,23 @@ export default function PropertiesPanel({ field, onChange, onDelete, onDuplicate
     const handleDeleteImageOption = (index: number) => {
         const currentOptions = field.imageOptions || [];
         onChange({ imageOptions: currentOptions.filter((_, i) => i !== index) });
+    };
+
+    const handleAddHighlightRule = () => {
+        const currentRules = field.highlightRules || [];
+        onChange({ highlightRules: [...currentRules, { value: '', message: '' }] });
+    };
+
+    const handleUpdateHighlightRule = (index: number, updates: Partial<{ value: string; message: string }>) => {
+        const currentRules = field.highlightRules || [];
+        const newRules = [...currentRules];
+        newRules[index] = { ...newRules[index], ...updates };
+        onChange({ highlightRules: newRules });
+    };
+
+    const handleDeleteHighlightRule = (index: number) => {
+        const currentRules = field.highlightRules || [];
+        onChange({ highlightRules: currentRules.filter((_, i) => i !== index) });
     };
 
     const handleImageUpload = (index: number) => {
@@ -282,17 +300,81 @@ export default function PropertiesPanel({ field, onChange, onDelete, onDuplicate
                             />
                             <label htmlFor="required_toggle" className="text-sm font-medium text-slate-900 dark:text-slate-200 cursor-pointer">Required Field</label>
                         </div>
-                        <div className="flex items-start gap-3">
-                            <input
-                                type="checkbox"
-                                id="highlight_toggle"
-                                checked={!!field.isHighlighted}
-                                onChange={(e) => onChange({ isHighlighted: e.target.checked })}
-                                className="w-5 h-5 rounded border-slate-300 text-red-500 focus:ring-red-500 cursor-pointer mt-0.5"
-                            />
-                            <div className="flex flex-col">
-                                <label htmlFor="highlight_toggle" className="text-sm font-medium text-slate-900 dark:text-slate-200 cursor-pointer line-clamp-1">Show in Attendee Lists</label>
-                                <span className="text-[10px] text-slate-500 max-w-xs">Highlights this answer in red on the admin attendance and registration pages (Max 5 per form).</span>
+                        <div className="flex flex-col gap-4">
+                            <div className="flex items-start gap-3">
+                                <input
+                                    type="checkbox"
+                                    id="highlight_toggle"
+                                    checked={!!field.isHighlighted}
+                                    onChange={(e) => onChange({ isHighlighted: e.target.checked })}
+                                    className="w-5 h-5 rounded border-slate-300 text-red-500 focus:ring-red-500 cursor-pointer mt-0.5"
+                                />
+                                <div className="flex flex-col">
+                                    <label htmlFor="highlight_toggle" className="text-sm font-medium text-slate-900 dark:text-slate-200 cursor-pointer line-clamp-1">Always show in Attendee Lists</label>
+                                    <span className="text-[10px] text-slate-500 max-w-xs">Shows the raw answer for this question universally. Great for broad alerts.</span>
+                                </div>
+                            </div>
+
+                            <div className="pl-8 space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Conditional Alerts</span>
+                                    <button
+                                        onClick={handleAddHighlightRule}
+                                        className="text-[10px] font-bold text-primary hover:text-blue-700 uppercase flex items-center gap-1"
+                                    >
+                                        <span className="material-symbols-outlined text-[14px]">add</span> Rule
+                                    </button>
+                                </div>
+
+                                <div className="space-y-3">
+                                    {(field.highlightRules || []).map((rule, idx) => (
+                                        <div key={idx} className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 space-y-2 relative group">
+                                            <button
+                                                onClick={() => handleDeleteHighlightRule(idx)}
+                                                className="absolute -top-2 -right-2 w-6 h-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-full flex items-center justify-center text-slate-400 hover:text-red-500 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                                                title="Delete rule"
+                                            >
+                                                <span className="material-symbols-outlined text-[14px]">close</span>
+                                            </button>
+                                            <div>
+                                                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">If Answer Equals:</label>
+                                                {field.type === 'select' || field.type === 'radio' ? (
+                                                    <select
+                                                        value={rule.value}
+                                                        onChange={(e) => handleUpdateHighlightRule(idx, { value: e.target.value })}
+                                                        className="w-full text-xs p-1.5 border border-slate-200 dark:border-slate-700 rounded bg-white dark:bg-slate-900"
+                                                    >
+                                                        <option value="" disabled>Select option...</option>
+                                                        {(field.options || []).map(opt => (
+                                                            <option key={opt} value={opt}>{opt}</option>
+                                                        ))}
+                                                    </select>
+                                                ) : (
+                                                    <input
+                                                        type="text"
+                                                        value={rule.value}
+                                                        onChange={(e) => handleUpdateHighlightRule(idx, { value: e.target.value })}
+                                                        placeholder="Target Value..."
+                                                        className="w-full text-xs p-1.5 border border-slate-200 dark:border-slate-700 rounded bg-white dark:bg-slate-900"
+                                                    />
+                                                )}
+                                            </div>
+                                            <div>
+                                                <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Show Message:</label>
+                                                <input
+                                                    type="text"
+                                                    value={rule.message}
+                                                    onChange={(e) => handleUpdateHighlightRule(idx, { message: e.target.value })}
+                                                    placeholder="Medical Attention Required!"
+                                                    className="w-full text-xs p-1.5 border border-red-200 dark:border-red-900/50 focus:border-red-500 rounded bg-red-50/50 dark:bg-red-900/10 text-red-700 dark:text-red-400"
+                                                />
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {(!field.highlightRules || field.highlightRules.length === 0) && (
+                                        <p className="text-[10px] text-slate-400 italic">No conditional alerts set. If answer matches a rule, it shows the custom red message instead.</p>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>

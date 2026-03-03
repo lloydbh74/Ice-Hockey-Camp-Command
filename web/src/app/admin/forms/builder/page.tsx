@@ -22,6 +22,7 @@ interface FormField {
     imageUrl?: string;
     imageAlt?: string;
     isHighlighted?: boolean;
+    highlightRules?: { value: string; message: string }[];
 }
 
 import FormLibraryModal from "@/components/form/builder/FormLibraryModal";
