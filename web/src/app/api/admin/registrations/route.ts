@@ -86,12 +86,15 @@ export async function GET(request: NextRequest) {
                     }
                 }
 
-                if (finalValStr && finalValStr.toLowerCase() !== 'false') {
-                    // Check if it matches a highlight rule first
+                if (finalValStr) {
+                    const normalizedVal = finalValStr.toLowerCase();
+                    const isNegative = ['no', 'false', 'none', '-', 'n/a', '0'].includes(normalizedVal);
+
+                    // Check if it matches a highlight rule first (highest priority)
                     let matchedRule = false;
                     if (field.highlightRules && Array.isArray(field.highlightRules)) {
                         const rule = field.highlightRules.find((r: any) =>
-                            r.value && finalValStr.toLowerCase() === r.value.toLowerCase()
+                            r.value && normalizedVal === r.value.toLowerCase()
                         );
                         if (rule && rule.message) {
                             highlighted_answers[field.label] = rule.message;
@@ -99,8 +102,9 @@ export async function GET(request: NextRequest) {
                         }
                     }
 
-                    // If no rule matched, but field is broadly highlighted, show raw value
-                    if (!matchedRule && field.isHighlighted) {
+                    // If no rule matched, but field is broadly highlighted ("Always Show")
+                    // ONLY show raw value if it's NOT a negative answer
+                    if (!matchedRule && field.isHighlighted && !isNegative) {
                         highlighted_answers[field.label] = finalValStr;
                     }
                 }
