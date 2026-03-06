@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
 
         // 0. Track which Camp IDs are involved to do the reverse lookup
         const activeCampIds = new Set<number>();
-        const processedTxByEmailAndProduct = new Set<string>();
+        const processedTxByEmailAndSku = new Set<string>();
 
         // Pre-fetch all camps for display/mapping
         const { results: allCamps } = await db.prepare("SELECT id, name FROM Camps").all<{ id: number, name: string }>();
@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
             };
 
             if (existingPurchase) {
-                processedTxByEmailAndProduct.add(`${tx.guardianEmail.trim().toLowerCase()}-${campId}-${product.id}`);
+                processedTxByEmailAndSku.add(`${tx.guardianEmail.trim().toLowerCase()}-${campId}-${tx.productSku}`);
 
                 // Conflict detection: Shop says Refunded but DB is Active
                 const hasConflict = record.isRefunded && (existingPurchase.registration_state === 'completed' || existingPurchase.registration_state === 'invited');
@@ -159,7 +159,7 @@ export async function POST(req: NextRequest) {
                 for (const reg of dbRegistrations.results || []) {
                     const key = `${reg.guardian_email.toLowerCase()}-${campId}-${reg.product_sku}`;
                     // If this DB record wasn't matched to any CSV row, it's a Manual/BACS entry
-                    if (!processedTxByEmailAndProduct.has(key)) {
+                    if (!processedTxByEmailAndSku.has(key)) {
                         manualOnlyRegistrations.push({
                             id: reg.purchase_id,
                             guardianName: reg.guardian_name,
