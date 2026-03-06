@@ -335,7 +335,7 @@ function RegistrationsContent() {
                         <SelectContent className="rounded-xl border-slate-200 dark:border-slate-800">
                             <SelectItem value="all">All Products</SelectItem>
                             {availableProducts.map(product => (
-                                <SelectItem key={product.id} value={product.id.toString()}>{product.name}</SelectItem>
+                                <SelectItem key={product.id} value={product.product_id.toString()}>{product.product_name}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
