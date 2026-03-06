@@ -226,7 +226,7 @@ export default function ReconciliationPage() {
 
             {parsedData && (
                 <div className="space-y-6">
-                    <div className="grid gap-4 md:grid-cols-4">
+                    <div className="grid gap-4 md:grid-cols-5">
                         <Card>
                             <CardHeader className="py-4">
                                 <CardTitle className="text-sm font-medium">Total Rows</CardTitle>
@@ -237,7 +237,7 @@ export default function ReconciliationPage() {
                         </Card>
                         <Card>
                             <CardHeader className="py-4">
-                                <CardTitle className="text-sm font-medium">Existing Matches</CardTitle>
+                                <CardTitle className="text-sm font-medium">Matches</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold text-green-600">{parsedData.summary.existingMatchCount}</div>
@@ -245,7 +245,7 @@ export default function ReconciliationPage() {
                         </Card>
                         <Card>
                             <CardHeader className="py-4">
-                                <CardTitle className="text-sm font-medium">Missing (Importable)</CardTitle>
+                                <CardTitle className="text-sm font-medium">Missing</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold text-amber-600">{parsedData.summary.missingCount}</div>
@@ -253,10 +253,20 @@ export default function ReconciliationPage() {
                         </Card>
                         <Card>
                             <CardHeader className="py-4">
-                                <CardTitle className="text-sm font-medium">BACS / Manual</CardTitle>
+                                <CardTitle className="text-sm font-medium">BACS/Manual</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold text-blue-600">{parsedData.summary.manualCount}</div>
+                            </CardContent>
+                        </Card>
+                        <Card className={parsedData.summary.skippedCount > 0 ? "border-red-200 bg-red-50/30" : ""}>
+                            <CardHeader className="py-4">
+                                <CardTitle className="text-sm font-medium">Skipped</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className={`text-2xl font-bold ${parsedData.summary.skippedCount > 0 ? "text-red-600" : "text-slate-400"}`}>
+                                    {parsedData.summary.skippedCount}
+                                </div>
                             </CardContent>
                         </Card>
                     </div>
@@ -280,7 +290,7 @@ export default function ReconciliationPage() {
                         </Alert>
                     )}
 
-                    {parsedData.data.missing.length > 0 ? (
+                    {parsedData.data.missing.length > 0 && (
                         <Card className="border-amber-200">
                             <CardHeader className="bg-amber-50">
                                 <div className="flex items-center justify-between">
@@ -373,15 +383,73 @@ export default function ReconciliationPage() {
                                 </div>
                             </CardContent>
                         </Card>
-                    ) : (
+                    )}
+
+                    {parsedData.data.skipped.length > 0 && (
+                        <Card className="border-red-200">
+                            <CardHeader className="bg-red-50">
+                                <CardTitle className="text-red-800 flex items-center gap-2">
+                                    <AlertCircle className="h-5 w-5" />
+                                    Skipped Records (Action Required)
+                                </CardTitle>
+                                <CardDescription className="text-red-700">
+                                    These rows could not be processed. Please resolve the issues below and re-upload the file.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-0">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm text-left">
+                                        <thead className="bg-muted text-muted-foreground text-xs uppercase">
+                                            <tr>
+                                                <th className="px-4 py-3">Order</th>
+                                                <th className="px-4 py-3">Purchaser</th>
+                                                <th className="px-4 py-3">CSV Product / SKU</th>
+                                                <th className="px-4 py-3">Reason for Skip</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {parsedData.data.skipped.map((record, idx) => (
+                                                <tr key={`${record.orderId}-${idx}`} className="border-b hover:bg-muted/50">
+                                                    <td className="px-4 py-3 font-medium">#{record.orderNumber}</td>
+                                                    <td className="px-4 py-3">
+                                                        <div>{record.guardianName}</div>
+                                                        <div className="text-xs text-muted-foreground">{record.guardianEmail}</div>
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <div>{record.productName}</div>
+                                                        <div className="text-mono text-[10px] bg-slate-100 px-1 rounded w-fit">{record.productSku}</div>
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <Badge variant="destructive" className="font-normal">
+                                                            {record.skipReason}
+                                                        </Badge>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {parsedData.summary.missingCount === 0 && parsedData.summary.skippedCount === 0 ? (
                         <Alert className="bg-green-50 text-green-800 border-green-200">
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
                             <AlertTitle>All Good!</AlertTitle>
                             <AlertDescription>
-                                No discrepancies found. All valid shop orders are already in the database.
+                                No discrepancies or skipped records found. All valid shop orders are already in the database.
                             </AlertDescription>
                         </Alert>
-                    )}
+                    ) : (parsedData.summary.missingCount === 0 && (
+                        <Alert className="bg-slate-50 text-slate-600 border-slate-200">
+                            <AlertCircle className="h-5 w-5 text-slate-400" />
+                            <AlertTitle>No New Discrepancies</AlertTitle>
+                            <AlertDescription>
+                                No records are missing from the database, but some rows were skipped (see below).
+                            </AlertDescription>
+                        </Alert>
+                    ))}
 
                     {parsedData.data.manualOnly.length > 0 && (
                         <Card className="border-blue-200">

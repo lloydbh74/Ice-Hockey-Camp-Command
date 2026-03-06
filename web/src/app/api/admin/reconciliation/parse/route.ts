@@ -74,8 +74,20 @@ export async function POST(req: NextRequest) {
             }
 
             const productMatch = await getProductBySku(db, tx.productSku);
+
             if (!productMatch) {
-                skippedRecords.push({ ...tx, skipReason: `SKU not found: ${tx.productSku}` });
+                skippedRecords.push({
+                    ...tx,
+                    skipReason: "SKU not found in Product Repository"
+                });
+                continue;
+            }
+
+            if (!productMatch.campId) {
+                skippedRecords.push({
+                    ...tx,
+                    skipReason: `Product found (${productMatch.product.name}), but NOT assigned to any Camp`
+                });
                 continue;
             }
 

@@ -97,11 +97,11 @@ interface PurchaseRow {
 
 export async function getProductBySku(db: D1Database, sku: string): Promise<{ product: Product; campId: number; price: number } | null> {
     // Find product by SKU and get its associated camp and price from CampProducts
-    // We assume a SKU uniquely identifies a specific product-camp offering for ingestion
+    // Use LEFT JOIN to identify products that exist in repository but are NOT assigned to a camp
     const result = await db.prepare(`
         SELECT p.*, cp.camp_id, cp.price
         FROM Products p
-        INNER JOIN CampProducts cp ON p.id = cp.product_id
+        LEFT JOIN CampProducts cp ON p.id = cp.product_id
         WHERE p.sku = ?
         LIMIT 1
     `).bind(sku).first<any>();

@@ -27,27 +27,18 @@ export async function POST(request: NextRequest, props: RouteContext) {
             return NextResponse.json({ error: 'Source form not found' }, { status: 404 });
         }
 
-        // 2. Generate new ID
+        // 2. Generate new ID and names
         const newFormId = Date.now();
         const newFormName = `${sourceForm.name} (Copy)`;
         const newVersion = '1.0.0';
         const initialChangelog = 'Duplicated from Form ID ' + sourceFormId;
 
-        // 3. Ensure the Product exists (Self-healing for FK constraint)
-        const product = await db.prepare('SELECT id FROM Products WHERE id = ?').bind(newFormId).first();
-        if (!product) {
-            console.log(`[API] Product ID ${newFormId} missing for duplication. Creating placeholder product...`);
-            await db.prepare('INSERT INTO Products (id, name, description) VALUES (?, ?, ?)')
-                .bind(newFormId, `Product ${newFormId}`, 'Auto-generated for Form Builder (Duplicate)')
-                .run();
-        }
-
-        // 4. Batch insert new form and history
+        // 3. Duplicate Form and History
         await db.batch([
             db.prepare(`
                 INSERT INTO Forms (id, product_id, name, version, schema_json, changelog, is_published, is_active)
                 VALUES (?, ?, ?, ?, ?, ?, 1, 1)
-            `).bind(newFormId, newFormId, newFormName, newVersion, sourceForm.schema_json, initialChangelog),
+            `).bind(newFormId, sourceForm.product_id, newFormName, newVersion, sourceForm.schema_json, initialChangelog),
 
             db.prepare(`
                 INSERT INTO FormHistory (form_id, version, schema_json, changelog)

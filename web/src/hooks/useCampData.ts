@@ -46,8 +46,8 @@ export function useCampData(campId: string) {
                 setCamp(null);
             }
 
-            const productsData = await cpRes.json();
-            setCampProducts(Array.isArray(productsData) ? productsData : []);
+            const productsData: any = await cpRes.json();
+            setCampProducts(Array.isArray(productsData) ? productsData : (productsData.results || []));
 
             const allProductsData = await prodRes.json();
             setAllProducts(Array.isArray(allProductsData) ? allProductsData : []);
