@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
     const campId = searchParams.get('campId');
     const status = searchParams.get('status');
     const query = searchParams.get('q') || undefined;
+    const productId = searchParams.get('productId') ? parseInt(searchParams.get('productId')!) : undefined;
     const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined;
 
     try {
@@ -16,10 +17,10 @@ export async function GET(request: NextRequest) {
         let results: any[] = [];
 
         if (campId) {
-            const data = await listPurchasesByCamp(db, parseInt(campId), query, limit);
+            const data = await listPurchasesByCamp(db, parseInt(campId), query, limit, productId);
             results = data.results || [];
         } else {
-            const data = await listAllPurchases(db, query, limit);
+            const data = await listAllPurchases(db, query, limit, productId);
             results = data.results || [];
         }
 

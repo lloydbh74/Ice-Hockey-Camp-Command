@@ -165,7 +165,6 @@ export async function createPurchaseTransactions(
     `).bind(guardian.id, data.campId, productId, data.rawEmailId, pricePaid).run();
 }
 
-// --- Spec 004: Form Builder ---
 
 export async function getFormVariables(db: D1Database, campId: number): Promise<string[]> {
     // Determine which variables (custom fields) are available for this camp's forms
@@ -332,7 +331,7 @@ export async function updateCampProductPrice(db: D1Database, campId: number, cpI
         .run();
 }
 
-export async function listAllPurchases(db: D1Database, query?: string, limit?: number) {
+export async function listAllPurchases(db: D1Database, query?: string, limit?: number, productId?: number) {
     let sql = `
         SELECT p.*, p.price_at_purchase as amount, g.full_name as guardian_name, g.email as guardian_email, pr.name as product_name, c.name as camp_name,
                pl.first_name as player_first_name, pl.last_name as player_last_name, f.schema_json
@@ -345,11 +344,21 @@ export async function listAllPurchases(db: D1Database, query?: string, limit?: n
         LEFT JOIN Players pl ON r.player_id = pl.id
     `;
     const params: any[] = [];
+    const conditions: string[] = [];
 
     if (query) {
-        sql += ` WHERE (g.full_name LIKE ? OR g.email LIKE ? OR pl.first_name LIKE ? OR pl.last_name LIKE ?)`;
+        conditions.push(`(g.full_name LIKE ? OR g.email LIKE ? OR pl.first_name LIKE ? OR pl.last_name LIKE ?)`);
         const q = `%${query}%`;
         params.push(q, q, q, q);
+    }
+
+    if (productId) {
+        conditions.push(`p.product_id = ?`);
+        params.push(productId);
+    }
+
+    if (conditions.length > 0) {
+        sql += ` WHERE ` + conditions.join(' AND ');
     }
 
     sql += ` ORDER BY p.purchase_timestamp DESC`;
@@ -360,7 +369,7 @@ export async function listAllPurchases(db: D1Database, query?: string, limit?: n
     return await db.prepare(sql).bind(...params).all();
 }
 
-export async function listPurchasesByCamp(db: D1Database, campId: number, query?: string, limit?: number) {
+export async function listPurchasesByCamp(db: D1Database, campId: number, query?: string, limit?: number, productId?: number) {
     let sql = `
         SELECT p.*, p.price_at_purchase as amount, g.full_name as guardian_name, g.email as guardian_email, pr.name as product_name,
                pl.first_name as player_first_name, pl.last_name as player_last_name, f.schema_json
@@ -378,6 +387,11 @@ export async function listPurchasesByCamp(db: D1Database, campId: number, query?
         sql += ` AND (g.full_name LIKE ? OR g.email LIKE ? OR pl.first_name LIKE ? OR pl.last_name LIKE ?)`;
         const q = `%${query}%`;
         params.push(q, q, q, q);
+    }
+
+    if (productId) {
+        sql += ` AND p.product_id = ?`;
+        params.push(productId);
     }
 
     sql += ` ORDER BY p.purchase_timestamp DESC`;

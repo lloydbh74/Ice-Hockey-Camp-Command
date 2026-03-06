@@ -5,6 +5,23 @@ export const runtime = 'edge';
 import React, { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Search, Info, Trash2, Mail, Plus } from "lucide-react";
 
 interface Registration {
     id: number;
@@ -43,6 +60,8 @@ function RegistrationsContent() {
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState(initialStatus);
     const [searchQuery, setSearchQuery] = useState(initialQuery);
+    const [productIdFilter, setProductIdFilter] = useState('all');
+    const [availableProducts, setAvailableProducts] = useState<any[]>([]);
     const [campStatusTab, setCampStatusTab] = useState<'active' | 'archived'>('active');
     const [editingRegistration, setEditingRegistration] = useState<Registration | null>(null);
     const [saveLoading, setSaveLoading] = useState(false);
@@ -99,7 +118,9 @@ function RegistrationsContent() {
     const fetchRegistrations = () => {
         setLoading(true);
         const urlCampIdParam = selectedCampFilter !== 'all' ? `campId=${selectedCampFilter}&` : '';
-        const url = `/api/admin/registrations?${urlCampIdParam}${statusFilter !== 'all' && statusFilter !== 'medical' ? `status=${statusFilter}&` : ''}${searchQuery ? `q=${encodeURIComponent(searchQuery)}` : ''}`;
+        const urlProductIdParam = productIdFilter !== 'all' ? `productId=${productIdFilter}&` : '';
+        const statusParam = (statusFilter !== 'all' && statusFilter !== 'important') ? `status=${statusFilter}&` : '';
+        const url = `/api/admin/registrations?${urlCampIdParam}${urlProductIdParam}${statusParam}${searchQuery ? `q=${encodeURIComponent(searchQuery)}` : ''}`;
 
         fetch(url)
             .then((res) => res.json())
@@ -121,11 +142,22 @@ function RegistrationsContent() {
     };
 
     useEffect(() => {
+        if (selectedCampFilter !== 'all') {
+            fetch(`/api/admin/camps/${selectedCampFilter}/products`)
+                .then(res => res.json())
+                .then((data: any) => setAvailableProducts(data.results || []));
+        } else {
+            setAvailableProducts([]);
+            setProductIdFilter('all');
+        }
+    }, [selectedCampFilter]);
+
+    useEffect(() => {
         const timer = setTimeout(() => {
             fetchRegistrations();
         }, 300); // Simple debounce
         return () => clearTimeout(timer);
-    }, [selectedCampFilter, statusFilter, searchQuery]);
+    }, [selectedCampFilter, productIdFilter, statusFilter, searchQuery]);
 
     const handleUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -225,7 +257,7 @@ function RegistrationsContent() {
     };
 
     return (
-        <div className="p-8 max-w-7xl mx-auto">
+        <main className="p-8 max-w-7xl mx-auto">
             <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     {urlCampId && (
@@ -238,74 +270,94 @@ function RegistrationsContent() {
                     <p className="text-slate-500 font-medium">Manage all camp purchases and completion states.</p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+                <div className="flex flex-wrap items-center gap-3">
+                    {registrations.some(r => r.registration_state !== 'completed') && (
+                        <button
+                            onClick={() => handleChase(registrations.filter(r => r.registration_state !== 'completed').map(r => r.id))}
+                            disabled={bulkChaseLoading}
+                            className="bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-sm font-bold px-4 py-2 rounded-xl flex items-center gap-2 transition-all shadow-sm active:scale-95"
+                        >
+                            <Mail className="h-4 w-4" />
+                            {bulkChaseLoading ? 'Chasing All...' : 'Chase All Missing'}
+                        </button>
+                    )}
+                    <button
+                        onClick={() => setIsAddModalOpen(true)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2 rounded-xl flex items-center gap-2 transition-all shadow-sm shadow-blue-500/20 active:scale-95"
+                    >
+                        <Plus className="h-4 w-4" />
+                        Add Registration
+                    </button>
+                </div>
+            </header>
+
+            {/* Filter Bar */}
+            <div className="flex flex-col lg:flex-row items-stretch lg:items-end gap-3 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/50 shadow-sm mb-6">
+                <div className="flex flex-1 flex-col space-y-1.5">
+                    <Label htmlFor="search-registrations" className="text-[10px] font-black uppercase tracking-widest text-slate-400">Search Registrations</Label>
                     <div className="relative group">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg className="h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                        </div>
-                        <input
-                            type="text"
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                        <Input
+                            id="search-registrations"
                             placeholder="Search name or email..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="block w-full sm:w-64 pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-bold focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-400 focus:border-blue-500 transition-all outline-none"
+                            className="pl-9 h-11 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-xl font-medium focus:ring-4 focus:ring-blue-500/10 transition-all"
                         />
                     </div>
-
-                    <div className="flex items-center gap-2">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Camp:</label>
-                        <select
-                            value={selectedCampFilter}
-                            onChange={(e) => setSelectedCampFilter(e.target.value)}
-                            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-blue-500/20"
-                        >
-                            <option value="all">All Camps</option>
-                            {camps.filter(c => c.status === campStatusTab).map(camp => (
-                                <option key={camp.id} value={camp.id}>{camp.name}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <label htmlFor="status-filter" className="text-xs font-bold text-slate-500 uppercase tracking-widest">Status:</label>
-                        <select
-                            id="status-filter"
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-blue-500/20"
-                        >
-                            <option value="all">All Statuses</option>
-                            <option value="important">⚠️ Important Flags</option>
-                            <option value="completed">Completed</option>
-                            <option value="missing">Missing / Incomplete</option>
-                            <option value="invited">Invited</option>
-                            <option value="uninvited">Uninvited</option>
-                        </select>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-3">
-                        {registrations.some(r => r.registration_state !== 'completed') && (
-                            <button
-                                onClick={() => handleChase(registrations.filter(r => r.registration_state !== 'completed').map(r => r.id))}
-                                disabled={bulkChaseLoading}
-                                className="bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-sm font-bold px-4 py-2 rounded-xl flex items-center gap-2 transition-all shadow-sm active:scale-95"
-                            >
-                                <span className="material-symbols-outlined text-[18px]">campaign</span>
-                                {bulkChaseLoading ? 'Chasing All...' : 'Chase All Missing'}
-                            </button>
-                        )}
-                        <button
-                            onClick={() => setIsAddModalOpen(true)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2 rounded-xl flex items-center gap-2 transition-all shadow-sm shadow-blue-500/20 active:scale-95"
-                        >
-                            <span className="material-symbols-outlined text-[18px]">add</span>
-                            Add Registration
-                        </button>
-                    </div>
                 </div>
-            </header>
+
+                <div className="w-full lg:w-48 space-y-1.5">
+                    <Label id="label-camp-filter" htmlFor="camp-filter" className="text-[10px] font-black uppercase tracking-widest text-slate-400">Camp Date</Label>
+                    <Select value={selectedCampFilter} onValueChange={setSelectedCampFilter}>
+                        <SelectTrigger id="camp-filter" aria-labelledby="label-camp-filter" className="h-11 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-xl font-medium focus:ring-4 focus:ring-blue-500/10">
+                            <SelectValue placeholder="All Camps" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-slate-200 dark:border-slate-800">
+                            <SelectItem value="all">All Camps</SelectItem>
+                            {camps.filter(c => c.status === campStatusTab).map(camp => (
+                                <SelectItem key={camp.id} value={camp.id.toString()}>{camp.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="w-full lg:w-64 space-y-1.5">
+                    <Label id="label-product-filter" htmlFor="product-filter" className="text-[10px] font-black uppercase tracking-widest text-slate-400">Product / Stream</Label>
+                    <Select
+                        value={productIdFilter}
+                        onValueChange={setProductIdFilter}
+                        disabled={selectedCampFilter === 'all'}
+                    >
+                        <SelectTrigger id="product-filter" aria-labelledby="label-product-filter" className="h-11 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-xl font-medium focus:ring-4 focus:ring-blue-500/10">
+                            <SelectValue placeholder={selectedCampFilter === 'all' ? "Select a camp first" : "All Products"} />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-slate-200 dark:border-slate-800">
+                            <SelectItem value="all">All Products</SelectItem>
+                            {availableProducts.map(product => (
+                                <SelectItem key={product.id} value={product.id.toString()}>{product.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="w-full lg:w-48 space-y-1.5">
+                    <Label id="label-status-filter" htmlFor="status-filter" className="text-[10px] font-black uppercase tracking-widest text-slate-400">Status</Label>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger id="status-filter" aria-labelledby="label-status-filter" className="h-11 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-xl font-medium focus:ring-4 focus:ring-blue-500/10">
+                            <SelectValue placeholder="All Statuses" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-slate-200 dark:border-slate-800">
+                            <SelectItem value="all">All Statuses</SelectItem>
+                            <SelectItem value="important">⚠️ Important Flags</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                            <SelectItem value="missing">Missing / Incomplete</SelectItem>
+                            <SelectItem value="invited">Invited</SelectItem>
+                            <SelectItem value="uninvited">Uninvited</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
 
             {/* Active / Archived Tabs */}
             <div className="flex items-center gap-6 mb-6 px-1 border-b border-slate-200 dark:border-slate-800 pb-px">
@@ -351,26 +403,40 @@ function RegistrationsContent() {
                                 </td>
                                 <td className="px-6 py-4">
                                     {row.player_first_name ? (
-                                        <div className="flex flex-col gap-1">
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-bold text-slate-900 dark:text-white">{row.player_first_name} {row.player_last_name}</span>
-                                            </div>
+                                        <div className="flex flex-col gap-1.5">
+                                            <span className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-tight">
+                                                {row.player_first_name} {row.player_last_name}
+                                            </span>
                                             {(() => {
                                                 const answers = row.highlighted_answers || {};
                                                 if (Object.keys(answers).length === 0) return null;
                                                 return (
                                                     <div className="flex flex-wrap gap-1">
                                                         {Object.entries(answers).map(([key, value], idx) => (
-                                                            <span key={idx} className="bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter border border-red-100 dark:border-red-900/30">
-                                                                {key}: {value}
-                                                            </span>
+                                                            <Tooltip key={idx}>
+                                                                <TooltipTrigger asChild>
+                                                                    <Badge
+                                                                        variant="destructive"
+                                                                        className="h-5 px-1.5 text-[9px] font-black uppercase tracking-tight cursor-help bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/30 shadow-sm"
+                                                                    >
+                                                                        <span className="sr-only">{key}: </span>
+                                                                        {value}
+                                                                    </Badge>
+                                                                </TooltipTrigger>
+                                                                <TooltipContent className="bg-slate-900 text-white border-none text-[10px] font-bold rounded-lg shadow-xl">
+                                                                    <div className="flex flex-col gap-0.5" role="tooltip">
+                                                                        <span className="text-slate-400 text-[8px] uppercase tracking-widest">{key}</span>
+                                                                        <span className="text-white">{value}</span>
+                                                                    </div>
+                                                                </TooltipContent>
+                                                            </Tooltip>
                                                         ))}
                                                     </div>
                                                 );
                                             })()}
                                         </div>
                                     ) : (
-                                        <span className="text-xs text-slate-400 italic">Not yet provided</span>
+                                        <span className="text-xs text-slate-400 italic font-medium">Not yet provided</span>
                                     )}
                                 </td>
                                 <td className="px-6 py-4">
@@ -426,236 +492,240 @@ function RegistrationsContent() {
             </div>
 
             {/* Edit Modal */}
-            {editingRegistration && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-                    <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                        <header className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                            <div>
-                                <h2 className="text-xl font-bold text-slate-900 dark:text-white">Edit Registration</h2>
-                                <p className="text-sm text-slate-500">Updating details for {editingRegistration.guardian_name}</p>
-                            </div>
-                            <button onClick={() => setEditingRegistration(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-400 hover:text-slate-600 transition-colors">
-                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </header>
-
-                        <form onSubmit={handleUpdate} className="p-8 space-y-6 overflow-y-auto max-h-[70vh]">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-4">
-                                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Core Details</h3>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Registration Status</label>
-                                        <select
-                                            value={editingRegistration.registration_state}
-                                            onChange={e => setEditingRegistration({ ...editingRegistration, registration_state: e.target.value })}
-                                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10"
-                                        >
-                                            <option value="uninvited">Uninvited</option>
-                                            <option value="invited">Invited</option>
-                                            <option value="in_progress">In Progress</option>
-                                            <option value="completed">Completed</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Player First Name</label>
-                                        <input
-                                            type="text"
-                                            value={editingRegistration.player_first_name || ''}
-                                            onChange={e => setEditingRegistration({ ...editingRegistration, player_first_name: e.target.value })}
-                                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Player Last Name</label>
-                                        <input
-                                            type="text"
-                                            value={editingRegistration.player_last_name || ''}
-                                            onChange={e => setEditingRegistration({ ...editingRegistration, player_last_name: e.target.value })}
-                                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10"
-                                        />
-                                    </div>
+            {
+                editingRegistration && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                        <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                            <header className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">Edit Registration</h2>
+                                    <p className="text-sm text-slate-500">Updating details for {editingRegistration.guardian_name}</p>
                                 </div>
+                                <button onClick={() => setEditingRegistration(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-400 hover:text-slate-600 transition-colors">
+                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </header>
 
-                                <div className="space-y-4">
-                                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Form Responses</h3>
-                                    {editingRegistration.registration_data ? (
-                                        <div className="space-y-4">
-                                            {(() => {
-                                                try {
-                                                    const data = JSON.parse(editingRegistration.registration_data);
-                                                    const formSchema = editingRegistration.schema_json ? JSON.parse(editingRegistration.schema_json) : [];
-
-                                                    const getFieldLabel = (key: string) => {
-                                                        const field = formSchema.find((f: any) => f.id === key);
-                                                        return field ? field.label : key.replace(/_/g, ' ');
-                                                    };
-
-                                                    return Object.entries(data).map(([key, value]) => {
-                                                        if (typeof value !== 'string') return null;
-                                                        return (
-                                                            <div key={key}>
-                                                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 transition-colors group-focus-within:text-blue-500">{getFieldLabel(key)}</label>
-                                                                {key === 'medical_details' || key.length > 30 ? (
-                                                                    <textarea
-                                                                        value={value}
-                                                                        onChange={e => {
-                                                                            const newData = { ...data, [key]: e.target.value };
-                                                                            setEditingRegistration({ ...editingRegistration, registration_data: JSON.stringify(newData) });
-                                                                        }}
-                                                                        className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2 text-sm font-medium focus:ring-4 focus:ring-blue-500/10 min-h-[80px]"
-                                                                    />
-                                                                ) : (
-                                                                    <input
-                                                                        type="text"
-                                                                        value={value}
-                                                                        onChange={e => {
-                                                                            const newData = { ...data, [key]: e.target.value };
-                                                                            setEditingRegistration({ ...editingRegistration, registration_data: JSON.stringify(newData) });
-                                                                        }}
-                                                                        className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2 text-sm font-medium focus:ring-4 focus:ring-blue-500/10"
-                                                                    />
-                                                                )}
-                                                            </div>
-                                                        );
-                                                    });
-                                                } catch (e) {
-                                                    return <p className="text-xs text-red-500 font-bold">Corrupt registration data JSON</p>;
-                                                }
-                                            })()}
+                            <form onSubmit={handleUpdate} className="p-8 space-y-6 overflow-y-auto max-h-[70vh]">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-4">
+                                        <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Core Details</h3>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Registration Status</label>
+                                            <select
+                                                value={editingRegistration.registration_state}
+                                                onChange={e => setEditingRegistration({ ...editingRegistration, registration_state: e.target.value })}
+                                                className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10"
+                                            >
+                                                <option value="uninvited">Uninvited</option>
+                                                <option value="invited">Invited</option>
+                                                <option value="in_progress">In Progress</option>
+                                                <option value="completed">Completed</option>
+                                            </select>
                                         </div>
-                                    ) : (
-                                        <p className="text-xs text-slate-400 italic">No registration data submitted yet.</p>
-                                    )}
-                                </div>
-                            </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Player First Name</label>
+                                            <input
+                                                type="text"
+                                                value={editingRegistration.player_first_name || ''}
+                                                onChange={e => setEditingRegistration({ ...editingRegistration, player_first_name: e.target.value })}
+                                                className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Player Last Name</label>
+                                            <input
+                                                type="text"
+                                                value={editingRegistration.player_last_name || ''}
+                                                onChange={e => setEditingRegistration({ ...editingRegistration, player_last_name: e.target.value })}
+                                                className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10"
+                                            />
+                                        </div>
+                                    </div>
 
-                            <div className="pt-6 flex items-center justify-end gap-3 border-t border-slate-100 dark:border-slate-800 mt-4">
-                                <button
-                                    type="button"
-                                    onClick={handleDeleteRegistration}
-                                    disabled={saveLoading}
-                                    className="px-6 py-3 text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-2xl transition-all mr-auto"
-                                >
-                                    Delete Registration
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setEditingRegistration(null)}
-                                    className="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={saveLoading}
-                                    className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold py-3 px-8 rounded-2xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2"
-                                >
-                                    {saveLoading ? (
-                                        <>
-                                            <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                            </svg>
-                                            Saving...
-                                        </>
-                                    ) : 'Save Changes'}
-                                </button>
-                            </div>
-                        </form>
+                                    <div className="space-y-4">
+                                        <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Form Responses</h3>
+                                        {editingRegistration.registration_data ? (
+                                            <div className="space-y-4">
+                                                {(() => {
+                                                    try {
+                                                        const data = JSON.parse(editingRegistration.registration_data);
+                                                        const formSchema = editingRegistration.schema_json ? JSON.parse(editingRegistration.schema_json) : [];
+
+                                                        const getFieldLabel = (key: string) => {
+                                                            const field = formSchema.find((f: any) => f.id === key);
+                                                            return field ? field.label : key.replace(/_/g, ' ');
+                                                        };
+
+                                                        return Object.entries(data).map(([key, value]) => {
+                                                            if (typeof value !== 'string') return null;
+                                                            return (
+                                                                <div key={key}>
+                                                                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 transition-colors group-focus-within:text-blue-500">{getFieldLabel(key)}</label>
+                                                                    {key === 'medical_details' || key.length > 30 ? (
+                                                                        <textarea
+                                                                            value={value}
+                                                                            onChange={e => {
+                                                                                const newData = { ...data, [key]: e.target.value };
+                                                                                setEditingRegistration({ ...editingRegistration, registration_data: JSON.stringify(newData) });
+                                                                            }}
+                                                                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2 text-sm font-medium focus:ring-4 focus:ring-blue-500/10 min-h-[80px]"
+                                                                        />
+                                                                    ) : (
+                                                                        <input
+                                                                            type="text"
+                                                                            value={value}
+                                                                            onChange={e => {
+                                                                                const newData = { ...data, [key]: e.target.value };
+                                                                                setEditingRegistration({ ...editingRegistration, registration_data: JSON.stringify(newData) });
+                                                                            }}
+                                                                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2 text-sm font-medium focus:ring-4 focus:ring-blue-500/10"
+                                                                        />
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        });
+                                                    } catch (e) {
+                                                        return <p className="text-xs text-red-500 font-bold">Corrupt registration data JSON</p>;
+                                                    }
+                                                })()}
+                                            </div>
+                                        ) : (
+                                            <p className="text-xs text-slate-400 italic">No registration data submitted yet.</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="pt-6 flex items-center justify-end gap-3 border-t border-slate-100 dark:border-slate-800 mt-4">
+                                    <button
+                                        type="button"
+                                        onClick={handleDeleteRegistration}
+                                        disabled={saveLoading}
+                                        className="px-6 py-3 text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-2xl transition-all mr-auto"
+                                    >
+                                        Delete Registration
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditingRegistration(null)}
+                                        className="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={saveLoading}
+                                        className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold py-3 px-8 rounded-2xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2"
+                                    >
+                                        {saveLoading ? (
+                                            <>
+                                                <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                                Saving...
+                                            </>
+                                        ) : 'Save Changes'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Add Registration Modal */}
-            {isAddModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-                    <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                        <header className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                            <div>
-                                <h2 className="text-xl font-bold text-slate-900 dark:text-white">Add Registration</h2>
-                                <p className="text-sm text-slate-500">Manually invite a participant</p>
-                            </div>
-                            <button onClick={() => setIsAddModalOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-400 hover:text-slate-600 transition-colors">
-                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </header>
+            {
+                isAddModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                        <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                            <header className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">Add Registration</h2>
+                                    <p className="text-sm text-slate-500">Manually invite a participant</p>
+                                </div>
+                                <button onClick={() => setIsAddModalOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-400 hover:text-slate-600 transition-colors">
+                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </header>
 
-                        <form onSubmit={handleSubmitNewReg} className="p-8 space-y-4">
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Guardian Name</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={newRegData.guardianName}
-                                    onChange={e => setNewRegData({ ...newRegData, guardianName: e.target.value })}
-                                    className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-400"
-                                    placeholder="Jane Doe"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Guardian Email</label>
-                                <input
-                                    type="email"
-                                    required
-                                    value={newRegData.guardianEmail}
-                                    onChange={e => setNewRegData({ ...newRegData, guardianEmail: e.target.value })}
-                                    className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-400"
-                                    placeholder="jane.doe@example.com"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Camp</label>
-                                <select
-                                    required
-                                    value={newRegData.campId}
-                                    onChange={e => handleCampChange(e.target.value)}
-                                    className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10"
-                                >
-                                    <option value="" disabled>Select Camp</option>
-                                    {camps.map(camp => <option key={camp.id} value={camp.id}>{camp.name}</option>)}
-                                </select>
-                            </div>
-                            {newRegData.campId && (
-                                <div className="animate-in fade-in slide-in-from-top-2">
-                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Registration Type / Product</label>
+                            <form onSubmit={handleSubmitNewReg} className="p-8 space-y-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Guardian Name</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={newRegData.guardianName}
+                                        onChange={e => setNewRegData({ ...newRegData, guardianName: e.target.value })}
+                                        className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-400"
+                                        placeholder="Jane Doe"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Guardian Email</label>
+                                    <input
+                                        type="email"
+                                        required
+                                        value={newRegData.guardianEmail}
+                                        onChange={e => setNewRegData({ ...newRegData, guardianEmail: e.target.value })}
+                                        className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-400"
+                                        placeholder="jane.doe@example.com"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Camp</label>
                                     <select
                                         required
-                                        value={newRegData.productId}
-                                        onChange={e => setNewRegData({ ...newRegData, productId: e.target.value })}
+                                        value={newRegData.campId}
+                                        onChange={e => handleCampChange(e.target.value)}
                                         className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10"
                                     >
-                                        <option value="" disabled>Select Product</option>
-                                        {newRegProducts.map((cp: any) => (
-                                            <option key={cp.product_id} value={cp.product_id}>
-                                                {cp.product_name} - {getCurrencySymbol()} {cp.price}
-                                            </option>
-                                        ))}
+                                        <option value="" disabled>Select Camp</option>
+                                        {camps.map(camp => <option key={camp.id} value={camp.id}>{camp.name}</option>)}
                                     </select>
                                 </div>
-                            )}
-                            <div className="pt-6 flex justify-end gap-3 border-t border-slate-100 dark:border-slate-800 mt-4">
-                                <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors">Cancel</button>
-                                <button type="submit" disabled={isSubmittingNewReg} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-2xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2">
-                                    {isSubmittingNewReg ? (
-                                        <>
-                                            <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                            </svg>
-                                            Adding...
-                                        </>
-                                    ) : 'Add & Send Invite'}
-                                </button>
-                            </div>
-                        </form>
+                                {newRegData.campId && (
+                                    <div className="animate-in fade-in slide-in-from-top-2">
+                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Registration Type / Product</label>
+                                        <select
+                                            required
+                                            value={newRegData.productId}
+                                            onChange={e => setNewRegData({ ...newRegData, productId: e.target.value })}
+                                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10"
+                                        >
+                                            <option value="" disabled>Select Product</option>
+                                            {newRegProducts.map((cp: any) => (
+                                                <option key={cp.product_id} value={cp.product_id}>
+                                                    {cp.product_name} - {getCurrencySymbol()} {cp.price}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+                                <div className="pt-6 flex justify-end gap-3 border-t border-slate-100 dark:border-slate-800 mt-4">
+                                    <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors">Cancel</button>
+                                    <button type="submit" disabled={isSubmittingNewReg} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-2xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2">
+                                        {isSubmittingNewReg ? (
+                                            <>
+                                                <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                                Adding...
+                                            </>
+                                        ) : 'Add & Send Invite'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </main>
     );
 }
 
