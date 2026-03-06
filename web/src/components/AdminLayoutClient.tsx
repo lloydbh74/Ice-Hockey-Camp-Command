@@ -93,7 +93,7 @@ export default function AdminLayoutClient({
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col ml-64 min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
+            <main className="flex-1 flex flex-col ml-64 min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors p-6 md:p-8 lg:p-10">
                 {children}
             </main>
         </div>

@@ -176,10 +176,10 @@ export default function ReconciliationPage() {
     };
 
     return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">Sales Data Reconciliation</h1>
-                <p className="text-muted-foreground mt-2">
+        <div className="max-w-7xl mx-auto space-y-8">
+            <div className="flex flex-col gap-1">
+                <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">Sales Data Reconciliation</h1>
+                <p className="text-slate-500 dark:text-slate-400">
                     Upload a shop export CSV to find and import missing registrations.
                 </p>
             </div>
@@ -227,44 +227,44 @@ export default function ReconciliationPage() {
             {parsedData && (
                 <div className="space-y-6">
                     <div className="grid gap-4 md:grid-cols-5">
-                        <Card>
+                        <Card className="border-t-4 border-t-slate-400 shadow-sm">
                             <CardHeader className="py-4">
-                                <CardTitle className="text-sm font-medium">Total Rows</CardTitle>
+                                <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500">Total Rows</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold">{parsedData.summary.totalParsed}</div>
+                                <div className="text-3xl font-bold">{parsedData.summary.totalParsed}</div>
                             </CardContent>
                         </Card>
-                        <Card>
+                        <Card className="border-t-4 border-t-green-500 shadow-sm">
                             <CardHeader className="py-4">
-                                <CardTitle className="text-sm font-medium">Matches</CardTitle>
+                                <CardTitle className="text-xs font-bold uppercase tracking-wider text-green-600">Matches</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-green-600">{parsedData.summary.existingMatchCount}</div>
+                                <div className="text-3xl font-bold text-green-600">{parsedData.summary.existingMatchCount}</div>
                             </CardContent>
                         </Card>
-                        <Card>
+                        <Card className="border-t-4 border-t-amber-500 shadow-sm">
                             <CardHeader className="py-4">
-                                <CardTitle className="text-sm font-medium">Missing</CardTitle>
+                                <CardTitle className="text-xs font-bold uppercase tracking-wider text-amber-600">Missing</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-amber-600">{parsedData.summary.missingCount}</div>
+                                <div className="text-3xl font-bold text-amber-600">{parsedData.summary.missingCount}</div>
                             </CardContent>
                         </Card>
-                        <Card>
+                        <Card className="border-t-4 border-t-blue-500 shadow-sm">
                             <CardHeader className="py-4">
-                                <CardTitle className="text-sm font-medium">BACS/Manual</CardTitle>
+                                <CardTitle className="text-xs font-bold uppercase tracking-wider text-blue-600">BACS/Manual</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-blue-600">{parsedData.summary.manualCount}</div>
+                                <div className="text-3xl font-bold text-blue-600">{parsedData.summary.manualCount}</div>
                             </CardContent>
                         </Card>
-                        <Card className={parsedData.summary.skippedCount > 0 ? "border-red-200 bg-red-50/30" : ""}>
+                        <Card className={`shadow-sm ${parsedData.summary.skippedCount > 0 ? "border-t-4 border-t-red-500 bg-red-50/30" : "border-t-4 border-t-slate-200"}`}>
                             <CardHeader className="py-4">
-                                <CardTitle className="text-sm font-medium">Skipped</CardTitle>
+                                <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-500">Skipped</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className={`text-2xl font-bold ${parsedData.summary.skippedCount > 0 ? "text-red-600" : "text-slate-400"}`}>
+                                <div className={`text-3xl font-bold ${parsedData.summary.skippedCount > 0 ? "text-red-600" : "text-slate-400"}`}>
                                     {parsedData.summary.skippedCount}
                                 </div>
                             </CardContent>
@@ -313,21 +313,21 @@ export default function ReconciliationPage() {
                             </CardHeader>
                             <CardContent className="p-0">
                                 <div className="overflow-x-auto">
-                                    <table className="w-full text-sm text-left">
-                                        <thead className="bg-muted text-muted-foreground text-xs uppercase">
+                                    <table className="w-full text-sm text-left border-collapse">
+                                        <thead className="bg-slate-50 border-y border-amber-100 text-amber-900 text-xs uppercase font-bold tracking-tight">
                                             <tr>
-                                                <th className="px-4 py-3 w-[50px]">
+                                                <th className="px-6 py-4 w-[60px] text-center">
                                                     <Checkbox
                                                         checked={selectedRecords.size === parsedData.data.missing.length && parsedData.data.missing.length > 0}
                                                         onCheckedChange={toggleAllRecords}
                                                         aria-label="Select all missing registrations"
                                                     />
                                                 </th>
-                                                <th className="px-4 py-3">Order</th>
-                                                <th className="px-4 py-3">Status</th>
-                                                <th className="px-4 py-3">Purchaser</th>
-                                                <th className="px-4 py-3">Product (Camp)</th>
-                                                <th className="px-4 py-3">Date</th>
+                                                <th className="px-6 py-4">Order</th>
+                                                <th className="px-6 py-4">Status</th>
+                                                <th className="px-6 py-4">Purchaser</th>
+                                                <th className="px-6 py-4">Product (Camp)</th>
+                                                <th className="px-6 py-4">Date</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -342,38 +342,38 @@ export default function ReconciliationPage() {
                                                             />
                                                         </div>
                                                     </td>
-                                                    <td className="px-4 py-3 font-medium">
+                                                    <td className="px-6 py-4 font-medium whitespace-nowrap">
                                                         <div>#{record.orderNumber}</div>
                                                         {record.potentialMatch && (
                                                             <Badge variant="outline" className="mt-1 text-[10px] border-amber-300 bg-amber-50 text-amber-700">
-                                                                Identity Match Found
+                                                                Identity Match
                                                             </Badge>
                                                         )}
                                                     </td>
-                                                    <td className="px-4 py-3">
+                                                    <td className="px-6 py-4">
                                                         {record.isProblemOrder ? (
                                                             <Badge variant="destructive" className="flex items-center gap-1 w-fit">
                                                                 <AlertCircle className="h-3 w-3" />
                                                                 {record.isRefunded ? 'REFUNDED' : 'PROBLEM'}
                                                             </Badge>
                                                         ) : (
-                                                            <Badge variant="outline">{record.orderStatus}</Badge>
+                                                            <Badge variant="outline" className="border-slate-300">{record.orderStatus}</Badge>
                                                         )}
                                                     </td>
-                                                    <td className="px-4 py-3">
-                                                        <div>{record.guardianName}</div>
+                                                    <td className="px-6 py-4">
+                                                        <div className="font-semibold">{record.guardianName}</div>
                                                         <div className="text-muted-foreground text-xs">{record.guardianEmail}</div>
                                                         {record.potentialMatch && (
-                                                            <div className="text-[10px] text-amber-600 font-medium">
-                                                                * DB has different email: {record.potentialMatch.dbEmail}
+                                                            <div className="text-[10px] text-amber-600 font-medium mt-0.5">
+                                                                * DB email: {record.potentialMatch.dbEmail}
                                                             </div>
                                                         )}
                                                     </td>
-                                                    <td className="px-4 py-3">
-                                                        <div>{record.systemProductName}</div>
+                                                    <td className="px-6 py-4">
+                                                        <div className="font-medium text-slate-700">{record.systemProductName}</div>
                                                         <div className="text-muted-foreground text-xs">SKU: {record.productSku}</div>
                                                     </td>
-                                                    <td className="px-4 py-3 whitespace-nowrap">
+                                                    <td className="px-6 py-4 whitespace-nowrap text-slate-500 font-medium">
                                                         {new Date(record.orderDate).toLocaleDateString()}
                                                     </td>
                                                 </tr>
@@ -464,36 +464,36 @@ export default function ReconciliationPage() {
                             </CardHeader>
                             <CardContent className="p-0">
                                 <div className="overflow-x-auto">
-                                    <table className="w-full text-sm text-left">
-                                        <thead className="bg-muted text-muted-foreground text-xs uppercase">
+                                    <table className="w-full text-sm text-left border-collapse">
+                                        <thead className="bg-blue-50/50 border-y border-blue-100 text-blue-900 text-xs uppercase font-bold tracking-tight">
                                             <tr>
-                                                <th className="px-4 py-3">Participant</th>
-                                                <th className="px-4 py-3">Camp / Product</th>
-                                                <th className="px-4 py-3">Status</th>
-                                                <th className="px-4 py-3">Source</th>
-                                                <th className="px-4 py-3">Date Added</th>
+                                                <th className="px-6 py-4">Participant</th>
+                                                <th className="px-6 py-4">Camp / Product</th>
+                                                <th className="px-6 py-4">Status</th>
+                                                <th className="px-6 py-4">Source</th>
+                                                <th className="px-6 py-4">Date Added</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {parsedData.data.manualOnly.map((reg) => (
                                                 <tr key={reg.id} className="border-b hover:bg-muted/50">
-                                                    <td className="px-4 py-3">
-                                                        <div className="font-medium">{reg.guardianName}</div>
+                                                    <td className="px-6 py-4">
+                                                        <div className="font-semibold">{reg.guardianName}</div>
                                                         <div className="text-xs text-muted-foreground">{reg.guardianEmail}</div>
                                                     </td>
-                                                    <td className="px-4 py-3">
-                                                        <div className="font-medium">{reg.campName}</div>
+                                                    <td className="px-6 py-4">
+                                                        <div className="font-medium text-slate-700">{reg.campName}</div>
                                                         <div className="text-xs text-muted-foreground">{reg.productName}</div>
                                                     </td>
-                                                    <td className="px-4 py-3">
-                                                        <Badge variant="secondary">{reg.registrationState}</Badge>
+                                                    <td className="px-6 py-4">
+                                                        <Badge variant="secondary" className="px-2 py-0.5 text-[11px] uppercase tracking-wider">{reg.registrationState}</Badge>
                                                     </td>
-                                                    <td className="px-4 py-3">
-                                                        <Badge variant="outline" className="bg-white">
+                                                    <td className="px-6 py-4">
+                                                        <Badge variant="outline" className="bg-white border-slate-200 font-medium font-mono text-[10px]">
                                                             {reg.isManual ? 'MANUAL / BACS' : 'OLD IMPORT'}
                                                         </Badge>
                                                     </td>
-                                                    <td className="px-4 py-3 whitespace-nowrap">
+                                                    <td className="px-6 py-4 whitespace-nowrap text-slate-500 font-medium">
                                                         {new Date(reg.purchaseTimestamp).toLocaleDateString()}
                                                     </td>
                                                 </tr>
