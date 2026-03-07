@@ -21,6 +21,7 @@ export async function POST(req: NextRequest) {
             guardianName: string;
             systemProductName: string;
             campId: number;
+            productId: number;
             price: number;
             isProblemOrder?: boolean;
         }
@@ -74,6 +75,10 @@ export async function POST(req: NextRequest) {
         const purchaseStmts = [];
         const recordsToEmail = [];
 
+        // Pre-fetch all products to verify existence
+        const { results: productRows } = await db.prepare("SELECT id FROM Products").all<{ id: number }>();
+        const validProductIds = new Set((productRows || []).map(p => p.id));
+
         // Retrieve camp definitions to send correct emails
         const { results: campRows } = await db.prepare("SELECT id, name FROM Camps").all<{ id: number, name: string }>();
         const campMap = new Map((campRows || []).map(c => [c.id, c.name]));
@@ -91,7 +96,11 @@ export async function POST(req: NextRequest) {
                 if (!guardianId) throw new Error("Failed to map Guardian ID");
 
                 const token = globalThis.crypto.randomUUID();
-                const productId = 1; // Standardized fallback mimicking createPurchaseTransactions
+                const productId = record.productId;
+
+                if (!productId || !validProductIds.has(productId)) {
+                    throw new Error(`Product "${record.systemProductName}" (ID: ${productId}) does not exist or is not defined in the repository. Please define the product before importing.`);
+                }
 
                 purchaseStmts.push(db.prepare(`
                     INSERT INTO Purchases (guardian_id, camp_id, product_id, quantity, registration_state, purchase_timestamp, raw_email_id, price_at_purchase, currency, registration_token)

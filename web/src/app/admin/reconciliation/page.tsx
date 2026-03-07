@@ -66,6 +66,7 @@ export default function ReconciliationPage() {
     const [file, setFile] = useState<File | null>(null);
     const [isParsing, setIsParsing] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isCorrecting, setIsCorrecting] = useState(false);
     const [parsedData, setParsedData] = useState<ParseResponse | null>(null);
     const [selectedRecords, setSelectedRecords] = useState<Set<string>>(new Set());
 
@@ -175,13 +176,46 @@ export default function ReconciliationPage() {
         }
     };
 
+    const handleCorrectData = async () => {
+        setIsCorrecting(true);
+        try {
+            const res = await fetch("/api/admin/reconciliation/correct-data", { method: "POST" });
+            if (!res.ok) {
+                const errorResponse = await res.json() as { error?: string };
+                throw new Error(errorResponse.error || "Failed to correct data");
+            }
+            const data = await res.json() as { summary: { updated: number } };
+            toast.success("Cleanup Complete", {
+                description: `Successfully updated ${data.summary.updated} registrations to their correct products.`
+            });
+        } catch (error: any) {
+            toast.error("Correction Error", { description: error.message });
+        } finally {
+            setIsCorrecting(false);
+        }
+    };
+
     return (
-        <div className="max-w-7xl mx-auto space-y-8">
+        <main className="max-w-7xl mx-auto space-y-8 p-4 md:p-8">
             <div className="flex flex-col gap-1">
-                <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">Sales Data Reconciliation</h1>
-                <p className="text-slate-500 dark:text-slate-400">
-                    Upload a shop export CSV to find and import missing registrations.
-                </p>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">Sales Data Reconciliation</h1>
+                        <p className="text-slate-500 dark:text-slate-400">
+                            Upload a shop export CSV to find and import missing registrations.
+                        </p>
+                    </div>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs text-slate-600 hover:text-amber-700 h-8 font-mono border border-slate-200 hover:border-amber-200 transition-colors"
+                        onClick={handleCorrectData}
+                        disabled={isCorrecting}
+                        title="Fix registrations imported with incorrect product mapping"
+                    >
+                        {isCorrecting ? "Fixing..." : "FIX LEGACY MAPPING"}
+                    </Button>
+                </div>
             </div>
 
             {!parsedData && (
@@ -512,6 +546,6 @@ export default function ReconciliationPage() {
                     </div>
                 </div>
             )}
-        </div>
+        </main>
     );
 }
