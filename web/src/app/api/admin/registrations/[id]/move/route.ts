@@ -6,10 +6,11 @@ export const runtime = 'edge';
 
 export async function POST(
     req: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const purchaseId = parseInt(params.id, 10);
+        const { id } = await params;
+        const purchaseId = parseInt(id, 10);
         const { productId } = await req.json() as { productId: number };
 
         if (!purchaseId || !productId) {
