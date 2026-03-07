@@ -40,6 +40,7 @@ interface Registration {
     schema_json?: string;
     highlighted_answers?: Record<string, string>;
     camp_id?: number;
+    product_id: number;
 }
 
 const getCurrencySymbol = (currency?: string) => {
