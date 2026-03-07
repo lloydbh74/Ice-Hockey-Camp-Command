@@ -816,8 +816,8 @@ function RegistrationsContent() {
         </div>
     )
 }
-        </main >
-    );
+    </main >
+);
 }
 
 export default function RegistrationsPage() {
