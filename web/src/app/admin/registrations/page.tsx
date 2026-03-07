@@ -552,23 +552,23 @@ function RegistrationsContent() {
             </div>
 
             {/* Edit Modal */}
-            {
-                editingRegistration && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-                        <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                            <header className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                                <div>
-                                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">Edit Registration</h2>
-                                    <p className="text-sm text-slate-500">Updating details for {editingRegistration.guardian_name}</p>
-                                </div>
-                                <button onClick={() => setEditingRegistration(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-400 hover:text-slate-600 transition-colors">
-                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            </header>
+            {editingRegistration && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <header className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-xl font-bold text-slate-900 dark:text-white">Edit Registration</h2>
+                                <p className="text-sm text-slate-500">Updating details for {editingRegistration.guardian_name}</p>
+                            </div>
+                            <button onClick={() => setEditingRegistration(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-400 hover:text-slate-600 transition-colors">
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </header>
 
-                            <form onSubmit={handleUpdate} className="p-8 space-y-6 overflow-y-auto max-h-[70vh]">
+                        <form onSubmit={handleUpdate} className="flex flex-col max-h-[85vh]">
+                            <div className="p-8 space-y-6 overflow-y-auto">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-4">
                                         <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Core Details</h3>
@@ -595,17 +595,20 @@ function RegistrationsContent() {
                                             />
                                         </div>
                                     </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Player Last Name</label>
-                                        <input
-                                            type="text"
-                                            value={editingRegistration.player_last_name || ''}
-                                            onChange={e => setEditingRegistration({ ...editingRegistration, player_last_name: e.target.value })}
-                                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10"
-                                        />
+                                    <div className="space-y-4">
+                                        <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 md:block hidden opacity-0 text-[0px] h-0 select-none">Spacer</h3>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Player Last Name</label>
+                                            <input
+                                                type="text"
+                                                value={editingRegistration.player_last_name || ''}
+                                                onChange={e => setEditingRegistration({ ...editingRegistration, player_last_name: e.target.value })}
+                                                className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10"
+                                            />
+                                        </div>
                                     </div>
 
-                                    <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                                    <div className="col-span-1 md:col-span-2 pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
                                         <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Transfer Stream</h3>
                                         <div>
                                             <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Move to Product</label>
@@ -616,7 +619,7 @@ function RegistrationsContent() {
                                                     className="flex-1 bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-3 py-2 text-xs font-bold focus:ring-4 focus:ring-blue-500/10"
                                                 >
                                                     <option value="">Select Stream...</option>
-                                                    {editProducts.filter(p => p.product_id !== editingRegistration.product_id).map((cp: any) => (
+                                                    {editProducts.filter((p: any) => p.product_id !== editingRegistration.product_id).map((cp: any) => (
                                                         <option key={cp.product_id} value={cp.product_id}>
                                                             {cp.product_name}
                                                         </option>
@@ -636,7 +639,7 @@ function RegistrationsContent() {
                                     </div>
                                 </div>
 
-                                <div className="space-y-4">
+                                <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
                                     <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Form Responses</h3>
                                     {editingRegistration.registration_data ? (
                                         <div className="space-y-4">
@@ -687,137 +690,136 @@ function RegistrationsContent() {
                                         <p className="text-xs text-slate-400 italic">No registration data submitted yet.</p>
                                     )}
                                 </div>
-                        </div>
+                            </div>
 
-                        <div className="pt-6 flex items-center justify-end gap-3 border-t border-slate-100 dark:border-slate-800 mt-4">
-                            <button
-                                type="button"
-                                onClick={handleDeleteRegistration}
-                                disabled={saveLoading}
-                                className="px-6 py-3 text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-2xl transition-all mr-auto"
-                            >
-                                Delete Registration
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setEditingRegistration(null)}
-                                className="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={saveLoading}
-                                className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold py-3 px-8 rounded-2xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2"
-                            >
-                                {saveLoading ? (
-                                    <>
-                                        <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                        Saving...
-                                    </>
-                                ) : 'Save Changes'}
-                            </button>
-                        </div>
-                    </form>
-                        </div>
-                    </div >
-                )
-}
+                            <div className="px-8 py-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3 bg-slate-50/50 dark:bg-slate-800/20">
+                                <button
+                                    type="button"
+                                    onClick={handleDeleteRegistration}
+                                    disabled={saveLoading}
+                                    className="px-6 py-3 text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-2xl transition-all mr-auto"
+                                >
+                                    Delete Registration
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setEditingRegistration(null)}
+                                    className="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={saveLoading}
+                                    className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold py-3 px-8 rounded-2xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2"
+                                >
+                                    {saveLoading ? (
+                                        <>
+                                            <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            Saving...
+                                        </>
+                                    ) : 'Save Changes'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
-{/* Add Registration Modal */ }
-{
-    isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-            <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                <header className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                    <div>
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Add Registration</h2>
-                        <p className="text-sm text-slate-500">Manually invite a participant</p>
-                    </div>
-                    <button onClick={() => setIsAddModalOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-400 hover:text-slate-600 transition-colors">
-                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </header>
-
-                <form onSubmit={handleSubmitNewReg} className="p-8 space-y-4">
-                    <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Guardian Name</label>
-                        <input
-                            type="text"
-                            required
-                            value={newRegData.guardianName}
-                            onChange={e => setNewRegData({ ...newRegData, guardianName: e.target.value })}
-                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-400"
-                            placeholder="Jane Doe"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Guardian Email</label>
-                        <input
-                            type="email"
-                            required
-                            value={newRegData.guardianEmail}
-                            onChange={e => setNewRegData({ ...newRegData, guardianEmail: e.target.value })}
-                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-400"
-                            placeholder="jane.doe@example.com"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Camp</label>
-                        <select
-                            required
-                            value={newRegData.campId}
-                            onChange={e => handleCampChange(e.target.value)}
-                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10"
-                        >
-                            <option value="" disabled>Select Camp</option>
-                            {camps.map(camp => <option key={camp.id} value={camp.id}>{camp.name}</option>)}
-                        </select>
-                    </div>
-                    {newRegData.campId && (
-                        <div className="animate-in fade-in slide-in-from-top-2">
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Registration Type / Product</label>
-                            <select
-                                required
-                                value={newRegData.productId}
-                                onChange={e => setNewRegData({ ...newRegData, productId: e.target.value })}
-                                className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10"
-                            >
-                                <option value="" disabled>Select Product</option>
-                                {newRegProducts.map((cp: any) => (
-                                    <option key={cp.product_id} value={cp.product_id}>
-                                        {cp.product_name} - {getCurrencySymbol()} {cp.price}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    )}
-                    <div className="pt-6 flex justify-end gap-3 border-t border-slate-100 dark:border-slate-800 mt-4">
-                        <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors">Cancel</button>
-                        <button type="submit" disabled={isSubmittingNewReg} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-2xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2">
-                            {isSubmittingNewReg ? (
-                                <>
-                                    <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            {/* Add Registration Modal */}
+            {
+                isAddModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                        <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                            <header className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">Add Registration</h2>
+                                    <p className="text-sm text-slate-500">Manually invite a participant</p>
+                                </div>
+                                <button onClick={() => setIsAddModalOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-400 hover:text-slate-600 transition-colors">
+                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
-                                    Adding...
-                                </>
-                            ) : 'Add & Send Invite'}
-                        </button>
+                                </button>
+                            </header>
+
+                            <form onSubmit={handleSubmitNewReg} className="p-8 space-y-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Guardian Name</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={newRegData.guardianName}
+                                        onChange={e => setNewRegData({ ...newRegData, guardianName: e.target.value })}
+                                        className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-400"
+                                        placeholder="Jane Doe"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Guardian Email</label>
+                                    <input
+                                        type="email"
+                                        required
+                                        value={newRegData.guardianEmail}
+                                        onChange={e => setNewRegData({ ...newRegData, guardianEmail: e.target.value })}
+                                        className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-400"
+                                        placeholder="jane.doe@example.com"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Camp</label>
+                                    <select
+                                        required
+                                        value={newRegData.campId}
+                                        onChange={e => handleCampChange(e.target.value)}
+                                        className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10"
+                                    >
+                                        <option value="" disabled>Select Camp</option>
+                                        {camps.map(camp => <option key={camp.id} value={camp.id}>{camp.name}</option>)}
+                                    </select>
+                                </div>
+                                {newRegData.campId && (
+                                    <div className="animate-in fade-in slide-in-from-top-2">
+                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Registration Type / Product</label>
+                                        <select
+                                            required
+                                            value={newRegData.productId}
+                                            onChange={e => setNewRegData({ ...newRegData, productId: e.target.value })}
+                                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10"
+                                        >
+                                            <option value="" disabled>Select Product</option>
+                                            {newRegProducts.map((cp: any) => (
+                                                <option key={cp.product_id} value={cp.product_id}>
+                                                    {cp.product_name} - {getCurrencySymbol()} {cp.price}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+                                <div className="pt-6 flex justify-end gap-3 border-t border-slate-100 dark:border-slate-800 mt-4">
+                                    <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors">Cancel</button>
+                                    <button type="submit" disabled={isSubmittingNewReg} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-2xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2">
+                                        {isSubmittingNewReg ? (
+                                            <>
+                                                <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                                Adding...
+                                            </>
+                                        ) : 'Add & Send Invite'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </form>
-            </div>
-        </div>
-    )
-}
-    </main >
-);
+                )
+            }
+        </main >
+    );
 }
 
 export default function RegistrationsPage() {
