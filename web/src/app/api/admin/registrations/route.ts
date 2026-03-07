@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const query = searchParams.get('q') || undefined;
     const productId = searchParams.get('productId') ? parseInt(searchParams.get('productId')!) : undefined;
+    const purchaseId = searchParams.get('purchaseId') ? parseInt(searchParams.get('purchaseId')!) : undefined;
     const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined;
 
     try {
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
             const data = await listPurchasesByCamp(db, parseInt(campId), query, limit, productId);
             results = data.results || [];
         } else {
-            const data = await listAllPurchases(db, query, limit, productId);
+            const data = await listAllPurchases(db, query, limit, productId, purchaseId);
             results = data.results || [];
         }
 

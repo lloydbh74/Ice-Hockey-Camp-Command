@@ -64,6 +64,9 @@ function RegistrationsContent() {
     const [availableProducts, setAvailableProducts] = useState<any[]>([]);
     const [campStatusTab, setCampStatusTab] = useState<'active' | 'archived'>('active');
     const [editingRegistration, setEditingRegistration] = useState<Registration | null>(null);
+    const [editProducts, setEditProducts] = useState<any[]>([]);
+    const [targetProductId, setTargetProductId] = useState<string>('');
+    const [isMovingProduct, setIsMovingProduct] = useState(false);
     const [saveLoading, setSaveLoading] = useState(false);
     const [chaseLoading, setChaseLoading] = useState<Record<number, boolean>>({});
     const [bulkChaseLoading, setBulkChaseLoading] = useState(false);
@@ -158,6 +161,63 @@ function RegistrationsContent() {
         }, 300); // Simple debounce
         return () => clearTimeout(timer);
     }, [selectedCampFilter, productIdFilter, statusFilter, searchQuery]);
+
+    const handleEditClick = async (reg: Registration) => {
+        setEditingRegistration(reg);
+        setTargetProductId('');
+        if (reg.camp_id) {
+            const res = await fetch(`/api/admin/camps/${reg.camp_id}/products`);
+            if (res.ok) {
+                const data = await res.json() as any;
+                setEditProducts(data.results || []);
+            }
+        }
+    };
+
+    const handleMoveProduct = async () => {
+        if (!editingRegistration || !targetProductId) return;
+
+        const product = editProducts.find(p => p.product_id.toString() === targetProductId);
+        if (!product) return;
+
+        if (!confirm(`Are you sure you want to transfer this player to ${product.product_name}?\n\nForm data will be automatically mapped where possible, but you should verify the details after the move.`)) {
+            return;
+        }
+
+        setIsMovingProduct(true);
+        try {
+            const res = await fetch(`/api/admin/registrations/${editingRegistration.id}/move`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId: parseInt(targetProductId, 10) })
+            });
+
+            if (res.ok) {
+                // Refresh data to show new product and possibly new form schema
+                fetchRegistrations();
+                // We keep the modal open but update the editing state to reflect the new product/schema
+                // Alternatively, just close and let them re-open if they want to audit.
+                // User said: "map as much as possible automatically, then keep the modal open so the admin can instantly see if anything is missing"
+
+                // Fetch the updated record
+                const updatedRes = await fetch(`/api/admin/registrations?purchaseId=${editingRegistration.id}`);
+                if (updatedRes.ok) {
+                    const updatedData = await updatedRes.json() as any;
+                    if (updatedData.results && updatedData.results[0]) {
+                        setEditingRegistration(updatedData.results[0]);
+                        alert("Player transferred successfully! Please verify the form data below.");
+                    }
+                }
+            } else {
+                const err = await res.json() as any;
+                alert(`Error: ${err.error}`);
+            }
+        } catch (error) {
+            alert('Failed to transfer player');
+        } finally {
+            setIsMovingProduct(false);
+        }
+    };
 
     const handleUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -469,7 +529,7 @@ function RegistrationsContent() {
                                             </button>
                                         )}
                                         <button
-                                            onClick={() => setEditingRegistration(row)}
+                                            onClick={() => handleEditClick(row)}
                                             className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-blue-500 transition-colors"
                                         >
                                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -534,198 +594,229 @@ function RegistrationsContent() {
                                                 className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10"
                                             />
                                         </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Player Last Name</label>
+                                        <input
+                                            type="text"
+                                            value={editingRegistration.player_last_name || ''}
+                                            onChange={e => setEditingRegistration({ ...editingRegistration, player_last_name: e.target.value })}
+                                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10"
+                                        />
+                                    </div>
+
+                                    <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                                        <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Transfer Stream</h3>
                                         <div>
-                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Player Last Name</label>
-                                            <input
-                                                type="text"
-                                                value={editingRegistration.player_last_name || ''}
-                                                onChange={e => setEditingRegistration({ ...editingRegistration, player_last_name: e.target.value })}
-                                                className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10"
-                                            />
+                                            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Move to Product</label>
+                                            <div className="flex gap-2">
+                                                <select
+                                                    value={targetProductId}
+                                                    onChange={e => setTargetProductId(e.target.value)}
+                                                    className="flex-1 bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-3 py-2 text-xs font-bold focus:ring-4 focus:ring-blue-500/10"
+                                                >
+                                                    <option value="">Select Stream...</option>
+                                                    {editProducts.filter(p => p.product_id !== editingRegistration.product_id).map((cp: any) => (
+                                                        <option key={cp.product_id} value={cp.product_id}>
+                                                            {cp.product_name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleMoveProduct}
+                                                    disabled={isMovingProduct || !targetProductId}
+                                                    className="bg-slate-900 dark:bg-white dark:text-slate-900 text-white text-[10px] font-black uppercase px-3 py-2 rounded-xl hover:opacity-90 disabled:opacity-30 transition-all active:scale-95"
+                                                >
+                                                    {isMovingProduct ? 'Moving...' : 'Move'}
+                                                </button>
+                                            </div>
+                                            <p className="text-[10px] text-slate-400 mt-1 italic font-medium">This will re-map matching form questions automatically.</p>
                                         </div>
                                     </div>
-
-                                    <div className="space-y-4">
-                                        <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Form Responses</h3>
-                                        {editingRegistration.registration_data ? (
-                                            <div className="space-y-4">
-                                                {(() => {
-                                                    try {
-                                                        const data = JSON.parse(editingRegistration.registration_data);
-                                                        const formSchema = editingRegistration.schema_json ? JSON.parse(editingRegistration.schema_json) : [];
-
-                                                        const getFieldLabel = (key: string) => {
-                                                            const field = formSchema.find((f: any) => f.id === key);
-                                                            return field ? field.label : key.replace(/_/g, ' ');
-                                                        };
-
-                                                        return Object.entries(data).map(([key, value]) => {
-                                                            if (typeof value !== 'string') return null;
-                                                            return (
-                                                                <div key={key}>
-                                                                    <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 transition-colors group-focus-within:text-blue-500">{getFieldLabel(key)}</label>
-                                                                    {key === 'medical_details' || key.length > 30 ? (
-                                                                        <textarea
-                                                                            value={value}
-                                                                            onChange={e => {
-                                                                                const newData = { ...data, [key]: e.target.value };
-                                                                                setEditingRegistration({ ...editingRegistration, registration_data: JSON.stringify(newData) });
-                                                                            }}
-                                                                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2 text-sm font-medium focus:ring-4 focus:ring-blue-500/10 min-h-[80px]"
-                                                                        />
-                                                                    ) : (
-                                                                        <input
-                                                                            type="text"
-                                                                            value={value}
-                                                                            onChange={e => {
-                                                                                const newData = { ...data, [key]: e.target.value };
-                                                                                setEditingRegistration({ ...editingRegistration, registration_data: JSON.stringify(newData) });
-                                                                            }}
-                                                                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2 text-sm font-medium focus:ring-4 focus:ring-blue-500/10"
-                                                                        />
-                                                                    )}
-                                                                </div>
-                                                            );
-                                                        });
-                                                    } catch (e) {
-                                                        return <p className="text-xs text-red-500 font-bold">Corrupt registration data JSON</p>;
-                                                    }
-                                                })()}
-                                            </div>
-                                        ) : (
-                                            <p className="text-xs text-slate-400 italic">No registration data submitted yet.</p>
-                                        )}
-                                    </div>
                                 </div>
 
-                                <div className="pt-6 flex items-center justify-end gap-3 border-t border-slate-100 dark:border-slate-800 mt-4">
-                                    <button
-                                        type="button"
-                                        onClick={handleDeleteRegistration}
-                                        disabled={saveLoading}
-                                        className="px-6 py-3 text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-2xl transition-all mr-auto"
-                                    >
-                                        Delete Registration
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setEditingRegistration(null)}
-                                        className="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={saveLoading}
-                                        className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold py-3 px-8 rounded-2xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2"
-                                    >
-                                        {saveLoading ? (
-                                            <>
-                                                <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                </svg>
-                                                Saving...
-                                            </>
-                                        ) : 'Save Changes'}
-                                    </button>
+                                <div className="space-y-4">
+                                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Form Responses</h3>
+                                    {editingRegistration.registration_data ? (
+                                        <div className="space-y-4">
+                                            {(() => {
+                                                try {
+                                                    const data = JSON.parse(editingRegistration.registration_data);
+                                                    const formSchema = editingRegistration.schema_json ? JSON.parse(editingRegistration.schema_json) : [];
+
+                                                    const getFieldLabel = (key: string) => {
+                                                        const field = formSchema.find((f: any) => f.id === key);
+                                                        return field ? field.label : key.replace(/_/g, ' ');
+                                                    };
+
+                                                    return Object.entries(data).map(([key, value]) => {
+                                                        if (typeof value !== 'string') return null;
+                                                        return (
+                                                            <div key={key}>
+                                                                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1 transition-colors group-focus-within:text-blue-500">{getFieldLabel(key)}</label>
+                                                                {key === 'medical_details' || key.length > 30 ? (
+                                                                    <textarea
+                                                                        value={value}
+                                                                        onChange={e => {
+                                                                            const newData = { ...data, [key]: e.target.value };
+                                                                            setEditingRegistration({ ...editingRegistration, registration_data: JSON.stringify(newData) });
+                                                                        }}
+                                                                        className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2 text-sm font-medium focus:ring-4 focus:ring-blue-500/10 min-h-[80px]"
+                                                                    />
+                                                                ) : (
+                                                                    <input
+                                                                        type="text"
+                                                                        value={value}
+                                                                        onChange={e => {
+                                                                            const newData = { ...data, [key]: e.target.value };
+                                                                            setEditingRegistration({ ...editingRegistration, registration_data: JSON.stringify(newData) });
+                                                                        }}
+                                                                        className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2 text-sm font-medium focus:ring-4 focus:ring-blue-500/10"
+                                                                    />
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    });
+                                                } catch (e) {
+                                                    return <p className="text-xs text-red-500 font-bold">Corrupt registration data JSON</p>;
+                                                }
+                                            })()}
+                                        </div>
+                                    ) : (
+                                        <p className="text-xs text-slate-400 italic">No registration data submitted yet.</p>
+                                    )}
                                 </div>
-                            </form>
                         </div>
-                    </div>
-                )
-            }
 
-            {/* Add Registration Modal */}
-            {
-                isAddModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-                        <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-                            <header className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                                <div>
-                                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">Add Registration</h2>
-                                    <p className="text-sm text-slate-500">Manually invite a participant</p>
-                                </div>
-                                <button onClick={() => setIsAddModalOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-400 hover:text-slate-600 transition-colors">
-                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                        <div className="pt-6 flex items-center justify-end gap-3 border-t border-slate-100 dark:border-slate-800 mt-4">
+                            <button
+                                type="button"
+                                onClick={handleDeleteRegistration}
+                                disabled={saveLoading}
+                                className="px-6 py-3 text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-2xl transition-all mr-auto"
+                            >
+                                Delete Registration
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setEditingRegistration(null)}
+                                className="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={saveLoading}
+                                className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold py-3 px-8 rounded-2xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2"
+                            >
+                                {saveLoading ? (
+                                    <>
+                                        <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Saving...
+                                    </>
+                                ) : 'Save Changes'}
+                            </button>
+                        </div>
+                    </form>
+                        </div>
+                    </div >
+                )
+}
+
+{/* Add Registration Modal */ }
+{
+    isAddModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                <header className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Add Registration</h2>
+                        <p className="text-sm text-slate-500">Manually invite a participant</p>
+                    </div>
+                    <button onClick={() => setIsAddModalOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-400 hover:text-slate-600 transition-colors">
+                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </header>
+
+                <form onSubmit={handleSubmitNewReg} className="p-8 space-y-4">
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Guardian Name</label>
+                        <input
+                            type="text"
+                            required
+                            value={newRegData.guardianName}
+                            onChange={e => setNewRegData({ ...newRegData, guardianName: e.target.value })}
+                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-400"
+                            placeholder="Jane Doe"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Guardian Email</label>
+                        <input
+                            type="email"
+                            required
+                            value={newRegData.guardianEmail}
+                            onChange={e => setNewRegData({ ...newRegData, guardianEmail: e.target.value })}
+                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-400"
+                            placeholder="jane.doe@example.com"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Camp</label>
+                        <select
+                            required
+                            value={newRegData.campId}
+                            onChange={e => handleCampChange(e.target.value)}
+                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10"
+                        >
+                            <option value="" disabled>Select Camp</option>
+                            {camps.map(camp => <option key={camp.id} value={camp.id}>{camp.name}</option>)}
+                        </select>
+                    </div>
+                    {newRegData.campId && (
+                        <div className="animate-in fade-in slide-in-from-top-2">
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Registration Type / Product</label>
+                            <select
+                                required
+                                value={newRegData.productId}
+                                onChange={e => setNewRegData({ ...newRegData, productId: e.target.value })}
+                                className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10"
+                            >
+                                <option value="" disabled>Select Product</option>
+                                {newRegProducts.map((cp: any) => (
+                                    <option key={cp.product_id} value={cp.product_id}>
+                                        {cp.product_name} - {getCurrencySymbol()} {cp.price}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+                    <div className="pt-6 flex justify-end gap-3 border-t border-slate-100 dark:border-slate-800 mt-4">
+                        <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors">Cancel</button>
+                        <button type="submit" disabled={isSubmittingNewReg} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-2xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2">
+                            {isSubmittingNewReg ? (
+                                <>
+                                    <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
-                                </button>
-                            </header>
-
-                            <form onSubmit={handleSubmitNewReg} className="p-8 space-y-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Guardian Name</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={newRegData.guardianName}
-                                        onChange={e => setNewRegData({ ...newRegData, guardianName: e.target.value })}
-                                        className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-400"
-                                        placeholder="Jane Doe"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Guardian Email</label>
-                                    <input
-                                        type="email"
-                                        required
-                                        value={newRegData.guardianEmail}
-                                        onChange={e => setNewRegData({ ...newRegData, guardianEmail: e.target.value })}
-                                        className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 placeholder:text-slate-400"
-                                        placeholder="jane.doe@example.com"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Camp</label>
-                                    <select
-                                        required
-                                        value={newRegData.campId}
-                                        onChange={e => handleCampChange(e.target.value)}
-                                        className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10"
-                                    >
-                                        <option value="" disabled>Select Camp</option>
-                                        {camps.map(camp => <option key={camp.id} value={camp.id}>{camp.name}</option>)}
-                                    </select>
-                                </div>
-                                {newRegData.campId && (
-                                    <div className="animate-in fade-in slide-in-from-top-2">
-                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Registration Type / Product</label>
-                                        <select
-                                            required
-                                            value={newRegData.productId}
-                                            onChange={e => setNewRegData({ ...newRegData, productId: e.target.value })}
-                                            className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10"
-                                        >
-                                            <option value="" disabled>Select Product</option>
-                                            {newRegProducts.map((cp: any) => (
-                                                <option key={cp.product_id} value={cp.product_id}>
-                                                    {cp.product_name} - {getCurrencySymbol()} {cp.price}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                )}
-                                <div className="pt-6 flex justify-end gap-3 border-t border-slate-100 dark:border-slate-800 mt-4">
-                                    <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors">Cancel</button>
-                                    <button type="submit" disabled={isSubmittingNewReg} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-2xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2">
-                                        {isSubmittingNewReg ? (
-                                            <>
-                                                <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                </svg>
-                                                Adding...
-                                            </>
-                                        ) : 'Add & Send Invite'}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
+                                    Adding...
+                                </>
+                            ) : 'Add & Send Invite'}
+                        </button>
                     </div>
-                )
-            }
-        </main>
+                </form>
+            </div>
+        </div>
+    )
+}
+        </main >
     );
 }
 

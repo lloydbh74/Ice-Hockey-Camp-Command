@@ -331,7 +331,7 @@ export async function updateCampProductPrice(db: D1Database, campId: number, cpI
         .run();
 }
 
-export async function listAllPurchases(db: D1Database, query?: string, limit?: number, productId?: number) {
+export async function listAllPurchases(db: D1Database, query?: string, limit?: number, productId?: number, purchaseId?: number) {
     let sql = `
         SELECT p.*, p.price_at_purchase as amount, g.full_name as guardian_name, g.email as guardian_email, pr.name as product_name, c.name as camp_name,
                pl.first_name as player_first_name, pl.last_name as player_last_name, f.schema_json
@@ -355,6 +355,11 @@ export async function listAllPurchases(db: D1Database, query?: string, limit?: n
     if (productId) {
         conditions.push(`p.product_id = ?`);
         params.push(productId);
+    }
+
+    if (purchaseId) {
+        conditions.push(`p.id = ?`);
+        params.push(purchaseId);
     }
 
     if (conditions.length > 0) {
@@ -907,4 +912,82 @@ export async function purgeCampSensitiveData(db: D1Database, campId: number) {
     `).bind(campId).run();
 
     return success;
+}
+
+export async function moveRegistrationBetweenProducts(
+    db: D1Database,
+    purchaseId: number,
+    newProductId: number
+) {
+    // 1. Fetch current purchase and registration info
+    const purchase = await db.prepare(`
+        SELECT p.id, p.camp_id, p.product_id, r.id as registration_id, r.form_id as old_form_id, r.form_response_json as old_json,
+               f.schema_json as old_schema
+        FROM Purchases p
+        LEFT JOIN Registrations r ON p.id = r.purchase_id
+        LEFT JOIN Forms f ON r.form_id = f.id
+        WHERE p.id = ?
+    `).bind(purchaseId).first<any>();
+
+    if (!purchase) throw new Error("Purchase not found");
+
+    // 2. Verify new product is in the same camp
+    const newProduct = await db.prepare(`
+        SELECT p.id, p.name, cp.camp_id, f.id as new_form_id, f.schema_json as new_schema
+        FROM Products p
+        JOIN CampProducts cp ON p.id = cp.product_id
+        LEFT JOIN Forms f ON p.form_template_id = f.id AND f.is_active = 1
+        WHERE p.id = ? AND cp.camp_id = ?
+    `).bind(newProductId, purchase.camp_id).first<any>();
+
+    if (!newProduct) throw new Error("Target product not found or not in the same camp");
+
+    const stmts: D1PreparedStatement[] = [];
+
+    // 3. Smart Form Data Migration (Hybrid Recommendation)
+    let finalJson = purchase.old_json;
+
+    if (purchase.old_json && purchase.old_schema && newProduct.new_schema && purchase.old_form_id !== newProduct.new_form_id) {
+        try {
+            const oldData = JSON.parse(purchase.old_json);
+            const oldSchema = JSON.parse(purchase.old_schema);
+            const newSchema = JSON.parse(newProduct.new_schema);
+
+            const newData: Record<string, any> = {};
+
+            // Map by label/name for compatibility
+            const oldLabelToValue = new Map();
+            oldSchema.forEach((field: any) => {
+                const value = oldData[field.id] || oldData[field.name];
+                if (value !== undefined) {
+                    oldLabelToValue.set(field.label.toLowerCase().trim(), value);
+                }
+            });
+
+            newSchema.forEach((field: any) => {
+                const label = field.label.toLowerCase().trim();
+                if (oldLabelToValue.has(label)) {
+                    newData[field.id] = oldLabelToValue.get(label);
+                } else if (oldData[field.id] !== undefined) {
+                    // Fallback to exact ID match if it happens to be the same
+                    newData[field.id] = oldData[field.id];
+                }
+            });
+
+            finalJson = JSON.stringify(newData);
+        } catch (e) {
+            console.error("Smart migration failed, falling back to raw copy", e);
+        }
+    }
+
+    // 4. Update Purchases
+    stmts.push(db.prepare("UPDATE Purchases SET product_id = ? WHERE id = ?").bind(newProductId, purchaseId));
+
+    // 5. Update Registrations
+    if (purchase.registration_id) {
+        stmts.push(db.prepare("UPDATE Registrations SET form_id = ?, form_response_json = ? WHERE id = ?")
+            .bind(newProduct.new_form_id, finalJson, purchase.registration_id));
+    }
+
+    return await db.batch(stmts);
 }
