@@ -67,6 +67,7 @@ function RegistrationsContent() {
     const [editingRegistration, setEditingRegistration] = useState<Registration | null>(null);
     const [editProducts, setEditProducts] = useState<any[]>([]);
     const [targetProductId, setTargetProductId] = useState<string>('');
+    const [resetAndResend, setResetAndResend] = useState(false);
     const [isMovingProduct, setIsMovingProduct] = useState(false);
     const [saveLoading, setSaveLoading] = useState(false);
     const [chaseLoading, setChaseLoading] = useState<Record<number, boolean>>({});
@@ -190,7 +191,10 @@ function RegistrationsContent() {
             const res = await fetch(`/api/admin/registrations/${editingRegistration.id}/move`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ productId: parseInt(targetProductId, 10) })
+                body: JSON.stringify({ 
+                    productId: parseInt(targetProductId, 10),
+                    resetAndResend
+                })
             });
 
             if (res.ok) {
@@ -635,7 +639,19 @@ function RegistrationsContent() {
                                                     {isMovingProduct ? 'Moving...' : 'Move'}
                                                 </button>
                                             </div>
-                                            <p className="text-[10px] text-slate-400 mt-1 italic font-medium">This will re-map matching form questions automatically.</p>
+                                            <div className="flex items-center gap-3 mt-2 min-h-[32px]">
+                                                <input 
+                                                    type="checkbox"
+                                                    id="reset-resend"
+                                                    checked={resetAndResend}
+                                                    onChange={(e) => setResetAndResend(e.target.checked)}
+                                                    className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                />
+                                                <label htmlFor="reset-resend" className="text-[10px] font-bold text-slate-500 uppercase cursor-pointer select-none">
+                                                    Send new registration form? <span className="text-amber-700 dark:text-amber-500">(Clears existing answers)</span>
+                                                </label>
+                                            </div>
+                                            <p className="text-[10px] text-slate-400 mt-1 italic font-medium">This will re-map matching form questions automatically unless you check the box above.</p>
                                         </div>
                                     </div>
                                 </div>

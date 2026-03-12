@@ -917,7 +917,8 @@ export async function purgeCampSensitiveData(db: D1Database, campId: number) {
 export async function moveRegistrationBetweenProducts(
     db: D1Database,
     purchaseId: number,
-    newProductId: number
+    newProductId: number,
+    resetData: boolean = false
 ) {
     // 1. Fetch current purchase and registration info
     const purchase = await db.prepare(`
@@ -947,7 +948,9 @@ export async function moveRegistrationBetweenProducts(
     // 3. Smart Form Data Migration (Hybrid Recommendation)
     let finalJson = purchase.old_json;
 
-    if (purchase.old_json && purchase.old_schema && newProduct.new_schema && purchase.old_form_id !== newProduct.new_form_id) {
+    if (resetData) {
+        finalJson = null;
+    } else if (purchase.old_json && purchase.old_schema && newProduct.new_schema && purchase.old_form_id !== newProduct.new_form_id) {
         try {
             const oldData = JSON.parse(purchase.old_json);
             const oldSchema = JSON.parse(purchase.old_schema);
@@ -981,12 +984,21 @@ export async function moveRegistrationBetweenProducts(
     }
 
     // 4. Update Purchases
-    stmts.push(db.prepare("UPDATE Purchases SET product_id = ? WHERE id = ?").bind(newProductId, purchaseId));
+    if (resetData) {
+        stmts.push(db.prepare("UPDATE Purchases SET product_id = ?, registration_state = 'invited' WHERE id = ?").bind(newProductId, purchaseId));
+    } else {
+        stmts.push(db.prepare("UPDATE Purchases SET product_id = ? WHERE id = ?").bind(newProductId, purchaseId));
+    }
 
     // 5. Update Registrations
     if (purchase.registration_id) {
         stmts.push(db.prepare("UPDATE Registrations SET form_id = ?, form_response_json = ? WHERE id = ?")
             .bind(newProduct.new_form_id, finalJson, purchase.registration_id));
+        
+        // If resetting, also clear kit orders
+        if (resetData) {
+            stmts.push(db.prepare("DELETE FROM KitOrders WHERE registration_id = ?").bind(purchase.registration_id));
+        }
     }
 
     return await db.batch(stmts);

@@ -77,4 +77,38 @@ describe('Database Logic (db.ts)', () => {
             expect(mockD1.prepare).not.toHaveBeenCalledWith(expect.stringContaining('SELECT * FROM Streams'));
         });
     });
+
+    describe('Registration Management (moveRegistrationBetweenProducts)', () => {
+        it('should clear data and reset state when resetData is true', async () => {
+            // 1. Mock purchase/registration fetch
+            mockD1.first.mockResolvedValueOnce({ 
+                id: 100, 
+                camp_id: 1, 
+                product_id: 10, 
+                registration_id: 50, 
+                old_form_id: 5, 
+                old_json: '{"q1":"a1"}',
+                old_schema: '[]'
+            });
+            // 2. Mock new product fetch
+            mockD1.first.mockResolvedValueOnce({ 
+                id: 11, 
+                name: 'New Stream', 
+                camp_id: 1, 
+                new_form_id: 6, 
+                new_schema: '[]' 
+            });
+            // 3. Mock batch execution
+            mockD1.batch.mockResolvedValueOnce([{ success: true }]);
+
+            await import('./db').then(async (m) => {
+                await m.moveRegistrationBetweenProducts(db, 100, 11, true);
+            });
+
+            // Verify update calls in batch
+            expect(mockD1.prepare).toHaveBeenCalledWith(expect.stringContaining("UPDATE Purchases SET product_id = ?, registration_state = 'invited'"));
+            expect(mockD1.prepare).toHaveBeenCalledWith(expect.stringContaining("UPDATE Registrations SET form_id = ?, form_response_json = ?"));
+            expect(mockD1.prepare).toHaveBeenCalledWith(expect.stringContaining("DELETE FROM KitOrders WHERE registration_id = ?"));
+        });
+    });
 });
