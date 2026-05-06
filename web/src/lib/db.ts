@@ -333,7 +333,7 @@ export async function updateCampProductPrice(db: D1Database, campId: number, cpI
 
 export async function listAllPurchases(db: D1Database, query?: string, limit?: number, productId?: number, purchaseId?: number) {
     let sql = `
-        SELECT p.*, p.price_at_purchase as amount, g.full_name as guardian_name, g.email as guardian_email, pr.name as product_name, c.name as camp_name,
+        SELECT DISTINCT p.*, p.price_at_purchase as amount, g.full_name as guardian_name, g.email as guardian_email, pr.name as product_name, c.name as camp_name,
                pl.first_name as player_first_name, pl.last_name as player_last_name, f.schema_json
         FROM Purchases p
         JOIN Guardians g ON p.guardian_id = g.id
@@ -376,7 +376,7 @@ export async function listAllPurchases(db: D1Database, query?: string, limit?: n
 
 export async function listPurchasesByCamp(db: D1Database, campId: number, query?: string, limit?: number, productId?: number) {
     let sql = `
-        SELECT p.*, p.price_at_purchase as amount, g.full_name as guardian_name, g.email as guardian_email, pr.name as product_name,
+        SELECT DISTINCT p.*, p.price_at_purchase as amount, g.full_name as guardian_name, g.email as guardian_email, pr.name as product_name,
                pl.first_name as player_first_name, pl.last_name as player_last_name, f.schema_json
         FROM Purchases p
         JOIN Guardians g ON p.guardian_id = g.id
