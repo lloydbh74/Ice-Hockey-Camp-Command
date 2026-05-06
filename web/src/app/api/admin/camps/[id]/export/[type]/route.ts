@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb, getAttendanceList, listPurchasesByCamp, getKitOrderSummary, getKitPersonalizationList } from '@/lib/db';
+import { getDb, getAttendanceList, listPurchasesByCamp, getKitOrderSummary, getKitPersonalizationList, getDetailedKitOrders } from '@/lib/db';
 
 export const runtime = 'edge';
 
@@ -60,22 +60,29 @@ export async function GET(
             });
         }
         else if (type === 'kit-orders') {
-            const summary = await getKitOrderSummary(db, campId);
-            const personalizations = await getKitPersonalizationList(db, campId);
+            const data = await getDetailedKitOrders(db, campId);
 
-            csvContent = '--- AGGREGATED SUMMARY ---\n';
-            csvContent += 'Item Type,Size,Quantity\n';
+            // Header
+            csvContent = 'QUANTITY,SIZE,CUT,NAME,NUMBER,COURSE,EXTRA (Color),ITEM - PRODUCT NAME,COLLAR,MATERIAL,First Name,Last Name\n';
 
-            Object.entries(summary).forEach(([itemType, sizes]) => {
-                Object.entries(sizes).forEach(([size, quantity]) => {
-                    csvContent += `"${itemType}",${size},${quantity}\n`;
-                });
-            });
-
-            csvContent += '\n--- PERSONALIZATIONS ---\n';
-            csvContent += 'Player Name,Jersey Size,Personalization\n';
-            (personalizations as any[]).forEach(p => {
-                csvContent += `"${p.playerName}","${p.jerseySize}","${p.personalization}"\n`;
+            // Rows
+            data.forEach((row: any) => {
+                const escape = (val: any) => `"${String(val || '').replace(/"/g, '""')}"`;
+                
+                csvContent += [
+                    row.quantity,
+                    escape(row.size),
+                    escape(row.cut),
+                    escape(row.name),
+                    escape(row.number),
+                    escape(row.course),
+                    escape(row.extra),
+                    escape(row.item),
+                    escape(row.collar),
+                    escape(row.material),
+                    escape(row.firstName),
+                    escape(row.lastName)
+                ].join(',') + '\n';
             });
         }
         else {

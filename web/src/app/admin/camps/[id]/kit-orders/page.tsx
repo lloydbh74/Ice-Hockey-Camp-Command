@@ -62,7 +62,7 @@ export default function KitOrderSummaryPage() {
                     className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm"
                 >
                     <span className="material-symbols-outlined text-lg">download</span>
-                    <span>Export CSV</span>
+                    <span>Download orders</span>
                 </button>
             </header>
 

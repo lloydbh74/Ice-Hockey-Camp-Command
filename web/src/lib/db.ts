@@ -695,6 +695,70 @@ export async function getKitPersonalizationList(db: D1Database, campId: number) 
     return personalizations;
 }
 
+export async function getDetailedKitOrders(db: D1Database, campId: number) {
+    const { results } = await db.prepare(`
+        SELECT 
+            p.first_name,
+            p.last_name,
+            c.name as camp_name,
+            ko.size,
+            ko.personalization_name,
+            ko.personalization_number,
+            r.form_response_json,
+            f.schema_json
+        FROM KitOrders ko
+        JOIN Registrations r ON ko.registration_id = r.id
+        JOIN Players p ON r.player_id = p.id
+        JOIN Purchases pu ON r.purchase_id = pu.id
+        JOIN Camps c ON pu.camp_id = c.id
+        LEFT JOIN Forms f ON r.form_id = f.id
+        WHERE pu.camp_id = ? AND pu.registration_state = 'completed'
+        ORDER BY p.first_name ASC, p.last_name ASC
+    `).bind(campId).all();
+
+    return results?.map((row: any) => {
+        let cut = "";
+        try {
+            const responses = JSON.parse(row.form_response_json || '{}');
+            const schema = JSON.parse(row.schema_json || '[]');
+
+            // Map IDs to labels
+            const mappedResponses: Record<string, any> = { ...responses };
+            schema.forEach((field: any) => {
+                if (responses[field.id] !== undefined && field.label) {
+                    mappedResponses[field.label] = responses[field.id];
+                }
+            });
+
+            // Look for "position" or "role" or similar for "CUT"
+            Object.entries(mappedResponses).forEach(([key, value]) => {
+                const lowerKey = key.toLowerCase();
+                if (lowerKey.includes('position') || lowerKey.includes('role') || lowerKey.includes('cut')) {
+                    cut = String(value);
+                }
+            });
+        } catch (e) {
+            console.error("Failed to parse registration JSON for cut", e);
+        }
+
+        return {
+            quantity: 1,
+            size: row.size,
+            cut: cut,
+            name: row.personalization_name,
+            number: row.personalization_number,
+            course: row.camp_name,
+            extra: "",
+            item: "",
+            collar: "",
+            material: "",
+            firstName: row.first_name,
+            lastName: row.last_name
+        };
+    }) || [];
+}
+
+
 // --- Spec 006: Camp Day Planner ---
 
 export async function getCampDays(db: D1Database, campId: number) {
