@@ -25,9 +25,11 @@ interface DashboardData {
         completedRegistrations: number;
         missingRegistrations: number;
         completionPercentage: number;
+        productBreakdown: { name: string, count: number }[];
     };
     recentRegistrations: Registration[];
 }
+
 
 export default function CampDashboardPage() {
     const params = useParams();
@@ -144,7 +146,36 @@ export default function CampDashboardPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Camp Breakdown Card */}
+                <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-3xl lg:col-span-1 shadow-sm">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Camp Breakdown</h3>
+                    <div className="space-y-5">
+                        {data.stats.productBreakdown.length > 0 ? (
+                            data.stats.productBreakdown.map((item, i) => (
+                                <div key={i} className="group">
+                                    <div className="flex justify-between items-end mb-2">
+                                        <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{item.name}</span>
+                                        <span className="text-sm font-black text-blue-600 dark:text-blue-400">{item.count}</span>
+                                    </div>
+                                    <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                        <div 
+                                            className="h-full bg-blue-500 rounded-full transition-all duration-1000 ease-out"
+                                            style={{ width: `${(item.count / data.stats.completedRegistrations) * 100}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="py-8 text-center opacity-30">
+                                <span className="material-symbols-outlined text-4xl mb-2">inventory_2</span>
+                                <p className="text-xs font-bold">No product data</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
                 {/* Quick Actions Card */}
+
                 <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 p-8 rounded-3xl lg:col-span-1">
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Reports & Actions</h3>
                     <nav className="space-y-3">

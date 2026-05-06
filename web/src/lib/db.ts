@@ -547,7 +547,7 @@ export async function deleteAdminSession(db: D1Database, sessionId: string) {
 // --- Reporting & Dashboards (Spec 005) ---
 
 export async function getCampSummary(db: D1Database, campId: number) {
-    return await db.prepare(`
+    const stats = await db.prepare(`
         SELECT 
             COUNT(*) as total_purchases,
             SUM(CASE WHEN registration_state = 'completed' THEN 1 ELSE 0 END) as completed_registrations,
@@ -559,7 +559,22 @@ export async function getCampSummary(db: D1Database, campId: number) {
         completed_registrations: number;
         missing_registrations: number;
     }>();
+
+    const { results: productBreakdown } = await db.prepare(`
+        SELECT pr.name, COUNT(*) as count
+        FROM Purchases pu
+        JOIN Products pr ON pu.product_id = pr.id
+        WHERE pu.camp_id = ? AND pu.registration_state = 'completed'
+        GROUP BY pr.name
+        ORDER BY count DESC
+    `).bind(campId).all();
+
+    return {
+        ...stats,
+        productBreakdown: productBreakdown || []
+    };
 }
+
 
 export async function getAttendanceList(db: D1Database, campId: number) {
     return await db.prepare(`

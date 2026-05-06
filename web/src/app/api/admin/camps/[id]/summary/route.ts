@@ -41,9 +41,11 @@ export async function GET(
                 totalPurchases: total,
                 completedRegistrations: completed,
                 missingRegistrations: missing,
-                completionPercentage: Math.round(completionRate * 10) / 10
+                completionPercentage: Math.round(completionRate * 10) / 10,
+                productBreakdown: (summary as any).productBreakdown || []
             }
         });
+
 
     } catch (error: any) {
         console.error('[API] Camp Summary error:', error);
