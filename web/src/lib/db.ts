@@ -667,7 +667,8 @@ export async function getKitPersonalizationList(db: D1Database, campId: number) 
 
             // Look for keys that contain 'size' and 'personalization'
             let jerseySize = '';
-            let personalization = '';
+            let personalizationName = '';
+            let personalizationNumber = '';
 
             Object.entries(mappedResponses).forEach(([key, value]) => {
                 if (!key) return;
@@ -675,18 +676,24 @@ export async function getKitPersonalizationList(db: D1Database, campId: number) 
                 if (lowerKey === 'jersey_size' || (lowerKey.includes('jersey') && lowerKey.includes('size'))) {
                     jerseySize = String(value);
                 }
-                if (lowerKey === 'personalization' || lowerKey.includes('personalisation')) {
-                    personalization = String(value);
+                // Match "Personalization Name" or "Jersey Name" etc
+                if (lowerKey.includes('personalization') || lowerKey.includes('personalisation')) {
+                    if (lowerKey.includes('number')) {
+                        personalizationNumber = String(value);
+                    } else {
+                        personalizationName = String(value);
+                    }
                 }
             });
 
-            if (jerseySize || personalization) {
+            if (jerseySize || personalizationName || personalizationNumber) {
                 personalizations.push({
                     playerName: row.player_name,
                     jerseySize,
-                    personalization
+                    personalization: personalizationName + (personalizationNumber ? ` #${personalizationNumber}` : '')
                 });
             }
+
         } catch (e) {
             console.error("Failed to parse registration JSON for personalization", e);
         }
@@ -713,6 +720,7 @@ export async function getDetailedKitOrders(db: D1Database, campId: number) {
         LEFT JOIN KitOrders ko ON ko.registration_id = r.id
         LEFT JOIN Forms f ON r.form_id = f.id
         WHERE pu.camp_id = ? AND pu.registration_state = 'completed'
+        GROUP BY r.id
         ORDER BY p.first_name ASC, p.last_name ASC
     `).bind(campId).all();
 
@@ -734,20 +742,24 @@ export async function getDetailedKitOrders(db: D1Database, campId: number) {
             });
 
             Object.entries(mappedResponses).forEach(([key, value]) => {
+                if (!key) return;
                 const lowerKey = key.toLowerCase();
-                // Find CUT
+                
+                // Find CUT (Position)
                 if (lowerKey.includes('position') || lowerKey.includes('role') || lowerKey.includes('cut')) {
                     cut = String(value);
                 }
-                // Fallbacks for kit info if table is empty
-                if (lowerKey.includes('size') && lowerKey.includes('jersey')) {
+                
+                // Fallbacks for kit info if KitOrders table is empty
+                if (lowerKey === 'jersey_size' || (lowerKey.includes('jersey') && lowerKey.includes('size'))) {
                     fallbackSize = String(value);
                 }
-                if (lowerKey.includes('name') && lowerKey.includes('personalization')) {
-                    fallbackName = String(value);
-                }
-                if (lowerKey.includes('number') && lowerKey.includes('personalization')) {
-                    fallbackNumber = String(value);
+                if (lowerKey.includes('personalization') || lowerKey.includes('personalisation')) {
+                    if (lowerKey.includes('number')) {
+                        fallbackNumber = String(value);
+                    } else {
+                        fallbackName = String(value);
+                    }
                 }
             });
         } catch (e) {
@@ -770,6 +782,7 @@ export async function getDetailedKitOrders(db: D1Database, campId: number) {
         };
     }) || [];
 }
+
 
 
 
