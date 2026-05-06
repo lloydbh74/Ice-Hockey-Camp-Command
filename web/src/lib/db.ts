@@ -701,16 +701,16 @@ export async function getDetailedKitOrders(db: D1Database, campId: number) {
             p.first_name,
             p.last_name,
             c.name as camp_name,
-            ko.size,
-            ko.personalization_name,
-            ko.personalization_number,
+            ko.size as ko_size,
+            ko.personalization_name as ko_name,
+            ko.personalization_number as ko_number,
             r.form_response_json,
             f.schema_json
-        FROM KitOrders ko
-        JOIN Registrations r ON ko.registration_id = r.id
+        FROM Registrations r
         JOIN Players p ON r.player_id = p.id
         JOIN Purchases pu ON r.purchase_id = pu.id
         JOIN Camps c ON pu.camp_id = c.id
+        LEFT JOIN KitOrders ko ON ko.registration_id = r.id
         LEFT JOIN Forms f ON r.form_id = f.id
         WHERE pu.camp_id = ? AND pu.registration_state = 'completed'
         ORDER BY p.first_name ASC, p.last_name ASC
@@ -718,11 +718,14 @@ export async function getDetailedKitOrders(db: D1Database, campId: number) {
 
     return results?.map((row: any) => {
         let cut = "";
+        let fallbackSize = "";
+        let fallbackName = "";
+        let fallbackNumber = "";
+
         try {
             const responses = JSON.parse(row.form_response_json || '{}');
             const schema = JSON.parse(row.schema_json || '[]');
 
-            // Map IDs to labels
             const mappedResponses: Record<string, any> = { ...responses };
             schema.forEach((field: any) => {
                 if (responses[field.id] !== undefined && field.label) {
@@ -730,23 +733,33 @@ export async function getDetailedKitOrders(db: D1Database, campId: number) {
                 }
             });
 
-            // Look for "position" or "role" or similar for "CUT"
             Object.entries(mappedResponses).forEach(([key, value]) => {
                 const lowerKey = key.toLowerCase();
+                // Find CUT
                 if (lowerKey.includes('position') || lowerKey.includes('role') || lowerKey.includes('cut')) {
                     cut = String(value);
                 }
+                // Fallbacks for kit info if table is empty
+                if (lowerKey.includes('size') && lowerKey.includes('jersey')) {
+                    fallbackSize = String(value);
+                }
+                if (lowerKey.includes('name') && lowerKey.includes('personalization')) {
+                    fallbackName = String(value);
+                }
+                if (lowerKey.includes('number') && lowerKey.includes('personalization')) {
+                    fallbackNumber = String(value);
+                }
             });
         } catch (e) {
-            console.error("Failed to parse registration JSON for cut", e);
+            console.error("Failed to parse registration JSON", e);
         }
 
         return {
             quantity: 1,
-            size: row.size,
+            size: row.ko_size || fallbackSize,
             cut: cut,
-            name: row.personalization_name,
-            number: row.personalization_number,
+            name: row.ko_name || fallbackName,
+            number: row.ko_number || fallbackNumber,
             course: row.camp_name,
             extra: "",
             item: "",
@@ -757,6 +770,7 @@ export async function getDetailedKitOrders(db: D1Database, campId: number) {
         };
     }) || [];
 }
+
 
 
 // --- Spec 006: Camp Day Planner ---
