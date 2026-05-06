@@ -608,26 +608,30 @@ export async function getKitOrderSummary(db: D1Database, campId: number) {
                 }
             });
 
+            const processedTypesForThisRow = new Set<string>();
+
             Object.entries(mappedResponses).forEach(([key, value]) => {
                 if (!key) return;
                 const lowerKey = key.toLowerCase();
                 // Ignore raw UUID keys to prevent duplicates, rely on mapped labels
                 if ((lowerKey.includes('size') || lowerKey.includes('jersey') || lowerKey.includes('socks')) && value && !key.match(/^[0-9a-f]{8}-[0-9a-f]{4}/i)) {
 
-                    // Normalize the name so that long sentence structures like "Please select jersey size required" becomes "Jersey Size"
-                    let itemType = key;
+                    // Normalize the name
+                    let itemType = '';
                     if (lowerKey.includes('jersey') && lowerKey.includes('size')) itemType = 'Jersey Size';
-                    else if (lowerKey.includes('jersey') && lowerKey.includes('type')) itemType = 'Jersey Type';
+                    else if (lowerKey.includes('jersey') && (lowerKey.includes('type') || lowerKey.includes('cut') || lowerKey.includes('position'))) itemType = 'Jersey Type';
                     else if (lowerKey.includes('socks') && lowerKey.includes('size')) itemType = 'Socks Size';
                     else if (lowerKey.includes('t-shirt') || lowerKey.includes('tshirt')) itemType = 'T-Shirt Size';
-                    else itemType = key.split(/_/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-
-                    const size = String(value);
-
-                    if (!summary[itemType]) summary[itemType] = {};
-                    summary[itemType][size] = (summary[itemType][size] || 0) + 1;
+                    
+                    if (itemType && !processedTypesForThisRow.has(itemType)) {
+                        const size = String(value);
+                        if (!summary[itemType]) summary[itemType] = {};
+                        summary[itemType][size] = (summary[itemType][size] || 0) + 1;
+                        processedTypesForThisRow.add(itemType);
+                    }
                 }
             });
+
         } catch (e) {
             console.error("Failed to parse registration JSON", e);
         }
