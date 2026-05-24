@@ -79,6 +79,12 @@ function RegistrationsContent() {
     const [newRegData, setNewRegData] = useState({ guardianName: '', guardianEmail: '', campId: '', productId: '' });
     const [isSubmittingNewReg, setIsSubmittingNewReg] = useState(false);
 
+    // Export Modal State
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+    const [exportCampId, setExportCampId] = useState('all');
+    const [exportProductId, setExportProductId] = useState('all');
+    const [exportProducts, setExportProducts] = useState<any[]>([]);
+
     useEffect(() => {
         fetch('/api/admin/camps').then(res => res.json()).then((data: any) => setCamps(data.results || []));
     }, []);
@@ -321,14 +327,29 @@ function RegistrationsContent() {
         }
     };
 
+    const handleExportCampChange = async (campId: string) => {
+        setExportCampId(campId);
+        setExportProductId('all');
+        if (campId !== 'all') {
+            const res = await fetch(`/api/admin/camps/${campId}/products`);
+            if (res.ok) {
+                const data = await res.json() as any;
+                setExportProducts(data.results || []);
+            }
+        } else {
+            setExportProducts([]);
+        }
+    };
+
     const handleExport = () => {
-        const urlCampIdParam = selectedCampFilter !== 'all' ? `campId=${selectedCampFilter}&` : '';
-        const urlProductIdParam = productIdFilter !== 'all' ? `productId=${productIdFilter}&` : '';
+        const urlCampIdParam = exportCampId !== 'all' ? `campId=${exportCampId}&` : '';
+        const urlProductIdParam = exportProductId !== 'all' ? `productId=${exportProductId}&` : '';
         const statusParam = (statusFilter !== 'all' && statusFilter !== 'important') ? `status=${statusFilter}&` : '';
         const queryParam = searchQuery ? `q=${encodeURIComponent(searchQuery)}` : '';
         const url = `/api/admin/registrations/export?${urlCampIdParam}${urlProductIdParam}${statusParam}${queryParam}`;
         
         window.location.href = url;
+        setIsExportModalOpen(false);
     };
 
     return (
@@ -357,7 +378,7 @@ function RegistrationsContent() {
                         </button>
                     )}
                     <button
-                        onClick={handleExport}
+                        onClick={() => setIsExportModalOpen(true)}
                         className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-4 py-2 rounded-xl flex items-center gap-2 transition-all shadow-sm shadow-emerald-500/20 active:scale-95"
                     >
                         <Download className="h-4 w-4" />
@@ -852,6 +873,61 @@ function RegistrationsContent() {
                     </div>
                 )
             }
+
+            {/* Export Modal */}
+            {isExportModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <header className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-xl font-bold text-slate-900 dark:text-white">Export CSV</h2>
+                                <p className="text-sm text-slate-500">Select data to download</p>
+                            </div>
+                            <button onClick={() => setIsExportModalOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-400 hover:text-slate-600 transition-colors">
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </header>
+                        <div className="p-8 space-y-6">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Camp</label>
+                                <select
+                                    value={exportCampId}
+                                    onChange={e => handleExportCampChange(e.target.value)}
+                                    className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10"
+                                >
+                                    <option value="all">All Camps</option>
+                                    {camps.map(camp => <option key={camp.id} value={camp.id}>{camp.name}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Registration Type / Product</label>
+                                <select
+                                    value={exportProductId}
+                                    onChange={e => setExportProductId(e.target.value)}
+                                    disabled={exportCampId === 'all'}
+                                    className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-2.5 text-sm font-bold focus:ring-4 focus:ring-blue-500/10 disabled:opacity-50"
+                                >
+                                    <option value="all">All Products</option>
+                                    {exportProducts.map((cp: any) => (
+                                        <option key={cp.product_id} value={cp.product_id}>
+                                            {cp.product_name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="pt-6 flex justify-end gap-3 border-t border-slate-100 dark:border-slate-800 mt-4">
+                                <button type="button" onClick={() => setIsExportModalOpen(false)} className="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors">Cancel</button>
+                                <button onClick={handleExport} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-8 rounded-2xl shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex items-center gap-2">
+                                    <Download className="h-4 w-4" />
+                                    Download CSV
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </main >
     );
 }
