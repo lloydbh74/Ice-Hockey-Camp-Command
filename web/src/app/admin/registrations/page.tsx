@@ -21,7 +21,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Search, Info, Trash2, Mail, Plus } from "lucide-react";
+import { Search, Info, Trash2, Mail, Plus, Download } from "lucide-react";
 
 interface Registration {
     id: number;
@@ -321,6 +321,16 @@ function RegistrationsContent() {
         }
     };
 
+    const handleExport = () => {
+        const urlCampIdParam = selectedCampFilter !== 'all' ? `campId=${selectedCampFilter}&` : '';
+        const urlProductIdParam = productIdFilter !== 'all' ? `productId=${productIdFilter}&` : '';
+        const statusParam = (statusFilter !== 'all' && statusFilter !== 'important') ? `status=${statusFilter}&` : '';
+        const queryParam = searchQuery ? `q=${encodeURIComponent(searchQuery)}` : '';
+        const url = `/api/admin/registrations/export?${urlCampIdParam}${urlProductIdParam}${statusParam}${queryParam}`;
+        
+        window.location.href = url;
+    };
+
     return (
         <main className="p-8 max-w-7xl mx-auto">
             <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -346,6 +356,13 @@ function RegistrationsContent() {
                             {bulkChaseLoading ? 'Chasing All...' : 'Chase All Missing'}
                         </button>
                     )}
+                    <button
+                        onClick={handleExport}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-4 py-2 rounded-xl flex items-center gap-2 transition-all shadow-sm shadow-emerald-500/20 active:scale-95"
+                    >
+                        <Download className="h-4 w-4" />
+                        Export CSV
+                    </button>
                     <button
                         onClick={() => setIsAddModalOpen(true)}
                         className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2 rounded-xl flex items-center gap-2 transition-all shadow-sm shadow-blue-500/20 active:scale-95"
