@@ -67,8 +67,12 @@ export default function CoachDayView({ params }: { params: Promise<{ id: string;
         fetchData();
     }, [campId, dayId]);
 
+    // Compute streams that have at least one session on this specific day
+    const activeStreamIds = new Set(sessions.flatMap(s => s.stream_ids || []));
+    const activeStreams = streams.filter(s => activeStreamIds.has(s.id));
+
     const filteredSessions = selectedStreamId
-        ? sessions.filter(s => s.stream_ids.includes(selectedStreamId))
+        ? sessions.filter(s => s.stream_ids && s.stream_ids.includes(selectedStreamId))
         : sessions;
 
     if (loading) {
@@ -98,30 +102,32 @@ export default function CoachDayView({ params }: { params: Promise<{ id: string;
             </header>
 
             <main className="max-w-4xl mx-auto p-6 pb-32">
-                {/* Filter Bar */}
-                <div className="mb-10 overflow-x-auto pb-4 scrollbar-hide flex gap-2">
-                    <button
-                        onClick={() => setSelectedStreamId(null)}
-                        className={`px-4 py-2 rounded-full whitespace-nowrap text-xs font-black uppercase tracking-widest transition-all ${selectedStreamId === null
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-white/5 text-slate-400 hover:bg-white/10'
-                            }`}
-                    >
-                        All Groups
-                    </button>
-                    {streams.map(stream => (
+                {/* Filter Bar: Only show if more than 1 active stream on this day */}
+                {activeStreams.length > 1 && (
+                    <div className="mb-10 overflow-x-auto pb-4 scrollbar-hide flex gap-2">
                         <button
-                            key={stream.id}
-                            onClick={() => setSelectedStreamId(stream.id)}
-                            className={`px-4 py-2 rounded-full whitespace-nowrap text-xs font-black uppercase tracking-widest transition-all ${selectedStreamId === stream.id
+                            onClick={() => setSelectedStreamId(null)}
+                            className={`px-4 py-2 rounded-full whitespace-nowrap text-xs font-black uppercase tracking-widest transition-all ${selectedStreamId === null
                                 ? 'bg-blue-600 text-white'
                                 : 'bg-white/5 text-slate-400 hover:bg-white/10'
                                 }`}
                         >
-                            {stream.name}
+                            All Active Groups
                         </button>
-                    ))}
-                </div>
+                        {activeStreams.map(stream => (
+                            <button
+                                key={stream.id}
+                                onClick={() => setSelectedStreamId(stream.id)}
+                                className={`px-4 py-2 rounded-full whitespace-nowrap text-xs font-black uppercase tracking-widest transition-all ${selectedStreamId === stream.id
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-white/5 text-slate-400 hover:bg-white/10'
+                                    }`}
+                            >
+                                {stream.name}
+                            </button>
+                        ))}
+                    </div>
+                )}
 
                 {/* Timeline List */}
                 {filteredSessions.length === 0 ? (
